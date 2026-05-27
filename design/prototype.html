@@ -102,6 +102,15 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
 .feat-dot.dim{background:var(--beige-200);}
 .pay-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .secure-note{font-size:11px;color:var(--beige-400);margin-top:10px;display:flex;align-items:center;justify-content:center;gap:5px;}
+.pay-method-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.pay-method-btn{padding:11px;border-radius:14px;border:1.5px solid var(--beige-100);background:var(--cream);font-family:'Jost',sans-serif;font-size:12px;font-weight:600;color:var(--beige-600);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
+.pay-method-btn.sel{background:#000;border-color:#000;color:#fff;}
+.pay-method-btn:not(.sel):hover{border-color:var(--beige-400);}
+.apple-pay-btn{width:100%;padding:14px;border-radius:14px;border:none;background:#000;color:#fff;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;transition:opacity .15s;}
+.apple-pay-btn:hover{opacity:.88;}
+.pay-divider{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.pay-divider::before,.pay-divider::after{content:'';flex:1;height:1px;background:var(--beige-100);}
+.pay-divider span{font-size:11px;color:var(--beige-400);white-space:nowrap;}
 
 /* ── APP TOP BAR ── */
 .top-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 20px 12px;flex-shrink:0;border-bottom:1px solid var(--beige-50);}
@@ -357,7 +366,7 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
               <div class="plan-name">Pro kuupakett</div>
               <span style="background:var(--blush-50);color:var(--blush-800);border:1px solid var(--blush-200);border-radius:20px;font-size:9px;font-weight:700;padding:3px 9px;letter-spacing:.06em;text-transform:uppercase">Pro</span>
             </div>
-            <div style="margin-top:6px"><span class="plan-price">4.99€</span><span class="plan-per">/ kuus</span></div>
+            <div style="margin-top:6px"><span class="plan-price">3.99€</span><span class="plan-per">/ kuus</span></div>
             <div class="plan-features">
               <div class="plan-feat"><div class="feat-dot"></div>Piiramatud treeningkorrad</div>
               <div class="plan-feat"><div class="feat-dot"></div>Faasipõhised ülevaated</div>
@@ -370,23 +379,42 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
               <div class="plan-name">Pro aastapakett</div>
               <span style="background:var(--green-50);color:var(--green-800);border:1px solid var(--green-200);border-radius:20px;font-size:9px;font-weight:700;padding:3px 9px;letter-spacing:.06em;text-transform:uppercase">-17%</span>
             </div>
-            <div style="margin-top:6px"><span class="plan-price">49.99€</span><span class="plan-per">/ aastas</span></div>
-            <div style="font-size:11px;color:var(--beige-400);margin-top:4px">Kõik Pro funktsioonid · 4.17€/kuus</div>
+            <div style="margin-top:6px"><span class="plan-price">30.99€</span><span class="plan-per">/ aastas</span></div>
+            <div style="font-size:11px;color:var(--beige-400);margin-top:4px">Kõik Pro funktsioonid · 2.58€/kuus</div>
           </div>
         </div>
         <div id="pay-wrap">
-          <div class="form-group">
-            <label class="form-label">Kaardi number</label>
-            <div style="position:relative"><input class="form-input" id="pay-num" type="text" placeholder="1234 5678 9012 3456" maxlength="19" oninput="fmtCard(this)"/><svg width="20" height="20" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--beige-400)"><use href="#i-card"/></svg></div>
+          <div class="pay-method-row">
+            <button class="pay-method-btn sel" id="pm-apple" onclick="selPayMethod('apple')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.28.07 2.18.73 2.94.75.96-.13 1.87-.8 3-.82 1.41-.01 2.38.61 3.07 1.66-2.81 1.72-2.19 5.57.24 6.74-.48 1.29-1.15 2.56-1.25 4.55zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+              Apple Pay
+            </button>
+            <button class="pay-method-btn" id="pm-card" onclick="selPayMethod('card')">
+              <svg width="16" height="16"><use href="#i-card"/></svg>
+              Kaardiga
+            </button>
           </div>
-          <div class="pay-row">
-            <div class="form-group"><label class="form-label">Kehtiv kuni</label><input class="form-input" id="pay-exp" type="text" placeholder="KK/AA" maxlength="5" oninput="fmtExp(this)"/></div>
-            <div class="form-group"><label class="form-label">CVC</label><input class="form-input" id="pay-cvc" type="text" placeholder="123" maxlength="3"/></div>
+          <div id="apple-pay-section">
+            <button class="apple-pay-btn" onclick="doPurchase()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.28.07 2.18.73 2.94.75.96-.13 1.87-.8 3-.82 1.41-.01 2.38.61 3.07 1.66-2.81 1.72-2.19 5.57.24 6.74-.48 1.29-1.15 2.56-1.25 4.55zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+              Maksa Apple Pay'ga
+            </button>
+            <div class="pay-divider"><span>või maksa kaardiga</span></div>
           </div>
-          <div class="form-group" style="margin-bottom:0"><label class="form-label">E-post</label><input class="form-input" id="pay-email" type="email" placeholder="sinu@email.ee"/></div>
+          <div id="card-form-section" style="display:none">
+            <div class="form-group">
+              <label class="form-label">Kaardi number</label>
+              <div style="position:relative"><input class="form-input" id="pay-num" type="text" placeholder="1234 5678 9012 3456" maxlength="19" oninput="fmtCard(this)"/><svg width="20" height="20" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--beige-400)"><use href="#i-card"/></svg></div>
+            </div>
+            <div class="pay-row">
+              <div class="form-group"><label class="form-label">Kehtiv kuni</label><input class="form-input" id="pay-exp" type="text" placeholder="KK/AA" maxlength="5" oninput="fmtExp(this)"/></div>
+              <div class="form-group"><label class="form-label">CVC</label><input class="form-input" id="pay-cvc" type="text" placeholder="123" maxlength="3"/></div>
+            </div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">E-post</label><input class="form-input" id="pay-email" type="email" placeholder="sinu@email.ee"/></div>
+          </div>
           <div class="secure-note"><svg width="12" height="12"><use href="#i-lock"/></svg>Makse on kaitstud · Tühista igal ajal</div>
         </div>
-        <button class="btn-primary-full" onclick="doPurchase()"><svg width="14" height="14"><use href="#i-check"/></svg><span id="pay-btn-txt">Alusta Pro kasutamist (4.99€/kuus)</span></button>
+        <button class="btn-primary-full" id="pay-main-btn" onclick="doPurchase()"><svg width="14" height="14"><use href="#i-check"/></svg><span id="pay-btn-txt">Alusta Pro kasutamist (3.99€/kuus)</span></button>
       </div>
 
       <!-- OB 6: Valmis -->
@@ -431,7 +459,7 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
       </div>
       <div class="stat-row">
         <div class="stat-tile"><div class="s-lbl"><svg width="10" height="10"><use href="#i-barbell"/></svg>Treeningkordi</div><div class="s-val" id="st-sess">0</div><div class="s-sub">viimase 7 päeva</div></div>
-        <div class="stat-tile"><div class="s-lbl"><svg width="10" height="10"><use href="#i-spark"/></svg><span id="st-pr-lbl">Parim tulemus</span></div><div class="s-val" id="st-pr">—</div><div class="s-sub" id="st-pr-sub">logitud andmetest</div></div>
+        <div class="stat-tile"><div class="s-lbl"><svg width="10" height="10"><use href="#i-spark"/></svg>Nädala maht</div><div class="s-val" id="st-vol">—</div><div class="s-sub" id="st-vol-sub">kg sel nädalal</div></div>
         <div class="stat-tile"><div class="s-lbl"><svg width="10" height="10"><use href="#i-wave"/></svg>Faasivõrdlus</div><div class="s-val" id="st-diff" style="font-size:18px">—</div><div class="s-sub">follik. vs luteaal</div></div>
       </div>
       <div class="quick-row">
@@ -699,10 +727,20 @@ function selPlan(p){
   ['free','monthly','yearly'].forEach(function(x){ document.getElementById('pc-'+x).classList.toggle('sel',x===p); });
   var wrap=document.getElementById('pay-wrap'), txt=document.getElementById('pay-btn-txt');
   if(p==='free'){ wrap.style.display='none'; txt.textContent='Jätka tasuta'; }
-  else { wrap.style.display='block'; txt.textContent=p==='monthly'?'Alusta Pro kasutamist (4.99€/kuus)':'Alusta Pro kasutamist (49.99€/aastas)'; }
+  else { wrap.style.display='block'; txt.textContent=p==='monthly'?'Alusta Pro kasutamist (3.99€/kuus)':'Alusta Pro kasutamist (30.99€/aastas)'; }
+}
+var _payMethod='apple';
+function selPayMethod(m){
+  _payMethod=m;
+  document.getElementById('pm-apple').classList.toggle('sel',m==='apple');
+  document.getElementById('pm-card').classList.toggle('sel',m==='card');
+  document.getElementById('apple-pay-section').style.display=m==='apple'?'block':'none';
+  document.getElementById('card-form-section').style.display=m==='card'?'block':'none';
+  var btn=document.getElementById('pay-main-btn');
+  btn.style.display=m==='apple'?'none':'flex';
 }
 function doPurchase(){
-  if(_obPlan!=='free'){
+  if(_obPlan!=='free'&&_payMethod==='card'){
     var num=document.getElementById('pay-num').value.replace(/\s/g,'');
     var exp=document.getElementById('pay-exp').value;
     var cvc=document.getElementById('pay-cvc').value;
@@ -902,9 +940,10 @@ function renderHome(){
   var d7=new Date(NOW.getTime()-7*86400000);
   var rec=S.workouts.filter(function(w){return new Date(w.date)>=d7;});
   document.getElementById('st-sess').textContent=rec.length;
-  var best=null,bestName='',bestDate='';
-  S.workouts.forEach(function(w){w.exercises.forEach(function(e){if(e.kg>(best||0)){best=e.kg;bestName=e.name;bestDate=w.date;}});});
-  if(best){document.getElementById('st-pr-lbl').textContent=bestName.length>12?bestName.slice(0,12)+'…':bestName;document.getElementById('st-pr').textContent=best+'kg';document.getElementById('st-pr-sub').textContent=disp(bestDate);}
+  var weekVol=0;
+  rec.forEach(function(w){w.exercises.forEach(function(e){if(e.kg>0&&e.sets>0&&e.reps>0)weekVol+=e.kg*e.sets*e.reps;});});
+  document.getElementById('st-vol').textContent=weekVol>0?Math.round(weekVol)+'kg':'—';
+  document.getElementById('st-vol-sub').textContent=weekVol>0?'kg sel nädalal':'trenn puudub';
   var pd=phaseDiff();
   if(pd!=null){var sign=pd>=0?'+':'';document.getElementById('st-diff').textContent=sign+pd.toFixed(1)+'%';document.getElementById('st-diff').style.color=pd>=0?'var(--green-600)':'var(--blush-400)';}
   // chart
