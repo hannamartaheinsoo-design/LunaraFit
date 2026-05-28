@@ -6,7 +6,6 @@
 <title>LunaraFit</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
 <style>
 :root{
   --cream:#FDFAF6;--beige-50:#F5F0EA;--beige-100:#E8DDD0;--beige-200:#CEC0AA;
@@ -240,27 +239,32 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
 /* ── TOAST ── */
 .toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--beige-800);color:var(--cream);padding:11px 22px;border-radius:30px;font-size:12px;font-weight:600;opacity:0;transition:all .25s;pointer-events:none;z-index:9999;white-space:nowrap;font-family:'Jost',sans-serif;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-/* ── TWEMOJI ── */
-img.emoji{height:1.1em;width:1.1em;margin:0 .05em;vertical-align:-0.15em;display:inline-block;}
-.energy-btn img.emoji{height:1.8em;width:1.8em;margin:0;}
-.contra-btn img.emoji{height:2em;width:2em;margin:0;}
-.cat-hdr img.emoji{height:1em;width:1em;vertical-align:-0.1em;}
 /* ── WELLBEING CATEGORIES ── */
-.cat-hdr{font-size:11px;font-weight:700;color:var(--beige-600);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.cat-hdr{font-size:11px;font-weight:700;color:var(--beige-600);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.cat-hdr svg{flex-shrink:0;color:var(--beige-400);}
 .pro-badge{background:var(--blush-400);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;line-height:1.4;}
 .energy-row{display:flex;gap:5px;}
-.energy-btn{flex:1;padding:9px 4px 7px;border:1.5px solid var(--beige-200);border-radius:12px;background:var(--cream);cursor:pointer;font-size:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s;}
-.energy-btn span{font-size:10px;font-weight:600;color:var(--beige-500);}
+.energy-btn{flex:1;min-height:76px;padding:10px 4px 8px;border:1.5px solid var(--beige-200);border-radius:12px;background:var(--cream);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
+.energy-btn svg{color:var(--beige-400);}
+.energy-btn span{font-size:10px;font-weight:600;color:var(--beige-500);line-height:1.2;text-align:center;}
 .energy-btn.on{background:var(--blush-50);border-color:var(--blush-400);}
+.energy-btn.on svg{color:var(--blush-500);}
 .energy-btn.on span{color:var(--blush-800);}
-.contra-row{display:flex;gap:6px;}
-.contra-btn{flex:1;padding:10px 6px 8px;border:1.5px solid var(--beige-200);border-radius:12px;background:var(--cream);cursor:pointer;font-size:20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s;}
-.contra-btn span{font-size:10px;font-weight:600;color:var(--beige-500);line-height:1.3;}
+.contra-row{display:flex;gap:5px;}
+.contra-btn{flex:1;min-height:76px;padding:10px 6px 8px;border:1.5px solid var(--beige-200);border-radius:12px;background:var(--cream);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
+.contra-btn svg{color:var(--beige-400);}
+.contra-btn span{font-size:10px;font-weight:600;color:var(--beige-500);line-height:1.3;text-align:center;}
 .contra-btn.on{background:var(--blush-50);border-color:var(--blush-400);}
+.contra-btn.on svg{color:var(--blush-500);}
 .contra-btn.on span{color:var(--blush-800);}
 .sleep-hrs-wrap{display:flex;align-items:center;gap:8px;margin-top:10px;}
 .sleep-hrs-wrap label{font-size:11px;font-weight:600;color:var(--beige-500);white-space:nowrap;}
 .sleep-hrs-wrap .form-input{max-width:100px;margin-bottom:0;}
+.cat-section{position:relative;}
+.cat-section.locked .chip-grid,.cat-section.locked .sleep-hrs-wrap{opacity:.22;pointer-events:none;user-select:none;}
+.sleep-lock-overlay{display:none;position:absolute;inset:28px 0 0;border-radius:12px;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:2;}
+.cat-section.locked .sleep-lock-overlay{display:flex;}
+.sleep-lock-txt{font-size:12px;font-weight:600;color:var(--beige-600);}
 </style>
 </head>
 <body>
@@ -575,107 +579,136 @@ img.emoji{height:1.1em;width:1.1em;margin:0 .05em;vertical-align:-0.15em;display
           </div>
         </div>
         <div class="form-group">
-          <div class="cat-hdr">⚡ Energia</div>
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2 L5 11 h5 L9 18 L15 9 h-5 Z"/></svg>Energia</div>
           <div class="energy-row" id="c-energy">
-            <button class="energy-btn" data-v="kurnatult" onclick="selEnergy(this)">😴<span>Kurnatult</span></button>
-            <button class="energy-btn" data-v="väsinult" onclick="selEnergy(this)">😫<span>Väsinult</span></button>
-            <button class="energy-btn" data-v="keskmiselt" onclick="selEnergy(this)">😐<span>Keskmiselt</span></button>
-            <button class="energy-btn" data-v="energiliselt" onclick="selEnergy(this)">⚡<span>Energiliselt</span></button>
-            <button class="energy-btn" data-v="täis energiat" onclick="selEnergy(this)">🌟<span>Täis energiat</span></button>
+            <button class="energy-btn" data-v="kurnatud" onclick="selEnergy(this)">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/></svg>
+              <span>Kurnatud</span>
+            </button>
+            <button class="energy-btn" data-v="väsinud" onclick="selEnergy(this)">
+              <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 12 L12 3 A9 9 0 0 1 21 12 Z" fill="currentColor" stroke="none" opacity=".55"/></svg>
+              <span>Väsinud</span>
+            </button>
+            <button class="energy-btn" data-v="normaalne" onclick="selEnergy(this)">
+              <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 1 12 21 Z" fill="currentColor" stroke="none" opacity=".55"/></svg>
+              <span>Normaalne</span>
+            </button>
+            <button class="energy-btn" data-v="energiline" onclick="selEnergy(this)">
+              <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 12 L12 3 A9 9 0 1 1 3 12 Z" fill="currentColor" stroke="none" opacity=".55"/></svg>
+              <span>Energiline</span>
+            </button>
+            <button class="energy-btn" data-v="täis energiat" onclick="selEnergy(this)">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>
+              <span>Täis energiat</span>
+            </button>
           </div>
         </div>
         <div class="form-group">
-          <div class="cat-hdr">💭 Tunded</div>
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 17s-7-4.5-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 17 8c0 4.5-7 9-7 9z"/></svg>Tunded</div>
           <div class="chip-grid" id="c-feelings">
-            <span class="chip" onclick="toggleChip(this)">🔄 Meeleolumuutused</span>
-            <span class="chip" onclick="toggleChip(this)">😵 Kontrolli kaotamas</span>
-            <span class="chip" onclick="toggleChip(this)">🙂 Hästi</span>
-            <span class="chip" onclick="toggleChip(this)">😊 Õnnelik</span>
-            <span class="chip" onclick="toggleChip(this)">😢 Kurb</span>
-            <span class="chip" onclick="toggleChip(this)">🌸 Tundlik</span>
-            <span class="chip" onclick="toggleChip(this)">😠 Vihane</span>
-            <span class="chip" onclick="toggleChip(this)">💪 Enesekindel</span>
-            <span class="chip" onclick="toggleChip(this)">🎉 Põnevil</span>
-            <span class="chip" onclick="toggleChip(this)">😤 Ärritunud</span>
-            <span class="chip" onclick="toggleChip(this)">😰 Ärev</span>
-            <span class="chip" onclick="toggleChip(this)">😟 Ebakindel</span>
-            <span class="chip" onclick="toggleChip(this)">😔 Masendunud</span>
-            <span class="chip" onclick="toggleChip(this)">🔍 Enesekritiseeriv</span>
+            <span class="chip" onclick="toggleChip(this)">Meeleolumuutused</span>
+            <span class="chip" onclick="toggleChip(this)">Kontrollikaotus</span>
+            <span class="chip" onclick="toggleChip(this)">Hea</span>
+            <span class="chip" onclick="toggleChip(this)">Õnnelik</span>
+            <span class="chip" onclick="toggleChip(this)">Kurb</span>
+            <span class="chip" onclick="toggleChip(this)">Tundlik</span>
+            <span class="chip" onclick="toggleChip(this)">Vihane</span>
+            <span class="chip" onclick="toggleChip(this)">Enesekindel</span>
+            <span class="chip" onclick="toggleChip(this)">Põnevil</span>
+            <span class="chip" onclick="toggleChip(this)">Ärritunud</span>
+            <span class="chip" onclick="toggleChip(this)">Ärev</span>
+            <span class="chip" onclick="toggleChip(this)">Ebakindel</span>
+            <span class="chip" onclick="toggleChip(this)">Masendunud</span>
+            <span class="chip" onclick="toggleChip(this)">Enesekritiseeriv</span>
           </div>
         </div>
         <div class="form-group">
-          <div class="cat-hdr">🧠 Meeleseisund</div>
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="8" r="5"/><path d="M6 18c0-3.5 8-3.5 8 0"/></svg>Meeleseisund</div>
           <div class="chip-grid" id="c-mind">
-            <span class="chip" onclick="toggleChip(this)">🤔 Unustlik</span>
-            <span class="chip" onclick="toggleChip(this)">🌫️ Ajuudu</span>
-            <span class="chip" onclick="toggleChip(this)">🧘 Rahulik</span>
-            <span class="chip" onclick="toggleChip(this)">😓 Stressis</span>
-            <span class="chip" onclick="toggleChip(this)">🎯 Fokuseeritud</span>
-            <span class="chip" onclick="toggleChip(this)">💭 Hajameelne</span>
-            <span class="chip" onclick="toggleChip(this)">🚀 Motiveeritud</span>
-            <span class="chip" onclick="toggleChip(this)">😶 Motivatsioonieta</span>
-            <span class="chip" onclick="toggleChip(this)">✅ Produktiivne</span>
-            <span class="chip" onclick="toggleChip(this)">📉 Ebaproduktiivsus</span>
+            <span class="chip" onclick="toggleChip(this)">Unustlik</span>
+            <span class="chip" onclick="toggleChip(this)">Ajuudu</span>
+            <span class="chip" onclick="toggleChip(this)">Rahulik</span>
+            <span class="chip" onclick="toggleChip(this)">Stressis</span>
+            <span class="chip" onclick="toggleChip(this)">Fokuseeritud</span>
+            <span class="chip" onclick="toggleChip(this)">Hajameelne</span>
+            <span class="chip" onclick="toggleChip(this)">Motiveeritud</span>
+            <span class="chip" onclick="toggleChip(this)">Motiveerimata</span>
+            <span class="chip" onclick="toggleChip(this)">Produktiivne</span>
+            <span class="chip" onclick="toggleChip(this)">Ebaproduktiivne</span>
           </div>
         </div>
         <div class="form-group">
-          <div class="cat-hdr">🩹 Valu</div>
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="10" y1="3" x2="10" y2="17"/><line x1="3" y1="10" x2="17" y2="10"/></svg>Valu</div>
           <div class="chip-grid" id="c-pain">
-            <span class="chip" onclick="toggleChip(this)">✅ Valuta</span>
-            <span class="chip" onclick="toggleChip(this)">🌀 Krambid</span>
-            <span class="chip" onclick="toggleChip(this)">🔵 Ovulatsioonivalu</span>
-            <span class="chip" onclick="toggleChip(this)">🤱 Rindade hellus</span>
-            <span class="chip" onclick="toggleChip(this)">🤕 Peavalu</span>
-            <span class="chip" onclick="toggleChip(this)">⚡ Migreen</span>
-            <span class="chip" onclick="toggleChip(this)">💥 Migreen auraga</span>
-            <span class="chip" onclick="toggleChip(this)">💙 Alaseljavalu</span>
-            <span class="chip" onclick="toggleChip(this)">😫 Üldine lihasvalu</span>
+            <span class="chip" onclick="toggleChip(this)">Valuta</span>
+            <span class="chip" onclick="toggleChip(this)">Krambid</span>
+            <span class="chip" onclick="toggleChip(this)">Ovulatsioonivalu</span>
+            <span class="chip" onclick="toggleChip(this)">Rindade hellus</span>
+            <span class="chip" onclick="toggleChip(this)">Peavalu</span>
+            <span class="chip" onclick="toggleChip(this)">Migreen</span>
+            <span class="chip" onclick="toggleChip(this)">Migreen auraga</span>
+            <span class="chip" onclick="toggleChip(this)">Alaseljavalu</span>
+            <span class="chip" onclick="toggleChip(this)">Üldine lihasvalu</span>
           </div>
         </div>
         <div class="form-group">
-          <div class="cat-hdr">🍬 Iharud</div>
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 10 Q5 6 8 10 Q11 14 14 10 Q17 6 20 10"/></svg>Isu</div>
           <div class="chip-grid" id="c-cravings">
-            <span class="chip" onclick="toggleChip(this)">🍬 Magus</span>
-            <span class="chip" onclick="toggleChip(this)">🧂 Soolane</span>
-            <span class="chip" onclick="toggleChip(this)">🍟 Rasvane</span>
-            <span class="chip" onclick="toggleChip(this)">🌶️ Vürtsikas</span>
-            <span class="chip" onclick="toggleChip(this)">🍞 Süsivesikud</span>
-            <span class="chip" onclick="toggleChip(this)">🥗 Värske</span>
+            <span class="chip" onclick="toggleChip(this)">Magus</span>
+            <span class="chip" onclick="toggleChip(this)">Soolane</span>
+            <span class="chip" onclick="toggleChip(this)">Rasvane</span>
+            <span class="chip" onclick="toggleChip(this)">Vürtsikas</span>
+            <span class="chip" onclick="toggleChip(this)">Süsivesikud</span>
+            <span class="chip" onclick="toggleChip(this)">Värske</span>
           </div>
         </div>
-        <div class="form-group">
-          <div class="cat-hdr">🌙 Unekvaliteet <span class="pro-badge">PRO</span></div>
+        <div class="form-group cat-section" id="c-sleep-section">
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M16 11A7 7 0 1 1 9 4a5 5 0 0 0 7 7z"/></svg>Unekvaliteet <span class="pro-badge">PRO</span></div>
           <div class="chip-grid" id="c-sleep">
-            <span class="chip" onclick="toggleChip(this)">😴 Raske uinuda</span>
-            <span class="chip" onclick="toggleChip(this)">☀️ Värske ärkamine</span>
-            <span class="chip" onclick="toggleChip(this)">😫 Väsinud ärkamine</span>
-            <span class="chip" onclick="toggleChip(this)">🔄 Rahutu uni</span>
-            <span class="chip" onclick="toggleChip(this)">🌙 Eredad unenäod</span>
-            <span class="chip" onclick="toggleChip(this)">💦 Öised higistamised</span>
+            <span class="chip" onclick="toggleChip(this)">Raske uinuda</span>
+            <span class="chip" onclick="toggleChip(this)">Värske ärkamine</span>
+            <span class="chip" onclick="toggleChip(this)">Väsinud ärkamine</span>
+            <span class="chip" onclick="toggleChip(this)">Rahutu uni</span>
+            <span class="chip" onclick="toggleChip(this)">Eredad unenäod</span>
+            <span class="chip" onclick="toggleChip(this)">Öised higistamised</span>
           </div>
           <div class="sleep-hrs-wrap">
             <label>Unetunnid:</label>
             <input class="form-input" id="c-sleep-hrs" type="number" min="0" max="24" step="0.5" placeholder="nt 7.5"/>
           </div>
-        </div>
-        <div class="form-group">
-          <div class="cat-hdr">🫁 Seedimine</div>
-          <div class="chip-grid" id="c-digestion">
-            <span class="chip" onclick="toggleChip(this)">✅ Korras</span>
-            <span class="chip" onclick="toggleChip(this)">💨 Puhitus</span>
-            <span class="chip" onclick="toggleChip(this)">💭 Gaasid</span>
-            <span class="chip" onclick="toggleChip(this)">🤢 Iiveldus</span>
-            <span class="chip" onclick="toggleChip(this)">🤮 Oksendamine</span>
-            <span class="chip" onclick="toggleChip(this)">💧 Kõhulahtisus</span>
-            <span class="chip" onclick="toggleChip(this)">🔒 Kõhukinnisus</span>
+          <div class="sleep-lock-overlay" id="c-sleep-lock">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--beige-400)" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <div class="sleep-lock-txt">Saadaval Pro paketiga</div>
+            <button class="btn btn-blush btn-sm" onclick="obGo(5);showOb()">Uuenda Pro&#8209;le</button>
           </div>
         </div>
         <div class="form-group">
-          <div class="cat-hdr">💊 Rasestumisvastased</div>
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="10" r="7"/><path d="M7 10 Q8.5 8 10 10 Q11.5 12 13 10"/></svg>Seedimine</div>
+          <div class="chip-grid" id="c-digestion">
+            <span class="chip" onclick="toggleChip(this)">Korras</span>
+            <span class="chip" onclick="toggleChip(this)">Puhitus</span>
+            <span class="chip" onclick="toggleChip(this)">Gaasid</span>
+            <span class="chip" onclick="toggleChip(this)">Iiveldus</span>
+            <span class="chip" onclick="toggleChip(this)">Oksendamine</span>
+            <span class="chip" onclick="toggleChip(this)">Kõhulahtisus</span>
+            <span class="chip" onclick="toggleChip(this)">Kõhukinnisus</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="7" width="12" height="6" rx="3"/><line x1="10" y1="7" x2="10" y2="13"/></svg>Rasestumisvastased</div>
           <div class="contra-row" id="c-contra">
-            <button class="contra-btn" data-v="ei kasuta" onclick="selContra(this)">🚫<span>Ei kasuta</span></button>
-            <button class="contra-btn" data-v="õigeaegselt" onclick="selContra(this)">✅<span>Õigeaegselt võetud</span></button>
-            <button class="contra-btn" data-v="hilinemisega" onclick="selContra(this)">⏰<span>Hilinemisega võetud</span></button>
+            <button class="contra-btn" data-v="ei kasuta" onclick="selContra(this)">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="6.5" y1="6.5" x2="17.5" y2="17.5"/></svg>
+              <span>Ei kasuta</span>
+            </button>
+            <button class="contra-btn" data-v="õigeaegselt" onclick="selContra(this)">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 L9 17 L20 6"/></svg>
+              <span>Õigeaegselt võetud</span>
+            </button>
+            <button class="contra-btn" data-v="hilinemisega" onclick="selContra(this)">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 L12 12 L15.5 15"/></svg>
+              <span>Hilinemisega võetud</span>
+            </button>
           </div>
         </div>
         <button class="btn btn-blush btn-full" onclick="saveCycleDay()">Salvesta tänane märge</button>
@@ -828,6 +861,12 @@ function showTab(name){
   if(name==='insights') renderInsights();
   if(name==='home') renderHome();
   if(name==='profile'){ renderLibrary(); updatePlanUI(); loadProfileForm(); }
+  if(name==='cycle') applySleepLock();
+}
+function applySleepLock(){
+  var sec=document.getElementById('c-sleep-section');
+  if(!sec) return;
+  if(S.plan==='free') sec.classList.add('locked'); else sec.classList.remove('locked');
 }
 
 // ── ONBOARDING ────────────────────────────────────────
@@ -1166,13 +1205,7 @@ function clearAll(){S={profile:{name:'',cycleLen:28,periodLen:5,lastPeriod:''},p
 // ── INIT DATE FIELDS ──────────────────────────────────
 document.getElementById('w-date').value=fd(NOW);
 document.getElementById('c-date').value=fd(NOW);
-
-// render all emoji as Twemoji flat SVG
-twemoji.parse(document.body, {
-  base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/',
-  folder: 'svg',
-  ext: '.svg'
-});
+applySleepLock();
 </script>
 </body>
 </html>
