@@ -174,6 +174,11 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
 .cal-day.ovulation{background:var(--green-400);color:#fff;}
 .cal-day.fertile{background:var(--green-50);color:var(--green-800);border-color:var(--green-200);}
 .cal-day.today{box-shadow:0 0 0 2.5px var(--cream),0 0 0 4px var(--blush-400);color:var(--beige-800);}
+.cal-day.cal-selected{outline:2.5px solid var(--beige-500);outline-offset:-3px;}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px;margin-bottom:8px;}
+.cal-nav-btn{background:none;border:1.5px solid var(--beige-200);border-radius:8px;cursor:pointer;padding:5px 10px;color:var(--beige-500);line-height:1;display:flex;align-items:center;transition:background .15s,border-color .15s;}
+.cal-nav-btn:hover{background:var(--beige-50);border-color:var(--beige-400);}
+.cal-nav-title{font-size:13px;font-weight:700;color:var(--beige-700);text-transform:capitalize;letter-spacing:.01em;}
 .legend{display:flex;gap:10px;flex-wrap:wrap;padding:12px 20px 0;}
 .leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--beige-600);}
 .leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
@@ -556,6 +561,11 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
       <div><div class="page-header-txt">Tsükkel</div><div class="page-sub-txt" id="cycle-sub">—</div></div>
     </div>
     <div class="tab-scroll" style="padding-top:12px">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calPrev()"><svg width="14" height="14"><use href="#i-arr-l"/></svg></button>
+        <span class="cal-nav-title" id="cal-title">—</span>
+        <button class="cal-nav-btn" onclick="calNext()"><svg width="14" height="14"><use href="#i-arr-r"/></svg></button>
+      </div>
       <div class="cal-hrow"><div class="cal-hday">E</div><div class="cal-hday">T</div><div class="cal-hday">K</div><div class="cal-hday">N</div><div class="cal-hday">R</div><div class="cal-hday">L</div><div class="cal-hday">P</div></div>
       <div class="cal-grid" id="cal-grid"></div>
       <div class="legend">
@@ -896,7 +906,7 @@ var STRINGS={
     'contra.none':'Ei kasuta','contra.taken':'Õigeaegselt võetud','contra.late':'Hilinemisega võetud',
     'leg.period.logged':'Menstruatsioon (märgitud)','leg.period.pred':'Menstruatsioon (ennustatud)',
     'leg.ovulation':'Ovulatsioon','leg.fertile':'Viljakas päev',
-    'cal.lbl.day':'Tänane märge',
+    'cal.lbl.day':'Tänane märge','cal.lbl.entry':'Märge',
     // insights
     'ins.header':'Ülevaated','ins.header.sub':'Mustrid sinu andmetes',
     'ins.empty':'Lisa treeninguid ja tsükliandmeid.',
@@ -1005,7 +1015,7 @@ var STRINGS={
     'contra.none':'Not using','contra.taken':'Taken on time','contra.late':'Taken late',
     'leg.period.logged':'Period (logged)','leg.period.pred':'Period (predicted)',
     'leg.ovulation':'Ovulation','leg.fertile':'Fertile day',
-    'cal.lbl.day':'Today\'s log',
+    'cal.lbl.day':'Today\'s log','cal.lbl.entry':'Entry',
     'ins.header':'Insights','ins.header.sub':'Patterns in your data',
     'ins.empty':'Add workouts and cycle data.',
     'ins.phase.compare':'Phase comparison',
@@ -1352,7 +1362,7 @@ function showTab(name){
   if(name==='insights') renderInsights();
   if(name==='home') renderHome();
   if(name==='profile'){ renderLibrary(); updatePlanUI(); loadProfileForm(); }
-  if(name==='cycle') applySleepLock();
+  if(name==='cycle'){ applySleepLock(); buildCal(); }
 }
 function applySleepLock(){
   var sec=document.getElementById('c-sleep-section');
@@ -1500,37 +1510,120 @@ function phaseKey(ds){
 }
 var PHASE_LBL={follicular:'Follikulaarfaas',luteal:'Luteaalfaas',menstruation:'Menstruatsioonifaas',ovulation:'Ovulatsioon',teadmata:'—'};
 
+// ── CALENDAR STATE & NAV ─────────────────────────────
+var _calView={yr:NOW.getFullYear(),mo:NOW.getMonth()};
+
+function calPrev(){
+  _calView.mo--; if(_calView.mo<0){_calView.mo=11;_calView.yr--;} buildCal();
+}
+function calNext(){
+  _calView.mo++; if(_calView.mo>11){_calView.mo=0;_calView.yr++;} buildCal();
+}
+
+function selectCalDay(ds){
+  document.getElementById('c-date').value=ds;
+  document.querySelectorAll('.cal-day').forEach(function(d){d.classList.remove('cal-selected');});
+  var sel=document.querySelector('.cal-day[data-date="'+ds+'"]');
+  if(sel) sel.classList.add('cal-selected');
+  // Update section label
+  var slbl=document.querySelector('#page-cycle .slbl');
+  if(slbl) txtN(slbl,' '+(ds===fd(NOW)?t('cal.lbl.day'):t('cal.lbl.entry')+': '+disp(ds)));
+  loadCycleDay(ds);
+}
+
+function loadCycleDay(ds){
+  // Clear all selections
+  document.querySelectorAll('#c-mood .chip,#c-energy .chip,#c-feelings .chip,#c-mind .chip,#c-pain .chip,#c-cravings .chip,#c-sleep .chip,#c-digestion .chip').forEach(function(c){c.classList.remove('on');});
+  document.querySelectorAll('#c-contra .contra-btn').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('c-sleep-hrs').value='';
+  S._period=false; S._mood=''; S._energy=''; S._contra=''; togglePeriod(false);
+  var entry=S.cycleDays.find(function(d){return d.date===ds;});
+  if(!entry) return;
+  // Period
+  if(entry.period){ S._period=true; togglePeriod(true); }
+  // Mood — match by onclick value attribute
+  if(entry.mood){
+    S._mood=entry.mood;
+    document.querySelectorAll('#c-mood .chip').forEach(function(c){
+      var oc=c.getAttribute('onclick')||'';
+      if(oc.indexOf("'"+entry.mood+"'")>-1||oc.indexOf('"'+entry.mood+'"')>-1) c.classList.add('on');
+    });
+  }
+  // Energy — match by data-v
+  if(entry.energy){
+    S._energy=entry.energy;
+    document.querySelectorAll('#c-energy .chip').forEach(function(c){if(c.dataset.v===entry.energy)c.classList.add('on');});
+  }
+  // Symptoms — match by text content
+  if(entry.symptoms&&entry.symptoms.length){
+    var sympSet=new Set(entry.symptoms);
+    ['#c-feelings','#c-mind','#c-pain','#c-cravings','#c-sleep','#c-digestion'].forEach(function(id){
+      document.querySelectorAll(id+' .chip').forEach(function(c){if(sympSet.has(c.textContent.trim()))c.classList.add('on');});
+    });
+  }
+  // Sleep hours
+  if(entry.sleepHrs!=null) document.getElementById('c-sleep-hrs').value=entry.sleepHrs;
+  // Contra — match by data-v
+  if(entry.contra){
+    S._contra=entry.contra;
+    document.querySelectorAll('#c-contra .contra-btn').forEach(function(b){if(b.dataset.v===entry.contra)b.classList.add('on');});
+  }
+}
+
+function recalcLastPeriod(){
+  var pd=S.cycleDays.filter(function(d){return d.period;}).map(function(d){return d.date;}).sort();
+  if(!pd.length) return;
+  // Find start of the most recent consecutive cluster (gap ≤ 2 days)
+  var start=pd[pd.length-1];
+  for(var i=pd.length-2;i>=0;i--){
+    var gap=Math.round((new Date(start)-new Date(pd[i]))/86400000);
+    if(gap<=2) start=pd[i]; else break;
+  }
+  S.profile.lastPeriod=start;
+  var lpEl=document.getElementById('p-lp'); if(lpEl)lpEl.value=start;
+}
+
 // ── CALENDAR ─────────────────────────────────────────
 function buildCal(){
   var cal=document.getElementById('cal-grid'); cal.innerHTML='';
-  var yr=NOW.getFullYear(),mo=NOW.getMonth();
+  var yr=_calView.yr, mo=_calView.mo;
   var cl=S.profile.cycleLen||28,pl=S.profile.periodLen||5;
   var blank=((new Date(yr,mo,1).getDay()+6)%7);
   var dim=new Date(yr,mo+1,0).getDate();
   var logged=new Set(S.cycleDays.filter(function(d){return d.period;}).map(function(d){return d.date;}));
+  // Mark all days that have ANY entry (not just period)
+  var hasEntry=new Set(S.cycleDays.map(function(d){return d.date;}));
   var pred=new Set(),fertile=new Set(),ov=new Set();
   if(S.profile.lastPeriod){
     var last=new Date(S.profile.lastPeriod);
-    for(var i=0;i<=4;i++){
+    for(var i=0;i<=6;i++){
       var cs=new Date(last.getTime()+i*cl*86400000);
-      for(var j=0;j<pl;j++){var pd=new Date(cs.getTime()+j*86400000);if(pd.getFullYear()===yr&&pd.getMonth()===mo){var pds=fd(pd);if(!logged.has(pds))pred.add(pd.getDate());}}
+      for(var j=0;j<pl;j++){var pd2=new Date(cs.getTime()+j*86400000);if(pd2.getFullYear()===yr&&pd2.getMonth()===mo){var pds=fd(pd2);if(!logged.has(pds))pred.add(pd2.getDate());}}
       var ov0=Math.floor(cl/2);
       for(var k=ov0-3;k<=ov0+1;k++){var fd2=new Date(cs.getTime()+k*86400000);if(fd2.getFullYear()===yr&&fd2.getMonth()===mo){if(k===ov0)ov.add(fd2.getDate());else fertile.add(fd2.getDate());}}
     }
   }
+  var selDate=document.getElementById('c-date').value;
   for(var b=0;b<blank;b++) cal.appendChild(document.createElement('div'));
   for(var day=1;day<=dim;day++){
     var el=document.createElement('div'); el.className='cal-day'; el.textContent=day;
     var ds=yr+'-'+String(mo+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    el.dataset.date=ds;
+    el.onclick=(function(d){return function(){selectCalDay(d);};})(ds);
     if(logged.has(ds)) el.classList.add('period-logged');
     else if(pred.has(day)) el.classList.add('period-pred');
     else if(ov.has(day)) el.classList.add('ovulation');
     else if(fertile.has(day)) el.classList.add('fertile');
-    if(day===NOW.getDate()) el.classList.add('today');
+    // Small dot for non-period entries
+    if(hasEntry.has(ds)&&!logged.has(ds)) el.style.fontWeight='800';
+    if(yr===NOW.getFullYear()&&mo===NOW.getMonth()&&day===NOW.getDate()) el.classList.add('today');
+    if(ds===selDate) el.classList.add('cal-selected');
     cal.appendChild(el);
   }
   var ci=getCycleInfo();
   var MONTHS=tArr('months');
+  var titleEl=document.getElementById('cal-title');
+  if(titleEl) titleEl.textContent=MONTHS[mo]+' '+yr;
   document.getElementById('cycle-sub').textContent=MONTHS[mo]+' '+yr+(ci?' · '+(S.lang==='en'?'Day':'Päev')+' '+ci.d+' / '+ci.cl:'');
 }
 
@@ -1603,7 +1696,7 @@ function saveCycleDay(){
   var entry={date,period:!!S._period,mood:S._mood,energy:S._energy||'',contra:S._contra||'',symptoms:syms,sleepHrs:sleepHrs};
   var idx=S.cycleDays.findIndex(function(d){return d.date===date;});
   if(idx>=0) S.cycleDays[idx]=entry; else S.cycleDays.push(entry);
-  if(S._period&&(!S.profile.lastPeriod||date<S.profile.lastPeriod)){S.profile.lastPeriod=date;document.getElementById('p-lp').value=date;}
+  recalcLastPeriod();
   save(); buildCal(); renderHome(); renderInsights();
   document.querySelectorAll('#c-mood .chip,#c-energy .chip,#c-feelings .chip,#c-mind .chip,#c-pain .chip,#c-cravings .chip,#c-sleep .chip,#c-digestion .chip').forEach(function(c){c.classList.remove('on');});
   document.querySelectorAll('#c-contra .contra-btn').forEach(function(b){b.classList.remove('on');});
@@ -1697,6 +1790,7 @@ function clearAll(){S={profile:{name:'',cycleLen:28,periodLen:5,lastPeriod:''},p
 // ── INIT DATE FIELDS ──────────────────────────────────
 document.getElementById('w-date').value=fd(NOW);
 document.getElementById('c-date').value=fd(NOW);
+_calView={yr:NOW.getFullYear(),mo:NOW.getMonth()};
 applySleepLock();
 // sync lang selector card on load
 var _initLang=S.lang||'et';
