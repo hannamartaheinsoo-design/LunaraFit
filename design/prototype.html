@@ -756,7 +756,7 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
       <div class="card">
         <div style="display:flex;flex-direction:column;gap:8px">
           <button class="btn btn-outline btn-full" onclick="exportCSV()"><svg width="13" height="13"><use href="#i-download"/></svg>Ekspordi kõik andmed (CSV)</button>
-          <button class="btn btn-danger btn-full" onclick="if(confirm('Kustutada kõik andmed?'))clearAll()"><svg width="13" height="13"><use href="#i-trash"/></svg>Kustuta kõik andmed</button>
+          <button class="btn btn-danger btn-full" onclick="if(confirm(t('confirm.clearall')))clearAll()"><svg width="13" height="13"><use href="#i-trash"/></svg>Kustuta kõik andmed</button>
         </div>
         <div style="font-size:11px;color:var(--beige-400);margin-top:14px;line-height:1.65;font-weight:300">Sinu andmed on salvestatud ainult selles seadmes.</div>
       </div>
@@ -1196,9 +1196,24 @@ function applyLang(){
     var tt=ob5.querySelector('.serif-title'); if(tt)tt.textContent=t('ob5.title');
     var bd=ob5.querySelector('.body-text'); if(bd)bd.textContent=t('ob5.body');
     // plan cards
-    var pf=q('pc-free'); if(pf){var pn=pf.querySelector('.plan-name');if(pn)pn.textContent=t('ob5.free.name');}
-    var pm=q('pc-monthly'); if(pm){var pn=pm.querySelector('.plan-name');if(pn)pn.textContent=t('ob5.monthly.name');var pp=pm.querySelector('.plan-per');if(pp)pp.textContent=t('ob5.monthly.per');}
-    var py=q('pc-yearly'); if(py){var pn=py.querySelector('.plan-name');if(pn)pn.textContent=t('ob5.yearly.name');var pp=py.querySelector('.plan-per');if(pp)pp.textContent=t('ob5.yearly.per');var ps=py.querySelector('[style*="2.58"]');if(ps)ps.textContent=t('ob5.yearly.sub');}
+    var pf=q('pc-free'); if(pf){
+      var pn=pf.querySelector('.plan-name');if(pn)pn.textContent=t('ob5.free.name');
+      var fts=pf.querySelectorAll('.plan-feat');
+      var ffk=['ob5.free.feat1','ob5.free.feat2','ob5.free.feat3','ob5.free.feat4'];
+      fts.forEach(function(f,i){if(ffk[i])txtN(f,t(ffk[i]));});
+    }
+    var pm=q('pc-monthly'); if(pm){
+      var pn=pm.querySelector('.plan-name');if(pn)pn.textContent=t('ob5.monthly.name');
+      var pp=pm.querySelector('.plan-per');if(pp)pp.textContent=t('ob5.monthly.per');
+      var mts=pm.querySelectorAll('.plan-feat');
+      var mfk=['ob5.monthly.feat1','ob5.monthly.feat2','ob5.monthly.feat3','ob5.monthly.feat4'];
+      mts.forEach(function(f,i){if(mfk[i])txtN(f,t(mfk[i]));});
+    }
+    var py=q('pc-yearly'); if(py){
+      var pn=py.querySelector('.plan-name');if(pn)pn.textContent=t('ob5.yearly.name');
+      var pp=py.querySelector('.plan-per');if(pp)pp.textContent=t('ob5.yearly.per');
+      var ps=py.querySelector('[style*="2.58"]');if(ps)ps.textContent=t('ob5.yearly.sub');
+    }
     // payment
     var pcb=q('pm-card'); if(pcb) txtN(pcb,' '+t('ob5.card.lbl'));
     var apb=q('apple-pay-section'); if(apb){var ab=apb.querySelector('.apple-pay-btn');if(ab)txtN(ab,' '+t('ob5.applepay.btn'));var dv=apb.querySelector('.pay-divider span');if(dv)dv.textContent=t('ob5.divider');}
