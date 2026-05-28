@@ -577,11 +577,11 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
         <div class="form-group">
           <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="9" r="6"/><path d="M7 11Q10 14 13 11"/></svg>Tuju</div>
           <div class="chip-grid" id="c-mood">
-            <span class="chip chip-sym" onclick="selMood(this,'halb')"><span style="font-size:16px;line-height:1">☹</span>Halb</span>
-            <span class="chip chip-sym" onclick="selMood(this,'keskmine')"><span style="font-size:16px;line-height:1">—</span>Keskmine</span>
-            <span class="chip chip-sym" onclick="selMood(this,'hea')"><span style="font-size:16px;line-height:1">☺</span>Hea</span>
-            <span class="chip chip-sym" onclick="selMood(this,'suurepärane')"><span style="font-size:16px;line-height:1">◉</span>Suurepärane</span>
-            <span class="chip chip-sym" onclick="selMood(this,'ergas')"><span style="font-size:16px;line-height:1">✦</span>Ergas</span>
+            <span class="chip" onclick="selMood(this,'halb')">Halb</span>
+            <span class="chip" onclick="selMood(this,'keskmine')">Keskmine</span>
+            <span class="chip" onclick="selMood(this,'hea')">Hea</span>
+            <span class="chip" onclick="selMood(this,'suurepärane')">Suurepärane</span>
+            <span class="chip" onclick="selMood(this,'ergas')">Ergas</span>
           </div>
         </div>
         <div class="form-group">
@@ -1016,9 +1016,9 @@ var STRINGS={
     'ins.mood':'Mood pattern','ins.mood.top':'Most frequent mood:','ins.mood.logged':'Logged','ins.mood.entries':'cycle entries.',
     'ins.disclaimer':'These insights are based on your own logged data and are not medical advice.',
     'ins.prog.follik':'% follic.',
-    'prof.header':'Profile','prof.header.sub':'Settings · privacy · data',
-    'prof.plan.lbl':'Your plan','prof.upgrade':'Upgrade',
-    'prof.data.lbl':'Personal data',
+    'prof.header':'Profile','prof.header.sub':'Settings · Privacy · Data',
+    'prof.plan.lbl':'Your Plan','prof.upgrade':'Upgrade',
+    'prof.data.lbl':'Personal Data',
     'prof.name.lbl':'Name','prof.name.ph':'Your name',
     'prof.cl.lbl':'Cycle length (days)','prof.pl.lbl':'Period length (days)',
     'prof.lp.lbl':'First day of last period',
@@ -1027,7 +1027,7 @@ var STRINGS={
     'prof.sync.title':'Sync across devices','prof.sync.sub':'Keep your data up to date',
     'prof.notif.title':'Gentle reminders','prof.notif.sub':'Gentle reminder to log entries',
     'prof.anon.title':'Anonymous data analysis','prof.anon.sub':'Help improve the app',
-    'prof.library.lbl':'Workout library',
+    'prof.library.lbl':'Workout Library',
     'prof.data.sec':'Data',
     'prof.export':'Export all data (CSV)',
     'prof.clear':'Delete all data',
@@ -1085,7 +1085,7 @@ var CHIP_DATA={
   },
   digestion:{
     et:['Korras','Puhitus','Gaasid','Iiveldus','Oksendamine','Kõhulahtisus','Kõhukinnisus'],
-    en:['Normal','Bloating','Gas','Nausea','Vomiting','Diarrhea','Constipation']
+    en:['Normal','Bloating','Gassy','Nausea','Vomiting','Diarrhea','Constipation']
   }
 };
 
@@ -1103,7 +1103,7 @@ function energySvg(pct){
 function buildMoodChips(){
   var l=S.lang||'et'; var data=CHIP_DATA.mood[l]||CHIP_DATA.mood.et;
   return data.map(function(d){
-    return '<span class="chip chip-sym" onclick="selMood(this,\''+d.v+'\')" style="font-size:15px;letter-spacing:0;gap:5px"><span style="font-size:16px;line-height:1;font-family:inherit">'+d.sym+'</span>'+d.lbl+'</span>';
+    return '<span class="chip" onclick="selMood(this,\''+d.v+'\')">'+d.lbl+'</span>';
   }).join('');
 }
 
@@ -1216,6 +1216,8 @@ function applyLang(){
     }
     // payment
     var pcb=q('pm-card'); if(pcb) txtN(pcb,' '+t('ob5.card.lbl'));
+    // Card form labels
+    var cfs=q('card-form-section'); if(cfs){var cfl=cfs.querySelectorAll('.form-label');var cfk=['ob5.cardnum.lbl','ob5.exp.lbl','ob5.cvc.lbl','ob5.email.lbl'];cfl.forEach(function(l2,i){if(cfk[i])l2.textContent=t(cfk[i]);});var expIn=q('pay-exp');if(expIn)expIn.placeholder=t('ob5.exp.ph');}
     var apb=q('apple-pay-section'); if(apb){var ab=apb.querySelector('.apple-pay-btn');if(ab)txtN(ab,' '+t('ob5.applepay.btn'));var dv=apb.querySelector('.pay-divider span');if(dv)dv.textContent=t('ob5.divider');}
     var sec=ob5.querySelector('.secure-note'); if(sec) txtN(sec,' '+t('ob5.secure'));
     // re-sync pay button text
@@ -1238,6 +1240,12 @@ function applyLang(){
   var ss=document.querySelector('#st-sess')&&document.querySelector('#st-sess').closest('.stat-tile'); if(ss){var sl2=ss.querySelector('.s-lbl');if(sl2)txtN(sl2,' '+t('home.stat.sess'));var ssb=ss.querySelector('.s-sub');if(ssb)ssb.textContent=t('home.stat.sess.sub');}
   var sv=q('st-vol')&&q('st-vol').closest('.stat-tile'); if(sv){var sl3=sv.querySelector('.s-lbl');if(sl3)txtN(sl3,' '+t('home.stat.vol'));var ssb2=sv.querySelector('.s-sub');if(ssb2&&(ssb2.textContent===STRINGS.et['home.stat.vol.sub.none']||ssb2.textContent===STRINGS.en['home.stat.vol.sub.none']||ssb2.textContent==='trenn puudub'||ssb2.textContent==='no workouts'))ssb2.textContent=t('home.stat.vol.sub.none');}
   var sd=q('st-diff')&&q('st-diff').closest('.stat-tile'); if(sd){var sl4=sd.querySelector('.s-lbl');if(sl4)txtN(sl4,' '+t('home.stat.diff'));var ssb3=sd.querySelector('.s-sub');if(ssb3)ssb3.textContent=t('home.stat.diff.sub');}
+  // Home quick row buttons
+  var qr=document.querySelector('#page-home .quick-row'); if(qr){var qbtns=qr.querySelectorAll('button');if(qbtns[0])txtN(qbtns[0],' '+t('home.quick.workout'));if(qbtns[1])txtN(qbtns[1],' '+t('home.quick.cycle'));if(qbtns[2])txtN(qbtns[2],' '+t('home.quick.insights'));}
+  // Home chart card label
+  var hcl=document.querySelector('#page-home .c-lbl'); if(hcl)txtN(hcl,' '+t('home.chart.lbl'));
+  // Home pattern label + defaults
+  var hpl=document.querySelector('#page-home .i-eye'); if(hpl)txtN(hpl,' '+t('home.pattern.lbl'));
   // Workouts page static
   var wp=q('page-workouts'); if(wp){
     var ph=wp.querySelector('.page-header-txt'); if(ph)ph.textContent=t('w.header');
@@ -1267,6 +1275,10 @@ function applyLang(){
     var legs=cp.querySelectorAll('.leg-item');
     var legKeys=['leg.period.logged','leg.period.pred','leg.ovulation','leg.fertile'];
     legs.forEach(function(leg,i){if(legKeys[i])txtN(leg,' '+t(legKeys[i]));});
+    // Calendar weekday headers (Mon–Sun order)
+    var calHdays=cp.querySelectorAll('.cal-hday');
+    var wds=tArr('days.short'), wdOrder=[1,2,3,4,5,6,0];
+    calHdays.forEach(function(h,i){h.textContent=wds[wdOrder[i]];});
     // slbl
     var cslbl=cp.querySelector('.slbl'); if(cslbl)txtN(cslbl,' '+t('cal.lbl.day'));
     // cat headers
@@ -1633,6 +1645,7 @@ function renderHome(){
   // insight preview
   if(pd!=null&&ci){var b2=pd>=0?t('home.ins.follik'):t('home.ins.luteal');document.getElementById('ins-title').textContent='Tulemused on '+b2+' '+Math.abs(pd).toFixed(1)+t('home.ins.higher');document.getElementById('ins-body').textContent=t('home.ins.based')+' '+S.workouts.length+' '+t('home.ins.sessions')+(ci.phase===t('phase.luteal')&&pd>0?' '+t('home.ins.follstart')+' '+ci.left+' '+t('home.ins.days.after'):'');}
   else if(S.workouts.length){document.getElementById('ins-title').textContent=S.workouts.length+' '+t('home.ins.count');document.getElementById('ins-body').textContent=t('home.ins.addcycle');}
+  else{document.getElementById('ins-title').textContent=t('home.pattern.none');document.getElementById('ins-body').textContent=t('home.pattern.none.sub');}
 }
 
 // ── INSIGHTS ─────────────────────────────────────────
