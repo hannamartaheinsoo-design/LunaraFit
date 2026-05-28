@@ -305,8 +305,8 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
         <div class="body-text">Isikupärastab sinu kogemuse.</div>
         <label class="form-label">Eesnimi</label>
         <input class="form-input" id="ob-name" type="text" placeholder="Sinu nimi" autocomplete="given-name"/>
-        <label class="form-label" style="margin-top:14px">Sünniaasta</label>
-        <input class="form-input" id="ob-dob" type="number" min="1960" max="2010" placeholder="aaaa"/>
+        <label class="form-label" style="margin-top:14px">Sünnikuupäev</label>
+        <input class="form-input" id="ob-dob" type="date" max="2010-12-31"/>
         <div class="err" id="ob-age-err">LunaraFit on mõeldud 16-aastastele ja vanematele.</div>
         <button class="btn-primary-full" onclick="checkOb2()">Jätka <svg width="14" height="14"><use href="#i-arr-r"/></svg></button>
       </div>
@@ -721,13 +721,18 @@ function selLang(l){
 }
 function checkOb2(){
   var name=document.getElementById('ob-name').value.trim();
-  var dob=parseInt(document.getElementById('ob-dob').value)||0;
+  var dobVal=document.getElementById('ob-dob').value;
   var err=document.getElementById('ob-age-err');
   if(!name){ toast('Palun sisesta oma nimi'); return; }
-  if(dob && (2026-dob)<16){ err.style.display='block'; S.profile.birthYear=dob; save(); showAgeBlock(); return; }
+  if(dobVal){
+    var dob=new Date(dobVal);
+    var today=new Date();
+    var age=today.getFullYear()-dob.getFullYear()-(today<new Date(today.getFullYear(),dob.getMonth(),dob.getDate())?1:0);
+    if(age<16){ err.style.display='block'; S.profile.birthDate=dobVal; save(); showAgeBlock(); return; }
+    S.profile.birthDate=dobVal;
+  }
   err.style.display='none';
   S.profile.name=name;
-  if(dob) S.profile.birthYear=dob;
   obGo(3);
 }
 function selFit(card,v){
@@ -770,7 +775,13 @@ function doPurchase(){
   document.getElementById('sum-plan').textContent={free:'Tasuta',monthly:'Pro kuupakett',yearly:'Pro aastapakett'}[_obPlan];
   obGo(6);
 }
-function isUnderAge(){ return S.profile.birthYear && (2026-S.profile.birthYear)<16; }
+function isUnderAge(){
+  if(!S.profile.birthDate) return false;
+  var dob=new Date(S.profile.birthDate);
+  var today=new Date();
+  var age=today.getFullYear()-dob.getFullYear()-(today<new Date(today.getFullYear(),dob.getMonth(),dob.getDate())?1:0);
+  return age<16;
+}
 function showAgeBlock(){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.getElementById('page-ageblock').classList.add('active');
