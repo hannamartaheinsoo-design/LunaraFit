@@ -644,6 +644,17 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
       <span>Profiil</span><div class="nav-dot"></div>
     </button>
   </div>
+
+  <!-- ══════════════════════════════════════
+       AGE BLOCK — alla 16-aastased
+  ══════════════════════════════════════ -->
+  <div class="page" id="page-ageblock" style="flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center;">
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--err-bg);border:2px solid #E0A0A0;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:32px;">🔒</div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--beige-400);margin-bottom:10px;">Juurdepääs piiratud</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--beige-800);line-height:1.2;margin-bottom:14px;">LunaraFit on mõeldud 16-aastastele ja vanematele.</div>
+    <div style="font-size:13px;color:var(--beige-600);line-height:1.65;font-weight:300;max-width:280px;">Kahjuks ei saa seda rakendust kasutada, kui oled noorem kui 16 aastat.</div>
+  </div>
+
 </div>
 <div class="toast" id="toast-el"></div>
 
@@ -713,9 +724,10 @@ function checkOb2(){
   var dob=parseInt(document.getElementById('ob-dob').value)||0;
   var err=document.getElementById('ob-age-err');
   if(!name){ toast('Palun sisesta oma nimi'); return; }
-  if(dob && (2026-dob)<16){ err.style.display='block'; return; }
+  if(dob && (2026-dob)<16){ err.style.display='block'; S.profile.birthYear=dob; save(); showAgeBlock(); return; }
   err.style.display='none';
   S.profile.name=name;
+  if(dob) S.profile.birthYear=dob;
   obGo(3);
 }
 function selFit(card,v){
@@ -758,7 +770,14 @@ function doPurchase(){
   document.getElementById('sum-plan').textContent={free:'Tasuta',monthly:'Pro kuupakett',yearly:'Pro aastapakett'}[_obPlan];
   obGo(6);
 }
+function isUnderAge(){ return S.profile.birthYear && (2026-S.profile.birthYear)<16; }
+function showAgeBlock(){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('page-ageblock').classList.add('active');
+  document.getElementById('bottom-nav').style.display='none';
+}
 function enterApp(){
+  if(isUnderAge()){ showAgeBlock(); return; }
   save();
   document.getElementById('w-date').value=fd(NOW);
   document.getElementById('c-date').value=fd(NOW);
@@ -770,12 +789,15 @@ function enterApp(){
 
 // ── AUTO-ENTER IF ALREADY ONBOARDED ──────────────────
 if(S.profile.name){
-  document.getElementById('w-date').value=fd(NOW);
-  document.getElementById('c-date').value=fd(NOW);
-  addExRow();
-  buildCal();
-  renderHome();
-  showTab('home');
+  if(isUnderAge()){ showAgeBlock(); }
+  else {
+    document.getElementById('w-date').value=fd(NOW);
+    document.getElementById('c-date').value=fd(NOW);
+    addExRow();
+    buildCal();
+    renderHome();
+    showTab('home');
+  }
 }
 
 // ── PLAN UI ───────────────────────────────────────────
