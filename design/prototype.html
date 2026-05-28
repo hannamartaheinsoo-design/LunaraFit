@@ -239,6 +239,22 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
 /* ── TOAST ── */
 .toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--beige-800);color:var(--cream);padding:11px 22px;border-radius:30px;font-size:12px;font-weight:600;opacity:0;transition:all .25s;pointer-events:none;z-index:9999;white-space:nowrap;font-family:'Jost',sans-serif;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* ── WELLBEING CATEGORIES ── */
+.cat-hdr{font-size:11px;font-weight:700;color:var(--beige-600);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.pro-badge{background:var(--blush-400);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;line-height:1.4;}
+.energy-row{display:flex;gap:5px;}
+.energy-btn{flex:1;padding:9px 4px 7px;border:1.5px solid var(--beige-200);border-radius:12px;background:var(--cream);cursor:pointer;font-size:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s;}
+.energy-btn span{font-size:10px;font-weight:600;color:var(--beige-500);}
+.energy-btn.on{background:var(--blush-50);border-color:var(--blush-400);}
+.energy-btn.on span{color:var(--blush-800);}
+.contra-row{display:flex;gap:6px;}
+.contra-btn{flex:1;padding:10px 6px 8px;border:1.5px solid var(--beige-200);border-radius:12px;background:var(--cream);cursor:pointer;font-size:20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s;}
+.contra-btn span{font-size:10px;font-weight:600;color:var(--beige-500);line-height:1.3;}
+.contra-btn.on{background:var(--blush-50);border-color:var(--blush-400);}
+.contra-btn.on span{color:var(--blush-800);}
+.sleep-hrs-wrap{display:flex;align-items:center;gap:8px;margin-top:10px;}
+.sleep-hrs-wrap label{font-size:11px;font-weight:600;color:var(--beige-500);white-space:nowrap;}
+.sleep-hrs-wrap .form-input{max-width:100px;margin-bottom:0;}
 </style>
 </head>
 <body>
@@ -553,9 +569,107 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Sümptomid</label>
-          <div class="chip-grid" id="c-chips">
-            <span class="chip" onclick="toggleChip(this)">Krambid</span><span class="chip" onclick="toggleChip(this)">Puhitus</span><span class="chip" onclick="toggleChip(this)">Peavalu</span><span class="chip" onclick="toggleChip(this)">Väsimus</span><span class="chip" onclick="toggleChip(this)">Hea energia</span><span class="chip" onclick="toggleChip(this)">Iha</span><span class="chip" onclick="toggleChip(this)">Ärrituvus</span><span class="chip" onclick="toggleChip(this)">Madal energia</span>
+          <div class="cat-hdr">⚡ Energia</div>
+          <div class="energy-row" id="c-energy">
+            <button class="energy-btn" data-v="kurnatult" onclick="selEnergy(this)">😴<span>Kurnatult</span></button>
+            <button class="energy-btn" data-v="väsinult" onclick="selEnergy(this)">😫<span>Väsinult</span></button>
+            <button class="energy-btn" data-v="keskmiselt" onclick="selEnergy(this)">😐<span>Keskmiselt</span></button>
+            <button class="energy-btn" data-v="energiliselt" onclick="selEnergy(this)">⚡<span>Energiliselt</span></button>
+            <button class="energy-btn" data-v="täis energiat" onclick="selEnergy(this)">🌟<span>Täis energiat</span></button>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr">💭 Tunded</div>
+          <div class="chip-grid" id="c-feelings">
+            <span class="chip" onclick="toggleChip(this)">🔄 Meeleolumuutused</span>
+            <span class="chip" onclick="toggleChip(this)">😵 Kontrolli kaotamas</span>
+            <span class="chip" onclick="toggleChip(this)">🙂 Hästi</span>
+            <span class="chip" onclick="toggleChip(this)">😊 Õnnelik</span>
+            <span class="chip" onclick="toggleChip(this)">😢 Kurb</span>
+            <span class="chip" onclick="toggleChip(this)">🌸 Tundlik</span>
+            <span class="chip" onclick="toggleChip(this)">😠 Vihane</span>
+            <span class="chip" onclick="toggleChip(this)">💪 Enesekindel</span>
+            <span class="chip" onclick="toggleChip(this)">🎉 Põnevil</span>
+            <span class="chip" onclick="toggleChip(this)">😤 Ärritunud</span>
+            <span class="chip" onclick="toggleChip(this)">😰 Ärev</span>
+            <span class="chip" onclick="toggleChip(this)">😟 Ebakindel</span>
+            <span class="chip" onclick="toggleChip(this)">😔 Masendunud</span>
+            <span class="chip" onclick="toggleChip(this)">🔍 Enesekritiseeriv</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr">🧠 Meeleseisund</div>
+          <div class="chip-grid" id="c-mind">
+            <span class="chip" onclick="toggleChip(this)">🤔 Unustlik</span>
+            <span class="chip" onclick="toggleChip(this)">🌫️ Ajuudu</span>
+            <span class="chip" onclick="toggleChip(this)">🧘 Rahulik</span>
+            <span class="chip" onclick="toggleChip(this)">😓 Stressis</span>
+            <span class="chip" onclick="toggleChip(this)">🎯 Fokuseeritud</span>
+            <span class="chip" onclick="toggleChip(this)">💭 Hajameelne</span>
+            <span class="chip" onclick="toggleChip(this)">🚀 Motiveeritud</span>
+            <span class="chip" onclick="toggleChip(this)">😶 Motivatsioonieta</span>
+            <span class="chip" onclick="toggleChip(this)">✅ Produktiivne</span>
+            <span class="chip" onclick="toggleChip(this)">📉 Ebaproduktiivsus</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr">🩹 Valu</div>
+          <div class="chip-grid" id="c-pain">
+            <span class="chip" onclick="toggleChip(this)">✅ Valuta</span>
+            <span class="chip" onclick="toggleChip(this)">🌀 Krambid</span>
+            <span class="chip" onclick="toggleChip(this)">🔵 Ovulatsioonivalu</span>
+            <span class="chip" onclick="toggleChip(this)">🤱 Rindade hellus</span>
+            <span class="chip" onclick="toggleChip(this)">🤕 Peavalu</span>
+            <span class="chip" onclick="toggleChip(this)">⚡ Migreen</span>
+            <span class="chip" onclick="toggleChip(this)">💥 Migreen auraga</span>
+            <span class="chip" onclick="toggleChip(this)">💙 Alaseljavalu</span>
+            <span class="chip" onclick="toggleChip(this)">😫 Üldine lihasvalu</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr">🍬 Iharud</div>
+          <div class="chip-grid" id="c-cravings">
+            <span class="chip" onclick="toggleChip(this)">🍬 Magus</span>
+            <span class="chip" onclick="toggleChip(this)">🧂 Soolane</span>
+            <span class="chip" onclick="toggleChip(this)">🍟 Rasvane</span>
+            <span class="chip" onclick="toggleChip(this)">🌶️ Vürtsikas</span>
+            <span class="chip" onclick="toggleChip(this)">🍞 Süsivesikud</span>
+            <span class="chip" onclick="toggleChip(this)">🥗 Värske</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr">🌙 Unekvaliteet <span class="pro-badge">PRO</span></div>
+          <div class="chip-grid" id="c-sleep">
+            <span class="chip" onclick="toggleChip(this)">😴 Raske uinuda</span>
+            <span class="chip" onclick="toggleChip(this)">☀️ Värske ärkamine</span>
+            <span class="chip" onclick="toggleChip(this)">😫 Väsinud ärkamine</span>
+            <span class="chip" onclick="toggleChip(this)">🔄 Rahutu uni</span>
+            <span class="chip" onclick="toggleChip(this)">🌙 Eredad unenäod</span>
+            <span class="chip" onclick="toggleChip(this)">💦 Öised higistamised</span>
+          </div>
+          <div class="sleep-hrs-wrap">
+            <label>Unetunnid:</label>
+            <input class="form-input" id="c-sleep-hrs" type="number" min="0" max="24" step="0.5" placeholder="nt 7.5"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr">🫁 Seedimine</div>
+          <div class="chip-grid" id="c-digestion">
+            <span class="chip" onclick="toggleChip(this)">✅ Korras</span>
+            <span class="chip" onclick="toggleChip(this)">💨 Puhitus</span>
+            <span class="chip" onclick="toggleChip(this)">💭 Gaasid</span>
+            <span class="chip" onclick="toggleChip(this)">🤢 Iiveldus</span>
+            <span class="chip" onclick="toggleChip(this)">🤮 Oksendamine</span>
+            <span class="chip" onclick="toggleChip(this)">💧 Kõhulahtisus</span>
+            <span class="chip" onclick="toggleChip(this)">🔒 Kõhukinnisus</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr">💊 Rasestumisvastased</div>
+          <div class="contra-row" id="c-contra">
+            <button class="contra-btn" data-v="ei kasuta" onclick="selContra(this)">🚫<span>Ei kasuta</span></button>
+            <button class="contra-btn" data-v="õigeaegselt" onclick="selContra(this)">✅<span>Õigeaegselt võetud</span></button>
+            <button class="contra-btn" data-v="hilinemisega" onclick="selContra(this)">⏰<span>Hilinemisega võetud</span></button>
           </div>
         </div>
         <button class="btn btn-blush btn-full" onclick="saveCycleDay()">Salvesta tänane märge</button>
@@ -662,7 +776,7 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
 'use strict';
 
 // ── STATE ─────────────────────────────────────────────
-var S = { profile:{name:'',cycleLen:28,periodLen:5,lastPeriod:''}, plan:'free', workouts:[], cycleDays:[], _mood:'', _period:false };
+var S = { profile:{name:'',cycleLen:28,periodLen:5,lastPeriod:''}, plan:'free', workouts:[], cycleDays:[], _mood:'', _period:false, _energy:'', _contra:'' };
 (function(){ try{ var d=localStorage.getItem('lf3'); if(d) S=JSON.parse(d); }catch(e){} })();
 function save(){ try{ localStorage.setItem('lf3',JSON.stringify(S)); }catch(e){} }
 
@@ -679,6 +793,8 @@ function fd(d){ return d.toISOString().slice(0,10); }
 function disp(s){ if(!s)return'—'; var p=s.split('-'); return p[2]+'.'+p[1]+'.'+p[0]; }
 function toggleChip(el){ el.classList.toggle('on'); }
 function selMood(el,v){ document.querySelectorAll('.mood-opt').forEach(function(m){m.classList.remove('on');}); el.classList.add('on'); S._mood=v; }
+function selEnergy(el){ document.querySelectorAll('#c-energy .energy-btn').forEach(function(b){b.classList.remove('on');}); el.classList.add('on'); S._energy=el.dataset.v; }
+function selContra(el){ document.querySelectorAll('#c-contra .contra-btn').forEach(function(b){b.classList.remove('on');}); el.classList.add('on'); S._contra=el.dataset.v; }
 function togglePeriod(v){
   S._period=v;
   document.getElementById('btn-period-y').className=v?'btn btn-blush btn-sm':'btn btn-outline btn-sm';
@@ -941,14 +1057,21 @@ function delW(i){if(!confirm('Kustutada?'))return;S.workouts.splice(i,1);save();
 function saveCycleDay(){
   var date=document.getElementById('c-date').value;
   if(!date){toast('Palun vali kuupäev');return;}
-  var syms=[]; document.querySelectorAll('#c-chips .chip.on').forEach(function(c){syms.push(c.textContent);});
-  var entry={date,period:!!S._period,mood:S._mood,symptoms:syms};
+  var syms=[];
+  ['#c-feelings','#c-mind','#c-pain','#c-cravings','#c-sleep','#c-digestion'].forEach(function(id){
+    document.querySelectorAll(id+' .chip.on').forEach(function(c){syms.push(c.textContent.trim());});
+  });
+  var sleepHrsEl=document.getElementById('c-sleep-hrs');
+  var sleepHrs=sleepHrsEl.value?parseFloat(sleepHrsEl.value):null;
+  var entry={date,period:!!S._period,mood:S._mood,energy:S._energy||'',contra:S._contra||'',symptoms:syms,sleepHrs:sleepHrs};
   var idx=S.cycleDays.findIndex(function(d){return d.date===date;});
   if(idx>=0) S.cycleDays[idx]=entry; else S.cycleDays.push(entry);
   if(S._period&&(!S.profile.lastPeriod||date<S.profile.lastPeriod)){S.profile.lastPeriod=date;document.getElementById('p-lp').value=date;}
   save(); buildCal(); renderHome(); renderInsights();
-  document.querySelectorAll('#c-chips .chip,.mood-opt').forEach(function(c){c.classList.remove('on');});
-  S._period=false; S._mood=''; togglePeriod(false);
+  document.querySelectorAll('#c-feelings .chip,#c-mind .chip,#c-pain .chip,#c-cravings .chip,#c-sleep .chip,#c-digestion .chip,.mood-opt').forEach(function(c){c.classList.remove('on');});
+  document.querySelectorAll('#c-energy .energy-btn,#c-contra .contra-btn').forEach(function(b){b.classList.remove('on');});
+  sleepHrsEl.value='';
+  S._period=false; S._mood=''; S._energy=''; S._contra=''; togglePeriod(false);
   toast('Tsüklimärge salvestatud');
 }
 
@@ -1032,7 +1155,7 @@ function exportCSV(){
   S.workouts.forEach(function(w){w.exercises.forEach(function(e){rows.push([w.date,'"'+w.name+'"','"'+e.name+'"',e.sets,e.reps,e.kg,w.phase].join(','));});});
   var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));a.download='lunarafit.csv';a.click();
 }
-function clearAll(){S={profile:{name:'',cycleLen:28,periodLen:5,lastPeriod:''},plan:'free',workouts:[],cycleDays:[],_mood:'',_period:false};save();location.reload();}
+function clearAll(){S={profile:{name:'',cycleLen:28,periodLen:5,lastPeriod:''},plan:'free',workouts:[],cycleDays:[],_mood:'',_period:false,_energy:'',_contra:''};save();location.reload();}
 
 // ── INIT DATE FIELDS ──────────────────────────────────
 document.getElementById('w-date').value=fd(NOW);
