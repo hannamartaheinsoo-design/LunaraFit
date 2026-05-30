@@ -13,7 +13,7 @@ export function Input({ label, error, containerStyle, style, ...rest }: Props) {
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {!!label && <Text style={styles.label}>{label}</Text>}
       <TextInput
         style={[
           styles.input,
@@ -26,7 +26,7 @@ export function Input({ label, error, containerStyle, style, ...rest }: Props) {
         onBlur={() => setFocused(false)}
         {...rest}
       />
-      {error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 }
