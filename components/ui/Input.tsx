@@ -13,12 +13,12 @@ export function Input({ label, error, containerStyle, style, ...rest }: Props) {
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {!!label && <Text style={styles.label}>{label}</Text>}
+      {label ? <Text style={styles.label}>{label}</Text> : null}
       <TextInput
         style={[
           styles.input,
-          focused && styles.inputFocused,
-          error && styles.inputError,
+          focused ? styles.inputFocused : null,
+          error ? styles.inputError : null,
           style,
         ]}
         placeholderTextColor={Colors.beige[200]}
@@ -26,7 +26,7 @@ export function Input({ label, error, containerStyle, style, ...rest }: Props) {
         onBlur={() => setFocused(false)}
         {...rest}
       />
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
 }

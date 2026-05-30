@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import { Colors, Spacing } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -8,6 +8,7 @@ import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function NameScreen() {
+  const navigation = useNavigation();
   const [name, setName] = useState('');
   const [birthYear, setBirthYear] = useState('');
   const [ageError, setAgeError] = useState('');
@@ -41,9 +42,11 @@ export default function NameScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-        <Text style={styles.backText}>← Tagasi</Text>
-      </TouchableOpacity>
+      {navigation.canGoBack() && (
+        <TouchableOpacity onPress={() => router.back()} style={styles.back}>
+          <Text style={styles.backText}>← Tagasi</Text>
+        </TouchableOpacity>
+      )}
 
       <Eyebrow>Sinu andmed</Eyebrow>
       <SerifTitle>Kuidas sind kutsuda?</SerifTitle>
