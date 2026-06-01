@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
-import { Colors } from '../../constants/theme';
+import { Colors, Fonts } from '../../constants/theme';
 
 type Variant = 'dark' | 'blush' | 'green' | 'outline' | 'ghost' | 'danger';
 type Size = 'sm' | 'md' | 'lg';
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   size_md: { paddingVertical: 12, paddingHorizontal: 20 },
   size_lg: { paddingVertical: 16, paddingHorizontal: 24 },
 
-  text: { fontWeight: '700', letterSpacing: 0.9, textTransform: 'uppercase' },
+  text: { fontFamily: Fonts.sansBold, letterSpacing: 0.9, textTransform: 'uppercase' },
   text_dark: { color: Colors.cream },
   text_blush: { color: '#fff' },
   text_green: { color: '#fff' },

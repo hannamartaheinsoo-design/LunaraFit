@@ -1,210 +1,373 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing } from '../../constants/theme';
-import { InsightCard } from '../../components/ui/Card';
+import { useFocusEffect } from 'expo-router';
+import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
+import { Icon } from '../../components/ui/Icon';
 import { storage } from '../../lib/storage';
-import { PHASE_LABELS, formatDate } from '../../lib/cycle';
-import { Workout, CycleDay } from '../../types';
+import { getCycleInfo } from '../../lib/cycle';
+import { Profile, Workout, CycleDay } from '../../types';
+import {
+  PHASE_INSIGHTS, detectPatterns, CONFIDENCE_LABELS, DISCLAIMER,
+  DetectedPattern, TrainingTip,
+} from '../../lib/cycleInsights';
 
-function phaseDiff(workouts: Workout[]): { diff: number; fCount: number; lCount: number } | null {
-  const f = workouts.filter((w) => w.phase === 'follicular');
-  const l = workouts.filter((w) => w.phase === 'luteal');
-  if (!f.length || !l.length) return null;
-  const avg = (ws: Workout[]) => {
-    let t = 0, c = 0;
-    ws.forEach((w) => w.exercises.forEach((e) => { if (e.weight_kg > 0) { t += e.weight_kg; c++; } }));
-    return c ? t / c : 0;
+function IntensityDot({ level }: { level: TrainingTip['intensity'] }) {
+  const colors = {
+    kerge:    Colors.green[400],
+    mõõdukas: Colors.beige[400],
+    kõrge:    Colors.blush[400],
   };
-  const fa = avg(f), la = avg(l);
-  if (!la) return null;
-  return { diff: ((fa - la) / la) * 100, fCount: f.length, lCount: l.length };
+  const labels = { kerge: 'Kerge', mõõdukas: 'Mõõdukas', kõrge: 'Kõrge' };
+  return (
+    <View style={styles.intensityRow}>
+      <View style={[styles.intensityDot, { backgroundColor: colors[level] }]} />
+      <Text style={[styles.intensityLbl, { color: colors[level] }]}>{labels[level]}</Text>
+    </View>
+  );
 }
 
-interface ExerciseStats {
-  follicular: number[];
-  luteal: number[];
+function ConfidenceBadge({ level }: { level: DetectedPattern['confidence'] }) {
+  const colors = {
+    preliminary: { bg: Colors.beige[50],  txt: Colors.beige[600]  },
+    emerging:    { bg: Colors.green[50],  txt: Colors.green[700]  },
+    consistent:  { bg: Colors.blush[50],  txt: Colors.blush[700]  },
+  };
+  const c = colors[level];
+  return (
+    <View style={[styles.confidenceBadge, { backgroundColor: c.bg }]}>
+      <Text style={[styles.confidenceTxt, { color: c.txt }]}>
+        {CONFIDENCE_LABELS[level].toUpperCase()}
+      </Text>
+    </View>
+  );
 }
 
 export default function InsightsScreen() {
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [profile,   setProfile]   = useState<Partial<Profile>>({});
+  const [workouts,  setWorkouts]  = useState<Workout[]>([]);
   const [cycleDays, setCycleDays] = useState<CycleDay[]>([]);
+  const [openTip,   setOpenTip]   = useState<string | null>(null);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     (async () => {
-      const [ws, cd] = await Promise.all([storage.getWorkouts(), storage.getCycleDays()]);
+      const [p, ws, cd] = await Promise.all([
+        storage.getProfile(), storage.getWorkouts(), storage.getCycleDays(),
+      ]);
+      if (p) setProfile(p);
       setWorkouts(ws);
       setCycleDays(cd);
     })();
-  }, []);
+  }, []));
 
-  if (!workouts.length && !cycleDays.length) {
-    return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <View style={styles.topBar}>
-          <Text style={styles.heading}>Ülevaated</Text>
-          <Text style={styles.subheading}>Mustrid sinu andmetes</Text>
-        </View>
-        <View style={styles.emptyWrap}>
-          <Text style={styles.empty}>Lisa treeninguid ja tsükliandmeid.</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const ci = getCycleInfo(
+    profile.last_period_date ?? null,
+    profile.cycle_length ?? 28,
+    profile.period_length ?? 5,
+  );
 
-  const pd = phaseDiff(workouts);
+  const phaseKey = ci?.phaseKey ?? 'unknown';
+  const insight  = PHASE_INSIGHTS[phaseKey];
+  const patterns = detectPatterns(workouts, cycleDays);
 
-  // Per-exercise phase comparison
-  const exMap: Record<string, ExerciseStats> = {};
-  workouts.forEach((w) => {
-    w.exercises.forEach((e) => {
-      if (!e.name || !e.weight_kg) return;
-      if (!exMap[e.name]) exMap[e.name] = { follicular: [], luteal: [] };
-      if (w.phase === 'follicular') exMap[e.name].follicular.push(e.weight_kg);
-      else if (w.phase === 'luteal') exMap[e.name].luteal.push(e.weight_kg);
-    });
-  });
-
-  // Mood stats
-  const moodCount: Record<string, number> = {};
-  cycleDays.forEach((d) => { if (d.mood) moodCount[d.mood] = (moodCount[d.mood] ?? 0) + 1; });
-  const topMood = Object.keys(moodCount).sort((a, b) => moodCount[b] - moodCount[a])[0];
+  const hasData  = workouts.length > 0 || cycleDays.length > 0;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
-        <Text style={styles.heading}>Ülevaated</Text>
-        <Text style={styles.subheading}>Mustrid sinu andmetes</Text>
+        <View>
+          <Text style={styles.heading}>Ülevaated</Text>
+          <Text style={styles.subheading}>Mustrid Sinu Andmetes</Text>
+        </View>
       </View>
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        {pd && (
-          <InsightCard variant={pd.diff >= 0 ? 'blush' : 'default'} style={styles.card}>
-            <Text style={[styles.cardEye, pd.diff >= 0 && { color: Colors.blush[400] }]}>✨ Faasivõrdlus</Text>
-            <Text style={styles.cardTitle}>
-              Tulemused on {pd.diff >= 0 ? 'follikulaarfaasis' : 'luteaalfaasis'} {Math.abs(pd.diff).toFixed(1)}% kõrgemad
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}>
+
+        {/* ── Current Phase Card ── */}
+        <View style={[styles.phaseCard, { backgroundColor: insight.colors.bg, borderColor: insight.colors.border }]}>
+          <View style={styles.phaseCardTop}>
+            <View>
+              <Text style={[styles.phaseEye, { color: insight.colors.sub }]}>PRAEGUNE FAAS</Text>
+              <Text style={[styles.phaseName, { color: insight.colors.text }]}>{insight.phase}</Text>
+              <Text style={[styles.phaseDays, { color: insight.colors.sub }]}>{insight.daysRange}</Text>
+            </View>
+            {ci && (
+              <View style={styles.phaseDaysLeft}>
+                <Text style={[styles.phaseDaysN, { color: insight.colors.text }]}>{ci.daysLeft}</Text>
+                <Text style={[styles.phaseDaysLbl, { color: insight.colors.sub }]}>päeva{'\n'}jäänud</Text>
+              </View>
+            )}
+          </View>
+          <Text style={[styles.phaseTagline, { color: insight.colors.accent }]}>
+            {insight.tagline}
+          </Text>
+          {insight.overview ? (
+            <Text style={[styles.phaseOverview, { color: insight.colors.sub }]}>
+              {insight.overview}
             </Text>
-            <Text style={styles.cardBody}>Follikulaarfaasis {pd.fCount} treeningkorda, luteaalfaasis {pd.lCount}.</Text>
-          </InsightCard>
-        )}
+          ) : null}
+        </View>
 
-        {Object.keys(exMap).some((name) => exMap[name].follicular.length && exMap[name].luteal.length) && (
-          <View style={[styles.card, styles.exCompareCard]}>
-            <Text style={styles.cardLbl}>✨ Harjutuste faasivõrdlus</Text>
-            {Object.keys(exMap).map((name) => {
-              const d = exMap[name];
-              if (!d.follicular.length || !d.luteal.length) return null;
-              const fa = d.follicular.reduce((a, b) => a + b, 0) / d.follicular.length;
-              const la = d.luteal.reduce((a, b) => a + b, 0) / d.luteal.length;
-              const diff = ((fa - la) / la) * 100;
-              const mx = Math.max(fa, la);
-              return (
-                <View key={name} style={styles.progWrap}>
-                  <View style={styles.progLbl}>
-                    <Text style={styles.progName}>{name}</Text>
-                    <Text style={[styles.progDiff, { color: diff >= 0 ? Colors.green[600] : Colors.blush[400] }]}>
-                      {diff >= 0 ? '+' : ''}{diff.toFixed(1)}% follik.
-                    </Text>
-                  </View>
-                  <View style={styles.progBars}>
-                    <View style={styles.progBarWrap}>
-                      <Text style={styles.progBarLbl}>Follikulaar · {fa.toFixed(1)} kg</Text>
-                      <View style={styles.progTrack}>
-                        <View style={[styles.progFill, { width: `${(fa / mx) * 100}%`, backgroundColor: Colors.beige[400] }]} />
-                      </View>
-                    </View>
-                    <View style={styles.progBarWrap}>
-                      <Text style={[styles.progBarLbl, { color: Colors.blush[400] }]}>Luteaal · {la.toFixed(1)} kg</Text>
-                      <View style={styles.progTrack}>
-                        <View style={[styles.progFill, { width: `${(la / mx) * 100}%`, backgroundColor: Colors.blush[400] }]} />
-                      </View>
-                    </View>
+        {/* ── Hormone Context ── */}
+        {insight.hormoneContext ? (
+          <>
+            <View style={styles.sectionRow}>
+              <Icon name="spark" size={12} color={Colors.beige[400]} />
+              <Text style={styles.sectionLbl}>Mis toimub hormonaalselt</Text>
+            </View>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoTxt}>{insight.hormoneContext}</Text>
+            </View>
+          </>
+        ) : null}
+
+        {/* ── Energy Pattern ── */}
+        {insight.energyPattern ? (
+          <>
+            <View style={styles.sectionRow}>
+              <Icon name="energized" size={12} color={Colors.beige[400]} />
+              <Text style={styles.sectionLbl}>Energia ja jõudlus</Text>
+            </View>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoTxt}>{insight.energyPattern}</Text>
+            </View>
+          </>
+        ) : null}
+
+        {/* ── Training Recommendations ── */}
+        {insight.trainingFocus.length > 0 ? (
+          <>
+            <View style={styles.sectionRow}>
+              <Icon name="barbell" size={12} color={Colors.beige[400]} />
+              <Text style={styles.sectionLbl}>Treeningusoovitused selleks faasiks</Text>
+            </View>
+            {insight.trainingFocus.map((tip, i) => (
+              <TouchableOpacity
+                key={i}
+                style={styles.tipCard}
+                activeOpacity={0.8}
+                onPress={() => setOpenTip(openTip === `tip-${i}` ? null : `tip-${i}`)}
+              >
+                <View style={styles.tipHeader}>
+                  <Text style={styles.tipTitle}>{tip.title}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <IntensityDot level={tip.intensity} />
+                    <Icon
+                      name="chevr"
+                      size={14}
+                      color={Colors.beige[400]}
+                    />
                   </View>
                 </View>
-              );
-            })}
-          </View>
-        )}
-
-        {workouts.length > 0 && (
-          <>
-            <Text style={styles.sectionLbl}>👁 Viimased treeningkorrad</Text>
-            {workouts.slice(0, 3).map((w) => (
-              <InsightCard key={w.id} style={styles.card}>
-                <Text style={styles.cardEye}>🏋️ {PHASE_LABELS[w.phase]}</Text>
-                <Text style={styles.cardTitle}>{w.name} · {formatDate(w.date)}</Text>
-                <Text style={styles.cardBody}>
-                  {w.exercises.map((e) => `${e.name} ${e.sets}×${e.reps}${e.weight_kg ? ` (${e.weight_kg} kg)` : ''}`).join(' · ')}
-                  {w.feel.length ? `\nTunne: ${w.feel.join(', ')}` : ''}
-                </Text>
-              </InsightCard>
+                {openTip === `tip-${i}` && (
+                  <Text style={styles.tipDetail}>{tip.detail}</Text>
+                )}
+              </TouchableOpacity>
             ))}
+          </>
+        ) : null}
+
+        {/* ── Recovery Note ── */}
+        {insight.recoveryNote ? (
+          <>
+            <View style={styles.sectionRow}>
+              <Icon name="moon" size={12} color={Colors.beige[400]} />
+              <Text style={styles.sectionLbl}>Taastumine ja uni</Text>
+            </View>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoTxt}>{insight.recoveryNote}</Text>
+            </View>
+          </>
+        ) : null}
+
+        {/* ── Wellness Tips ── */}
+        {insight.wellnessTips.length > 0 ? (
+          <>
+            <View style={styles.sectionRow}>
+              <Icon name="leaf" size={12} color={Colors.beige[400]} />
+              <Text style={styles.sectionLbl}>Heaolunõuanded</Text>
+            </View>
+            <View style={styles.wellnessCard}>
+              {insight.wellnessTips.map((tip, i) => (
+                <View key={i} style={[styles.wellnessRow, i === insight.wellnessTips.length - 1 && { borderBottomWidth: 0 }]}>
+                  <View style={styles.wellnessDot} />
+                  <Text style={styles.wellnessTxt}>{tip}</Text>
+                </View>
+              ))}
+            </View>
+          </>
+        ) : null}
+
+        {/* ── Personal Patterns ── */}
+        {patterns.length > 0 ? (
+          <>
+            <View style={styles.sectionRow}>
+              <Icon name="eye" size={12} color={Colors.beige[400]} />
+              <Text style={styles.sectionLbl}>Sinu isiklikud mustrid</Text>
+            </View>
+            {patterns.map(p => (
+              <View key={p.id} style={[
+                styles.patternCard,
+                p.color === 'green' && styles.patternGreen,
+                p.color === 'blush' && styles.patternBlush,
+              ]}>
+                <View style={styles.patternHeader}>
+                  <Text style={styles.patternTitle}>{p.title}</Text>
+                  <ConfidenceBadge level={p.confidence} />
+                </View>
+                <Text style={styles.patternBody}>{p.body}</Text>
+              </View>
+            ))}
+          </>
+        ) : hasData ? null : (
+          <>
+            <View style={styles.sectionRow}>
+              <Icon name="eye" size={12} color={Colors.beige[400]} />
+              <Text style={styles.sectionLbl}>Sinu isiklikud mustrid</Text>
+            </View>
+            <View style={styles.emptyPatterns}>
+              <Text style={styles.emptyTxt}>
+                Lisa vähemalt 3–4 treeningkorda eri tsüklifaasides, et mustrid ilmneksid.
+              </Text>
+            </View>
           </>
         )}
 
-        {topMood && (
-          <InsightCard variant="green" style={styles.card}>
-            <Text style={[styles.cardEye, { color: Colors.green[600] }]}>🌙 Tujumuster</Text>
-            <Text style={styles.cardTitle}>Sagedaim märgitud tuju: {topMood}</Text>
-            <Text style={styles.cardBody}>Logitud {cycleDays.length} tsüklimärget.</Text>
-          </InsightCard>
-        )}
+        {/* ── Research Source ── */}
+        {insight.researchContext ? (
+          <View style={styles.sourceCard}>
+            <Icon name="eye" size={13} color={Colors.beige[400]} />
+            <Text style={styles.sourceTxt}>{insight.researchContext}</Text>
+          </View>
+        ) : null}
 
+        {/* ── Disclaimer ── */}
         <View style={styles.disclaimer}>
-          <Text style={styles.disclaimerText}>
-            👁 Need ülevaated põhinevad sinu enda salvestatud andmetes ega ole meditsiiniline nõuanne.
-          </Text>
+          <View style={styles.disclaimerHeader}>
+            <Icon name="lock" size={13} color={Colors.beige[500]} />
+            <Text style={styles.disclaimerTitle}>Oluline märkus</Text>
+          </View>
+          <Text style={styles.disclaimerTxt}>{DISCLAIMER}</Text>
         </View>
 
-        <View style={{ height: 20 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.cream },
-  topBar: {
+  safe:       { flex: 1, backgroundColor: Colors.cream },
+  topBar:     {
     paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
     borderBottomWidth: 1, borderBottomColor: Colors.beige[50],
   },
-  heading: { fontSize: 26, fontWeight: '600', color: Colors.beige[800] },
-  subheading: { fontSize: 12, color: Colors.beige[400], marginTop: 2, fontWeight: '300' },
-  scroll: { flex: 1, paddingTop: 8 },
-  emptyWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  empty: { fontSize: 13, color: Colors.beige[400], fontWeight: '300' },
-  card: { marginTop: 4 },
-  cardEye: {
-    fontSize: 9, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase',
-    color: Colors.beige[400], marginBottom: 4,
+  heading:    { fontFamily: Fonts.serifSemiBold, fontSize: 26, color: Colors.beige[800] },
+  subheading: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 2 },
+  scroll:     { flex: 1 },
+
+  // Phase card
+  phaseCard: {
+    margin: Spacing.xl, borderRadius: Radius.lg, padding: 20,
+    borderWidth: 1.5,
   },
-  cardTitle: { fontSize: 13, fontWeight: '700', marginBottom: 4, color: Colors.beige[800] },
-  cardBody: { fontSize: 12, color: Colors.beige[600], lineHeight: 19, fontWeight: '300' },
-  cardLbl: {
-    fontSize: 10, fontWeight: '700', letterSpacing: 1.1, textTransform: 'uppercase',
-    color: Colors.beige[400], marginBottom: 12,
+  phaseCardTop:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
+  phaseEye:      { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 4 },
+  phaseName:     { fontFamily: Fonts.serifSemiBold, fontSize: 24, lineHeight: 28 },
+  phaseDays:     { fontFamily: Fonts.sansLight, fontSize: 11, marginTop: 4 },
+  phaseDaysLeft: { alignItems: 'center' },
+  phaseDaysN:    { fontFamily: Fonts.serifSemiBold, fontSize: 34, lineHeight: 36 },
+  phaseDaysLbl:  { fontFamily: Fonts.sansLight, fontSize: 10, textAlign: 'center', marginTop: 2 },
+  phaseTagline:  { fontFamily: Fonts.serifSemiBoldItalic, fontSize: 15, marginBottom: 10 },
+  phaseOverview: { fontFamily: Fonts.sansLight, fontSize: 13, lineHeight: 20 },
+
+  // Section label
+  sectionRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: Spacing.xl, marginBottom: 8, marginTop: 6,
   },
-  exCompareCard: {
-    marginHorizontal: Spacing.xl, marginBottom: 10,
-    backgroundColor: Colors.cream, borderWidth: 1, borderColor: Colors.beige[100],
-    borderRadius: 20, padding: 16,
-  },
-  progWrap: { marginBottom: 10 },
-  progLbl: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  progName: { fontSize: 11, color: Colors.beige[600] },
-  progDiff: { fontSize: 11, fontWeight: '700' },
-  progBars: { flexDirection: 'row', gap: 6 },
-  progBarWrap: { flex: 1 },
-  progBarLbl: { fontSize: 10, color: Colors.beige[400], marginBottom: 3 },
-  progTrack: { height: 7, borderRadius: 4, backgroundColor: Colors.beige[100], overflow: 'hidden' },
-  progFill: { height: '100%', borderRadius: 4 },
   sectionLbl: {
-    fontSize: 10, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase',
-    color: Colors.beige[400], paddingHorizontal: Spacing.xl, marginBottom: 10, marginTop: 4,
+    fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.1,
+    textTransform: 'uppercase', color: Colors.beige[400],
   },
+
+  // Info card
+  infoCard: {
+    marginHorizontal: Spacing.xl, marginBottom: 6,
+    backgroundColor: Colors.beige[50], borderRadius: Radius.md,
+    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
+  },
+  infoTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[700], lineHeight: 20 },
+
+  // Training tip cards
+  tipCard: {
+    marginHorizontal: Spacing.xl, marginBottom: 6,
+    backgroundColor: Colors.cream, borderRadius: Radius.md,
+    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
+  },
+  tipHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  tipTitle:   { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[800], flex: 1 },
+  tipDetail:  { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[600], lineHeight: 18, marginTop: 10 },
+  intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  intensityDot: { width: 6, height: 6, borderRadius: 3 },
+  intensityLbl: { fontFamily: Fonts.sansSemiBold, fontSize: 9, letterSpacing: 0.4 },
+
+  // Wellness
+  wellnessCard: {
+    marginHorizontal: Spacing.xl, marginBottom: 6,
+    backgroundColor: Colors.cream, borderRadius: Radius.md,
+    paddingHorizontal: 14, borderWidth: 1, borderColor: Colors.beige[100],
+  },
+  wellnessRow: {
+    flexDirection: 'row', gap: 10, paddingVertical: 11,
+    borderBottomWidth: 1, borderBottomColor: Colors.beige[50], alignItems: 'flex-start',
+  },
+  wellnessDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: Colors.beige[400], marginTop: 7, flexShrink: 0 },
+  wellnessTxt: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[700], lineHeight: 18, flex: 1 },
+
+  // Pattern cards
+  patternCard: {
+    marginHorizontal: Spacing.xl, marginBottom: 8,
+    backgroundColor: Colors.beige[50], borderRadius: Radius.md,
+    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
+    borderLeftWidth: 3, borderLeftColor: Colors.beige[400],
+  },
+  patternGreen: {
+    backgroundColor: Colors.green[50], borderColor: Colors.green[100],
+    borderLeftColor: Colors.green[400],
+  },
+  patternBlush: {
+    backgroundColor: Colors.blush[50], borderColor: Colors.blush[100],
+    borderLeftColor: Colors.blush[400],
+  },
+  patternHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, gap: 8 },
+  patternTitle:  { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[800], flex: 1 },
+  patternBody:   { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[600], lineHeight: 18 },
+  confidenceBadge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  confidenceTxt:   { fontFamily: Fonts.sansBold, fontSize: 8, letterSpacing: 0.5 },
+
+  emptyPatterns: {
+    marginHorizontal: Spacing.xl, padding: 20, alignItems: 'center',
+    backgroundColor: Colors.beige[50], borderRadius: Radius.md,
+    borderWidth: 1, borderColor: Colors.beige[100],
+  },
+  emptyTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[400], textAlign: 'center', lineHeight: 20 },
+
+  // Source & disclaimer
+  sourceCard: {
+    flexDirection: 'row', gap: 8, alignItems: 'flex-start',
+    marginHorizontal: Spacing.xl, marginTop: 8, marginBottom: 4,
+    padding: 12, backgroundColor: Colors.beige[50],
+    borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.beige[100],
+  },
+  sourceTxt: { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[500], lineHeight: 16, flex: 1 },
+
   disclaimer: {
-    marginHorizontal: Spacing.xl, marginBottom: 16, marginTop: 8,
-    padding: 12, backgroundColor: Colors.beige[50], borderWidth: 1, borderColor: Colors.beige[100], borderRadius: 12,
+    marginHorizontal: Spacing.xl, marginTop: 8,
+    padding: 14, backgroundColor: Colors.beige[50],
+    borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.beige[200],
   },
-  disclaimerText: { fontSize: 11, color: Colors.beige[400], lineHeight: 18, fontWeight: '300' },
+  disclaimerHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  disclaimerTitle:  { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.beige[600] },
+  disclaimerTxt:    { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[500], lineHeight: 17 },
 });

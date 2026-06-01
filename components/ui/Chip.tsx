@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Colors, Radius } from '../../constants/theme';
+import { Colors, Fonts, Radius } from '../../constants/theme';
 
 interface Props {
   label: string;
@@ -34,11 +34,12 @@ const styles = StyleSheet.create({
     borderColor: Colors.blush[400],
   },
   label: {
+    fontFamily: Fonts.sans,
     fontSize: 12,
     color: Colors.beige[600],
   },
   labelOn: {
+    fontFamily: Fonts.sansSemiBold,
     color: Colors.blush[800],
-    fontWeight: '600',
   },
 });

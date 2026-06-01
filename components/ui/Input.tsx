@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TextInputProps, ViewStyle } from 'react-native';
-import { Colors, Radius } from '../../constants/theme';
+import { Colors, Fonts, Radius } from '../../constants/theme';
 
 interface Props extends TextInputProps {
   label?: string;
@@ -34,8 +34,8 @@ export function Input({ label, error, containerStyle, style, ...rest }: Props) {
 const styles = StyleSheet.create({
   container: { marginBottom: 14 },
   label: {
+    fontFamily: Fonts.sansBold,
     fontSize: 10,
-    fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: Colors.beige[600],
@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.beige[100],
     borderRadius: Radius.md,
     backgroundColor: Colors.cream,
+    fontFamily: Fonts.sans,
     fontSize: 14,
     color: Colors.beige[800],
   },

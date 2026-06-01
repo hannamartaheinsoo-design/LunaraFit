@@ -4,9 +4,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Colors, Spacing } from '../../constants/theme';
+import { Colors, Fonts, Spacing } from '../../constants/theme';
 import { Card, InsightCard } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { Icon } from '../../components/ui/Icon';
 import { getCycleInfo, PHASE_LABELS, formatDate, todayISO } from '../../lib/cycle';
 import { storage } from '../../lib/storage';
 import { Profile, Workout } from '../../types';
@@ -70,7 +71,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
-        <Text style={styles.logo}><Text style={styles.logoAccent}>lunara</Text>fit</Text>
+        <Text style={styles.logo}><Text style={styles.logoAccent}>Lunara</Text>Fit</Text>
         <TouchableOpacity
           style={styles.avatar}
           onPress={() => router.push('/(tabs)/profile')}
@@ -92,7 +93,7 @@ export default function HomeScreen() {
         {/* Phase banner */}
         <View style={styles.phaseBanner}>
           <View style={styles.phaseIconWrap}>
-            <Text style={styles.phaseEmoji}>🌙</Text>
+            <Icon name="moon" size={24} color={Colors.blush[600]} strokeWidth={1.4} />
           </View>
           <View style={styles.phaseInfo}>
             <Text style={styles.phaseEye}>Praegune faas</Text>
@@ -110,17 +111,17 @@ export default function HomeScreen() {
         {/* Stat tiles */}
         <View style={styles.statRow}>
           <View style={styles.statTile}>
-            <Text style={styles.statLbl}>🏋️ Treeningkordi</Text>
+            <View style={styles.statLblRow}><Icon name="barbell" size={10} color={Colors.beige[400]} /><Text style={styles.statLbl}>Treeningkordi</Text></View>
             <Text style={styles.statVal}>{recentCount}</Text>
             <Text style={styles.statSub}>viimase 7 päeva</Text>
           </View>
           <View style={styles.statTile}>
-            <Text style={styles.statLbl}>✨ {bestName ? (bestName.length > 10 ? bestName.slice(0, 10) + '…' : bestName) : 'Parim tulemus'}</Text>
+            <View style={styles.statLblRow}><Icon name="spark" size={10} color={Colors.beige[400]} /><Text style={styles.statLbl}>{bestName ? (bestName.length > 10 ? bestName.slice(0, 10) + '…' : bestName) : 'Parim tulemus'}</Text></View>
             <Text style={styles.statVal}>{bestKg ? `${bestKg}kg` : '—'}</Text>
             <Text style={styles.statSub}>{bestDate ? formatDate(bestDate) : 'logitud andmetest'}</Text>
           </View>
           <View style={styles.statTile}>
-            <Text style={styles.statLbl}>🌊 Faasivõrdlus</Text>
+            <View style={styles.statLblRow}><Icon name="wave" size={10} color={Colors.beige[400]} /><Text style={styles.statLbl}>Faasivõrdlus</Text></View>
             <Text style={[styles.statVal, { fontSize: 18 }, pd != null ? { color: pd >= 0 ? Colors.green[600] : Colors.blush[400] } : {}]}>
               {pd != null ? `${pd >= 0 ? '+' : ''}${pd.toFixed(1)}%` : '—'}
             </Text>
@@ -130,14 +131,14 @@ export default function HomeScreen() {
 
         {/* Quick actions */}
         <View style={styles.quickRow}>
-          <Button variant="dark" size="sm" onPress={() => router.push('/(tabs)/workouts')}>🏋️ Lisa treening</Button>
-          <Button variant="blush" size="sm" onPress={() => router.push('/(tabs)/cycle')}>🌙 Lisa märge</Button>
-          <Button variant="green" size="sm" onPress={() => router.push('/(tabs)/insights')}>✨ Ülevaated</Button>
+          <Button variant="dark" size="sm" onPress={() => router.push('/(tabs)/workouts')}>Lisa treening</Button>
+          <Button variant="blush" size="sm" onPress={() => router.push('/(tabs)/cycle')}>Lisa märge</Button>
+          <Button variant="green" size="sm" onPress={() => router.push('/(tabs)/insights')}>Ülevaated</Button>
         </View>
 
         {/* Weekly chart */}
         <Card style={styles.chartCard}>
-          <Text style={styles.cardLbl}>🌊 Nädala aktiivsus</Text>
+          <View style={styles.cardLblRow}><Icon name="wave" size={12} color={Colors.beige[400]} /><Text style={styles.cardLbl}>Nädala aktiivsus</Text></View>
           {workouts.length ? (
             <View style={styles.chartWrap}>
               {weekBars.map((bar, i) => (
@@ -154,7 +155,7 @@ export default function HomeScreen() {
 
         {/* Insight preview */}
         <InsightCard variant="default" style={styles.insightPreview}>
-          <Text style={styles.insightEye}>✨ Muster</Text>
+          <View style={styles.insightEyeRow}><Icon name="spark" size={10} color={Colors.green[600]} /><Text style={styles.insightEye}>Muster</Text></View>
           <Text style={styles.insightTitle}>
             {pd != null && ci
               ? `Tulemused on ${pd >= 0 ? 'follikulaarfaasis' : 'luteaalfaasis'} ${Math.abs(pd).toFixed(1)}% kõrgemad`
@@ -182,20 +183,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
     borderBottomWidth: 1, borderBottomColor: Colors.beige[50],
   },
-  logo: { fontSize: 19, fontStyle: 'italic', color: Colors.beige[400] },
-  logoAccent: { fontStyle: 'normal', color: Colors.blush[400] },
+  logo: { fontFamily: Fonts.serifItalic, fontSize: 19, color: Colors.beige[400] },
+  logoAccent: { fontFamily: Fonts.serif, color: Colors.blush[400] },
   avatar: {
     width: 34, height: 34, borderRadius: 17,
     backgroundColor: Colors.blush[50], borderWidth: 2, borderColor: Colors.blush[200],
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { fontSize: 16, fontWeight: '700', color: Colors.blush[800] },
+  avatarText: { fontFamily: Fonts.serifSemiBold, fontSize: 16, color: Colors.blush[800] },
   scroll: { flex: 1 },
   greeting: { paddingHorizontal: Spacing.xl, paddingTop: 6, paddingBottom: 16 },
-  dateLbl: { fontSize: 10, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: Colors.beige[400], marginBottom: 4 },
-  greetingName: { fontSize: 30, fontWeight: '600', color: Colors.beige[800], lineHeight: 33 },
-  nameAccent: { fontStyle: 'italic', color: Colors.blush[400] },
-  greetingSub: { fontSize: 12, color: Colors.beige[400], marginTop: 3, fontWeight: '300' },
+  dateLbl: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: Colors.beige[400], marginBottom: 4 },
+  greetingName: { fontFamily: Fonts.serifSemiBold, fontSize: 30, color: Colors.beige[800], lineHeight: 33 },
+  nameAccent: { fontFamily: Fonts.serifSemiBoldItalic, color: Colors.blush[400] },
+  greetingSub: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 3 },
   phaseBanner: {
     marginHorizontal: Spacing.xl, marginBottom: 14,
     backgroundColor: Colors.blush[50],
@@ -208,29 +209,31 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.blush[100], borderWidth: 1.5, borderColor: Colors.blush[200],
     alignItems: 'center', justifyContent: 'center',
   },
-  phaseEmoji: { fontSize: 22 },
   phaseInfo: { flex: 1 },
-  phaseEye: { fontSize: 9, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: Colors.blush[600] },
-  phaseName: { fontSize: 20, fontWeight: '600', color: Colors.blush[800], marginVertical: 2 },
-  phaseDesc: { fontSize: 11, color: Colors.blush[600], fontWeight: '300', lineHeight: 16 },
+  phaseEye: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', color: Colors.blush[600] },
+  phaseName: { fontFamily: Fonts.serifSemiBold, fontSize: 20, color: Colors.blush[800], marginVertical: 2 },
+  phaseDesc: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.blush[600], lineHeight: 16 },
   phaseMeta: { alignItems: 'center' },
-  phaseDaysN: { fontSize: 32, fontWeight: '600', color: Colors.blush[800], lineHeight: 34 },
-  phaseDaysL: { fontSize: 9, color: Colors.blush[400], fontWeight: '500' },
+  phaseDaysN: { fontFamily: Fonts.serifSemiBold, fontSize: 32, color: Colors.blush[800], lineHeight: 34 },
+  phaseDaysL: { fontFamily: Fonts.sansMedium, fontSize: 9, color: Colors.blush[400] },
   statRow: { flexDirection: 'row', gap: 8, paddingHorizontal: Spacing.xl, marginBottom: 14 },
   statTile: { flex: 1, backgroundColor: Colors.beige[50], borderRadius: 18, padding: 12, borderWidth: 1, borderColor: Colors.beige[100] },
-  statLbl: { fontSize: 9, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: Colors.beige[400], marginBottom: 6 },
-  statVal: { fontSize: 26, fontWeight: '600', color: Colors.beige[800], lineHeight: 28, marginBottom: 3 },
-  statSub: { fontSize: 10, color: Colors.beige[600], fontWeight: '300' },
+  statLblRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 6 },
+  statLbl: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', color: Colors.beige[400] },
+  statVal: { fontFamily: Fonts.serifSemiBold, fontSize: 26, color: Colors.beige[800], lineHeight: 28, marginBottom: 3 },
+  statSub: { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[600] },
   quickRow: { flexDirection: 'row', gap: 8, paddingHorizontal: Spacing.xl, marginBottom: 14, flexWrap: 'wrap' },
   chartCard: {},
-  cardLbl: { fontSize: 10, fontWeight: '700', letterSpacing: 1.1, textTransform: 'uppercase', color: Colors.beige[400], marginBottom: 12 },
+  cardLblRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
+  cardLbl: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.1, textTransform: 'uppercase', color: Colors.beige[400] },
   chartWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 96 },
   barCol: { flex: 1, alignItems: 'center', gap: 5, height: '100%', justifyContent: 'flex-end' },
   barFill: { width: '100%', borderRadius: 5 },
-  barLbl: { fontSize: 10, color: Colors.beige[400], fontWeight: '600' },
-  empty: { fontSize: 12, color: Colors.beige[400], textAlign: 'center', paddingVertical: 8 },
+  barLbl: { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.beige[400] },
+  empty: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], textAlign: 'center', paddingVertical: 8 },
   insightPreview: { marginTop: 0 },
-  insightEye: { fontSize: 9, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: Colors.green[600], marginBottom: 4 },
-  insightTitle: { fontSize: 14, fontWeight: '700', marginBottom: 4, color: Colors.beige[800] },
-  insightBody: { fontSize: 12, color: Colors.beige[600], lineHeight: 19, fontWeight: '300' },
+  insightEyeRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 },
+  insightEye: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', color: Colors.green[600] },
+  insightTitle: { fontFamily: Fonts.sansSemiBold, fontSize: 14, marginBottom: 4, color: Colors.beige[800] },
+  insightBody: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[600], lineHeight: 19 },
 });

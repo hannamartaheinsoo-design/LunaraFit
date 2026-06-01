@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Spacing, Radius } from '../../constants/theme';
+import { useAuth } from '../../lib/authContext';
+import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
+import { Icon } from '../../components/ui/Icon';
 import { Input } from '../../components/ui/Input';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -51,6 +53,7 @@ const PLANS = [
 ];
 
 export default function PlanScreen() {
+  const { refreshAuth } = useAuth();
   const [selected, setSelected] = useState<Plan>('monthly');
 
   const handleContinue = async () => {
@@ -60,7 +63,7 @@ export default function PlanScreen() {
       ...profile,
       plan: selected,
     }));
-    router.replace('/(tabs)/home');
+    await refreshAuth();
   };
 
   return (
@@ -114,7 +117,10 @@ export default function PlanScreen() {
       <Button variant="dark" size="lg" fullWidth onPress={handleContinue} style={styles.btn}>
         {selected === 'free' ? 'Jätka tasuta' : `Alusta Pro kasutamist (${selected === 'monthly' ? '4.99€/kuus' : '49.99€/aastas'})`}
       </Button>
-      <Text style={styles.secureNote}>🔒 Makse on kaitstud · Tühista igal ajal</Text>
+      <View style={styles.secureNote}>
+        <Icon name="lock" size={11} color={Colors.beige[400]} />
+        <Text style={styles.secureNoteTxt}>Makse on kaitstud · Tühista igal ajal</Text>
+      </View>
     </ScrollView>
   );
 }
@@ -140,23 +146,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 4,
     borderBottomLeftRadius: 10, borderBottomRightRadius: 10,
   },
-  popularText: { color: '#fff', fontSize: 9, fontWeight: '700', letterSpacing: 0.7, textTransform: 'uppercase' },
+  popularText: { fontFamily: Fonts.sansBold, color: '#fff', fontSize: 9, letterSpacing: 0.7, textTransform: 'uppercase' },
   planRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 },
-  planName: { fontSize: 14, fontWeight: '700', color: Colors.beige[800] },
+  planName: { fontFamily: Fonts.sansSemiBold, fontSize: 14, color: Colors.beige[800] },
   badge: {
     borderWidth: 1, borderRadius: 20,
     paddingHorizontal: 9, paddingVertical: 3,
   },
-  badgeText: { fontSize: 9, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase' },
+  badgeText: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.6, textTransform: 'uppercase' },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 3 },
-  price: { fontSize: 28, fontWeight: '600', color: Colors.blush[800] },
-  per: { fontSize: 12, color: Colors.beige[400], fontWeight: '300' },
-  planSub: { fontSize: 11, color: Colors.beige[400], marginTop: 4 },
+  price: { fontFamily: Fonts.serifSemiBold, fontSize: 28, color: Colors.blush[800] },
+  per: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400] },
+  planSub: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 4 },
   feature: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 5 },
   dot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: Colors.green[400] },
   dotDim: { backgroundColor: Colors.beige[200] },
-  featureText: { fontSize: 11, color: Colors.beige[600] },
+  featureText: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[600] },
   featureTextDim: { color: Colors.beige[400] },
   btn: { marginTop: 22 },
-  secureNote: { fontSize: 11, color: Colors.beige[400], textAlign: 'center', marginTop: 10 },
+  secureNote: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: 10 },
+  secureNoteTxt: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400] },
 });

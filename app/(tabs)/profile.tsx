@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, Alert, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Colors, Spacing } from '../../constants/theme';
+import { useAuth } from '../../lib/authContext';
+import { Colors, Fonts, Spacing } from '../../constants/theme';
 import { Card } from '../../components/ui/Card';
+import { Icon } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Toggle } from '../../components/ui/Toggle';
@@ -19,6 +21,7 @@ const PLAN_SUBS = {
 };
 
 export default function ProfileScreen() {
+  const { signOut } = useAuth();
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [name, setName] = useState('');
@@ -73,8 +76,7 @@ export default function ProfileScreen() {
       {
         text: 'Kustuta', style: 'destructive',
         onPress: async () => {
-          await storage.clearAll();
-          router.replace('/(onboarding)/welcome');
+          await signOut();
         },
       },
     ]);
@@ -88,12 +90,12 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
         <Text style={styles.heading}>Profiil</Text>
-        <Text style={styles.subheading}>Seaded · privaatsus · andmed</Text>
+        <Text style={styles.subheading}>Seaded · Privaatsus · Andmed</Text>
       </View>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Plan card */}
-        <Text style={styles.sectionLbl}>⭐ Sinu pakett</Text>
+        <View style={styles.sectionLblRow}><Icon name="star" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>Sinu pakett</Text></View>
         <Card>
           <View style={styles.planRow}>
             <View style={{ flex: 1 }}>
@@ -109,7 +111,7 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Personal data */}
-        <Text style={styles.sectionLbl}>👤 Isiklikud andmed</Text>
+        <View style={styles.sectionLblRow}><Icon name="person" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>Isiklikud andmed</Text></View>
         <Card>
           <Input label="Nimi" value={name} onChangeText={setName} placeholder="Sinu nimi" />
           <View style={styles.row}>
@@ -123,7 +125,7 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Privacy */}
-        <Text style={styles.sectionLbl}>🔒 Privaatsus</Text>
+        <View style={styles.sectionLblRow}><Icon name="lock" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>Privaatsus</Text></View>
         <Card>
           {[
             { title: 'Sünkrooni kõigis seadmetes', sub: 'Hoia andmed ajakohasena', val: sync, set: setSync },
@@ -141,7 +143,7 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Library */}
-        <Text style={styles.sectionLbl}>📁 Treeningute logiraamat</Text>
+        <View style={styles.sectionLblRow}><Icon name="folder" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>Treeningute logiraamat</Text></View>
         {Object.keys(library).length === 0 ? (
           <Text style={styles.empty}>Treeninguid pole veel lisatud.</Text>
         ) : (
@@ -156,7 +158,7 @@ export default function ProfileScreen() {
                   onPress={() => setOpenFolder(isOpen ? null : folderName)}
                   style={styles.folderHead}
                 >
-                  📁 {folderName}  ·  {sessions.length} korda  {isOpen ? '▲' : '▼'}
+                  {folderName}  ·  {sessions.length} korda  {isOpen ? '▲' : '▼'}
                 </Button>
                 {isOpen && sessions.map((w) => (
                   <View key={w.id} style={styles.sessEntry}>
@@ -175,13 +177,13 @@ export default function ProfileScreen() {
         )}
 
         {/* Data */}
-        <Text style={[styles.sectionLbl, { marginTop: 20 }]}>⬇️ Andmed</Text>
+        <View style={[styles.sectionLblRow, { marginTop: 20 }]}><Icon name="download" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>Andmed</Text></View>
         <Card>
           <Button variant="outline" fullWidth onPress={handleExport} style={{ marginBottom: 8 }}>
-            ⬇️ Ekspordi kõik andmed (CSV)
+            Ekspordi kõik andmed (CSV)
           </Button>
           <Button variant="danger" fullWidth onPress={handleClearAll}>
-            🗑 Kustuta kõik andmed
+            Kustuta kõik andmed
           </Button>
           <Text style={styles.dataNote}>Sinu andmed on salvestatud ainult selles seadmes.</Text>
         </Card>
@@ -197,16 +199,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
     borderBottomWidth: 1, borderBottomColor: Colors.beige[50],
   },
-  heading: { fontSize: 26, fontWeight: '600', color: Colors.beige[800] },
-  subheading: { fontSize: 12, color: Colors.beige[400], marginTop: 2, fontWeight: '300' },
+  heading: { fontFamily: Fonts.serifSemiBold, fontSize: 26, color: Colors.beige[800] },
+  subheading: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 2 },
   scroll: { flex: 1, paddingTop: 12 },
+  sectionLblRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: Spacing.xl, marginBottom: 10, marginTop: 20,
+  },
   sectionLbl: {
-    fontSize: 10, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase',
-    color: Colors.beige[400], paddingHorizontal: Spacing.xl, marginBottom: 10, marginTop: 20,
+    fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.2,
+    textTransform: 'uppercase', color: Colors.beige[400],
   },
   planRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  planName: { fontSize: 15, fontWeight: '700', color: Colors.beige[800] },
-  planSub: { fontSize: 12, color: Colors.beige[400], marginTop: 3, fontWeight: '300' },
+  planName: { fontFamily: Fonts.sansSemiBold, fontSize: 15, color: Colors.beige[800] },
+  planSub: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 3 },
   row: { flexDirection: 'row', gap: 10 },
   half: { flex: 1 },
   saveBtn: { marginTop: 16 },
@@ -215,8 +221,8 @@ const styles = StyleSheet.create({
     paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: Colors.beige[50],
   },
   toggleInfo: { flex: 1, gap: 2 },
-  toggleTitle: { fontSize: 13, fontWeight: '600', color: Colors.beige[800] },
-  toggleSub: { fontSize: 11, color: Colors.beige[600], fontWeight: '300' },
+  toggleTitle: { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[800] },
+  toggleSub: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[600] },
   folder: { marginHorizontal: Spacing.xl, marginBottom: 10 },
   folderHead: { borderRadius: 20 },
   sessEntry: {
@@ -224,12 +230,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.beige[50],
   },
   sessDate: {
-    fontSize: 10, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase',
+    fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase',
     color: Colors.beige[400], marginBottom: 6,
   },
   exLine: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
-  exName: { fontSize: 12, fontWeight: '600', color: Colors.beige[800] },
-  exStats: { fontSize: 11, color: Colors.beige[600], fontWeight: '300' },
-  empty: { textAlign: 'center', padding: 20, color: Colors.beige[400], fontSize: 13, fontWeight: '300' },
-  dataNote: { fontSize: 11, color: Colors.beige[400], marginTop: 14, lineHeight: 18, fontWeight: '300' },
+  exName: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[800] },
+  exStats: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[600] },
+  empty: { fontFamily: Fonts.sansLight, textAlign: 'center', padding: 20, color: Colors.beige[400], fontSize: 13 },
+  dataNote: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 14, lineHeight: 18 },
 });

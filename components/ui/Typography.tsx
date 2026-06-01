@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, TextStyle, StyleSheet } from 'react-native';
-import { Colors } from '../../constants/theme';
+import { Colors, Fonts } from '../../constants/theme';
 
 interface Props {
   children: React.ReactNode;
@@ -34,45 +34,44 @@ export function Caption({ children, style, numberOfLines }: Props) {
 
 const styles = StyleSheet.create({
   eyebrow: {
+    fontFamily: Fonts.sansBold,
     fontSize: 10,
-    fontWeight: '700',
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: Colors.beige[400],
     marginBottom: 8,
   },
   serifTitle: {
+    fontFamily: Fonts.serifSemiBold,
     fontSize: 28,
-    fontWeight: '600',
     color: Colors.beige[800],
     lineHeight: 33,
     marginBottom: 10,
-    fontStyle: 'normal',
   },
   serifHeading: {
+    fontFamily: Fonts.serifSemiBold,
     fontSize: 26,
-    fontWeight: '600',
     color: Colors.beige[800],
     lineHeight: 30,
   },
   body: {
+    fontFamily: Fonts.sansLight,
     fontSize: 14,
     color: Colors.beige[600],
     lineHeight: 23,
-    fontWeight: '300',
     marginBottom: 24,
   },
   label: {
+    fontFamily: Fonts.sansBold,
     fontSize: 10,
-    fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: Colors.beige[600],
     marginBottom: 6,
   },
   caption: {
+    fontFamily: Fonts.sansLight,
     fontSize: 11,
     color: Colors.beige[600],
-    fontWeight: '300',
   },
 });

@@ -18,11 +18,34 @@ export interface Profile {
   created_at: string;
 }
 
+export interface ExerciseSet {
+  reps?: number;
+  weight_kg?: number;
+  duration_min?: number;
+  distance_km?: number;
+}
+
 export interface Exercise {
+  exercise_id?: string;          // links to EXERCISE_DB
   name: string;
-  sets: number;
+  category?: string;
+  sets: number;                  // kept for backwards compat
   reps: number;
   weight_kg: number;
+  logged_sets?: ExerciseSet[];   // new per-set logging
+  duration_min?: number;
+  distance_km?: number;
+}
+
+export type ExerciseField = 'sets' | 'reps' | 'weight' | 'duration' | 'distance';
+
+export interface ExerciseTemplate {
+  id: string;
+  name: string;
+  category: string;
+  popularity: number;           // 1–10 for search ranking
+  fields: ExerciseField[];
+  custom?: boolean;
 }
 
 export interface Workout {
