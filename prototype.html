@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>LunaraFit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --cream:#FDFAF6;--beige-50:#F5F0EA;--beige-100:#E8DDD0;--beige-200:#CEC0AA;
+  --beige-400:#A8926E;--beige-600:#7A6448;--beige-800:#3A2E1E;
+  --blush-50:#FAEAE4;--blush-100:#F0C8BC;--blush-200:#E0A090;
+  --blush-400:#C87060;--blush-600:#A04838;--blush-800:#581E14;
+  --green-50:#E6F2EC;--green-100:#C0DEC8;--green-200:#8EC4A0;
+  --green-400:#4A9E6A;--green-600:#2E7048;--green-800:#163824;
+  --stone-50:#ECEAE6;--stone-200:#C4BEB4;--stone-600:#5E584E;
+  --err-bg:#FAEAEA;--err-txt:#7A2020;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:20px 0;}
+
+/* ── PHONE SHELL ── */
+.phone{max-width:390px;width:100%;min-height:844px;background:var(--cream);display:flex;flex-direction:column;border-radius:40px;box-shadow:0 30px 80px rgba(0,0,0,.5);overflow:hidden;}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:16px 28px 8px;flex-shrink:0;}
+.status-time{font-size:15px;font-weight:700;letter-spacing:-.02em;}
+
+/* ── PAGES: onboarding pages + app tabs ── */
+/* Everything is hidden by default */
+.page{display:none;flex:1;flex-direction:column;overflow:hidden;}
+.page.active{display:flex;}
+
+/* onboarding scroll area */
+.ob-scroll{flex:1;overflow-y:auto;padding:0 24px 60px;scrollbar-width:none;}
+.ob-scroll::-webkit-scrollbar{display:none;}
+.ob-step{display:none;}.ob-step.active{display:block;}
+
+/* app tab scroll area */
+.tab-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:96px;}
+.tab-scroll::-webkit-scrollbar{display:none;}
+
+/* ── TYPOGRAPHY & SHARED ── */
+.logo{font-family:'Cormorant Garamond',serif;font-size:21px;font-style:italic;color:var(--beige-400);text-align:center;padding:20px 0 36px;letter-spacing:.02em;}
+.logo span{font-style:normal;color:var(--blush-400);}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--beige-400);margin-bottom:8px;}
+.serif-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--beige-800);line-height:1.15;margin-bottom:10px;}
+.body-text{font-size:14px;color:var(--beige-600);line-height:1.65;margin-bottom:24px;font-weight:300;}
+.form-label{display:block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--beige-600);margin-bottom:6px;margin-top:16px;}
+.form-label:first-of-type{margin-top:0;}
+.form-input{width:100%;padding:12px 14px;border:1.5px solid var(--beige-100);border-radius:12px;background:var(--cream);font-family:'Jost',sans-serif;font-size:14px;color:var(--beige-800);outline:none;transition:border-color .15s;-webkit-appearance:none;}
+.form-input:focus{border-color:var(--blush-400);box-shadow:0 0 0 3px rgba(200,112,96,.12);}
+.form-input::placeholder{color:var(--beige-200);}
+.err{font-size:12px;color:var(--err-txt);margin-top:6px;display:none;}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Jost',sans-serif;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:12px 20px;border-radius:30px;border:none;cursor:pointer;transition:opacity .15s,transform .1s;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.btn:active{transform:scale(.96);}
+.btn-dark{background:var(--beige-800);color:var(--cream);}
+.btn-dark:hover{opacity:.88;}
+.btn-blush{background:var(--blush-400);color:#fff;}
+.btn-blush:hover{opacity:.88;}
+.btn-green{background:var(--green-400);color:#fff;}
+.btn-green:hover{opacity:.88;}
+.btn-outline{background:transparent;color:var(--beige-600);border:1.5px solid var(--beige-200);}
+.btn-outline:hover{border-color:var(--blush-400);color:var(--blush-400);}
+.btn-ghost{width:100%;margin-top:10px;padding:12px;border-radius:30px;border:1.5px solid var(--beige-100);background:transparent;color:var(--beige-400);font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;}
+.btn-ghost:hover{background:var(--beige-50);}
+.btn-danger{background:var(--err-bg);color:var(--err-txt);border:1px solid #E0A0A0;}
+.btn-sm{padding:7px 14px;font-size:10px;}
+.btn-full{width:100%;}
+.btn-primary-full{width:100%;margin-top:22px;padding:16px;border-radius:30px;border:none;background:var(--beige-800);color:var(--cream);font-family:'Jost',sans-serif;font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-primary-full:hover{opacity:.88;}
+.btn-primary-full:active{transform:scale(.97);}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--beige-400);padding:4px;display:flex;align-items:center;margin-bottom:20px;}
+
+/* ── ONBOARDING CARDS ── */
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;}
+.lang-card{padding:20px 12px;border-radius:18px;border:1.5px solid var(--beige-100);background:var(--cream);cursor:pointer;text-align:center;transition:all .15s;}
+.lang-card:hover,.lang-card.sel{border-color:var(--blush-400);background:var(--blush-50);}
+.lang-flag{font-size:26px;margin-bottom:8px;}
+.lang-name{font-size:14px;font-weight:700;}
+.lang-native{font-size:11px;color:var(--beige-400);margin-top:2px;}
+.fit-stack{display:flex;flex-direction:column;gap:10px;}
+.fit-card{display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;border:1.5px solid var(--beige-100);background:var(--cream);cursor:pointer;transition:all .15s;}
+.fit-card:hover,.fit-card.sel{border-color:var(--blush-400);background:var(--blush-50);}
+.fit-icon{width:44px;height:44px;border-radius:12px;background:var(--beige-50);border:1px solid var(--beige-100);display:flex;align-items:center;justify-content:center;color:var(--beige-600);flex-shrink:0;}
+.fit-card.sel .fit-icon{background:var(--blush-100);border-color:var(--blush-200);color:var(--blush-800);}
+.fit-title{font-size:14px;font-weight:700;margin-bottom:2px;}
+.fit-sub{font-size:12px;color:var(--beige-600);font-weight:300;}
+
+/* ── PAYMENT ── */
+.plan-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.plan-card{padding:18px;border-radius:18px;border:1.5px solid var(--beige-100);background:var(--cream);cursor:pointer;transition:all .15s;position:relative;}
+.plan-card:hover,.plan-card.sel{border-color:var(--blush-400);background:var(--blush-50);}
+.plan-card.popular::before{content:'Populaarseim';position:absolute;top:-1px;right:16px;background:var(--blush-400);color:#fff;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:4px 10px;border-radius:0 0 10px 10px;}
+.plan-name{font-size:14px;font-weight:700;margin-bottom:4px;}
+.plan-price{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--blush-800);}
+.plan-per{font-size:12px;color:var(--beige-400);font-weight:300;margin-left:3px;}
+.plan-features{margin-top:10px;display:flex;flex-direction:column;gap:5px;}
+.plan-feat{font-size:11px;color:var(--beige-600);display:flex;align-items:center;gap:6px;}
+.feat-dot{width:5px;height:5px;border-radius:50%;background:var(--green-400);flex-shrink:0;}
+.feat-dot.dim{background:var(--beige-200);}
+.pay-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.secure-note{font-size:11px;color:var(--beige-400);margin-top:10px;display:flex;align-items:center;justify-content:center;gap:5px;}
+.pay-method-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.pay-method-btn{padding:11px;border-radius:14px;border:1.5px solid var(--beige-100);background:var(--cream);font-family:'Jost',sans-serif;font-size:12px;font-weight:600;color:var(--beige-600);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
+.pay-method-btn.sel{background:#000;border-color:#000;color:#fff;}
+.pay-method-btn:not(.sel):hover{border-color:var(--beige-400);}
+.apple-pay-btn{width:100%;padding:14px;border-radius:14px;border:none;background:#000;color:#fff;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;transition:opacity .15s;}
+.apple-pay-btn:hover{opacity:.88;}
+.pay-divider{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.pay-divider::before,.pay-divider::after{content:'';flex:1;height:1px;background:var(--beige-100);}
+.pay-divider span{font-size:11px;color:var(--beige-400);white-space:nowrap;}
+
+/* ── APP TOP BAR ── */
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 20px 12px;flex-shrink:0;border-bottom:1px solid var(--beige-50);}
+.top-logo{font-family:'Cormorant Garamond',serif;font-size:19px;font-style:italic;}
+.top-logo span{font-style:normal;color:var(--blush-400);}
+.top-av{width:34px;height:34px;border-radius:50%;background:var(--blush-50);border:2px solid var(--blush-200);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;color:var(--blush-800);cursor:pointer;}
+.page-header-txt{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;}
+.page-sub-txt{font-size:12px;color:var(--beige-400);margin-top:2px;font-weight:300;}
+
+/* ── APP CONTENT ── */
+.slbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--beige-400);padding:0 20px;margin-bottom:10px;margin-top:20px;display:flex;align-items:center;gap:6px;}
+.greeting{padding:6px 20px 16px;}
+.greeting-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--beige-400);margin-bottom:4px;}
+.greeting-name{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;line-height:1.1;}
+.greeting-name em{font-style:italic;color:var(--blush-400);}
+.greeting-sub{font-size:12px;color:var(--beige-400);margin-top:3px;font-weight:300;}
+.phase-banner{margin:0 20px 14px;background:linear-gradient(135deg,var(--blush-50),var(--cream));border:1.5px solid var(--blush-100);border-radius:20px;padding:16px 18px;display:flex;align-items:center;gap:14px;}
+.phase-icon{width:48px;height:48px;border-radius:50%;background:var(--blush-100);border:1.5px solid var(--blush-200);display:flex;align-items:center;justify-content:center;color:var(--blush-600);flex-shrink:0;position:relative;}
+.phase-icon::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:1.5px solid var(--blush-200);animation:pulse 2.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:.5;transform:scale(1);}50%{opacity:0;transform:scale(1.18);}}
+.p-eye{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blush-600);}
+.p-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--blush-800);margin:2px 0;}
+.p-desc{font-size:11px;color:var(--blush-600);font-weight:300;line-height:1.4;}
+.p-meta{margin-left:auto;text-align:center;flex-shrink:0;}
+.p-days-n{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;color:var(--blush-800);line-height:1;}
+.p-days-l{font-size:9px;color:var(--blush-400);font-weight:500;}
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 20px;margin-bottom:14px;}
+.stat-tile{background:var(--beige-50);border-radius:18px;padding:14px 12px;border:1px solid var(--beige-100);}
+.s-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--beige-400);margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+.s-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--beige-800);line-height:1;margin-bottom:3px;}
+.s-sub{font-size:10px;color:var(--beige-600);font-weight:300;}
+.quick-row{display:flex;gap:8px;padding:0 20px;margin-bottom:14px;flex-wrap:wrap;}
+.card{margin:0 20px 12px;background:var(--cream);border:1px solid var(--beige-100);border-radius:20px;padding:16px 18px;}
+.card-flat{margin:0 20px 12px;background:var(--beige-50);border-radius:20px;padding:14px 18px;}
+.c-lbl{font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--beige-400);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.chart-wrap{display:flex;align-items:flex-end;gap:6px;height:96px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.bar-fill{width:100%;border-radius:5px 5px 0 0;}
+.bar-lbl{font-size:10px;color:var(--beige-400);font-weight:600;}
+.insight-card{margin:0 20px 10px;border-radius:18px;padding:14px 16px;background:var(--beige-50);border:1px solid var(--beige-100);border-left:3px solid var(--beige-400);}
+.insight-card.blush{background:var(--blush-50);border-color:var(--blush-100);border-left-color:var(--blush-400);}
+.insight-card.green{background:var(--green-50);border-color:var(--green-100);border-left-color:var(--green-400);}
+.i-eye{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--beige-400);margin-bottom:4px;display:flex;align-items:center;gap:5px;}
+.insight-card.blush .i-eye{color:var(--blush-400);}
+.insight-card.green .i-eye{color:var(--green-600);}
+.i-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+.i-body{font-size:12px;color:var(--beige-600);line-height:1.6;font-weight:300;}
+.list-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--beige-50);}
+.list-row:last-child{border-bottom:none;}
+.list-icon{width:40px;height:40px;border-radius:12px;background:var(--beige-50);border:1px solid var(--beige-100);display:flex;align-items:center;justify-content:center;color:var(--beige-600);flex-shrink:0;}
+.list-icon.blush{background:var(--blush-50);border-color:var(--blush-100);color:var(--blush-600);}
+.l-title{font-size:14px;font-weight:600;}
+.l-sub{font-size:11px;color:var(--beige-600);margin-top:2px;font-weight:300;}
+.cal-hrow{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 20px;margin-bottom:6px;}
+.cal-hday{text-align:center;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--beige-400);padding:4px 0;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:0 20px;}
+.cal-day{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;cursor:pointer;color:var(--beige-400);border:1.5px solid transparent;max-width:38px;width:100%;margin:0 auto;transition:background .15s;}
+.cal-day:hover{background:var(--beige-100);}
+.cal-day.period-logged{background:var(--blush-400);color:#fff;border-color:var(--blush-400);}
+.cal-day.period-pred{background:var(--blush-50);color:var(--blush-400);border-color:var(--blush-200);}
+.cal-day.ovulation{background:var(--green-400);color:#fff;}
+.cal-day.fertile{background:var(--green-50);color:var(--green-800);border-color:var(--green-200);}
+.cal-day.today{box-shadow:0 0 0 2.5px var(--cream),0 0 0 4px var(--blush-400);color:var(--beige-800);}
+.legend{display:flex;gap:10px;flex-wrap:wrap;padding:12px 20px 0;}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--beige-600);}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.chip-grid{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{padding:7px 14px;border-radius:20px;border:1.5px solid var(--beige-100);font-size:12px;cursor:pointer;color:var(--beige-600);background:var(--cream);font-family:'Jost',sans-serif;transition:all .12s;}
+.chip:hover{border-color:var(--beige-400);}
+.chip.on{background:var(--blush-50);border-color:var(--blush-400);color:var(--blush-800);font-weight:600;}
+.chip-icon{display:inline-flex;align-items:center;gap:6px;}
+.chip-icon svg{flex-shrink:0;color:var(--beige-400);}
+.chip-icon.on svg{color:var(--blush-600);}
+.mood-row{display:flex;gap:8px;}
+.mood-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.mood-opt{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--beige-100);background:var(--beige-50);display:flex;align-items:center;justify-content:center;color:var(--beige-400);cursor:pointer;padding:10px;transition:all .15s;}
+.mood-opt:hover{border-color:var(--blush-200);background:var(--blush-50);}
+.mood-opt.on{border-color:var(--blush-400);background:var(--blush-50);color:var(--blush-600);box-shadow:0 0 0 3px rgba(200,112,96,.15);}
+.mood-lbl{font-size:9px;color:var(--beige-400);font-weight:500;}
+.form-group{margin-bottom:14px;}
+.ex-log-row{background:var(--beige-50);border:1px solid var(--beige-100);border-radius:14px;padding:12px 14px;margin-bottom:8px;}
+.ex-name-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.ex-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+.m-wrap{display:flex;flex-direction:column;gap:4px;}
+.m-lbl{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--beige-400);}
+.m-input{width:100%;padding:9px 8px;border:1.5px solid var(--beige-100);border-radius:9px;background:var(--cream);font-family:'Jost',sans-serif;font-size:14px;font-weight:600;color:var(--beige-800);outline:none;text-align:center;-webkit-appearance:none;}
+.m-input:focus{border-color:var(--blush-400);}
+.toggle-wrap{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--beige-50);}
+.toggle-wrap:last-child{border-bottom:none;}
+.t-info{display:flex;align-items:center;gap:9px;}
+.t-title{font-size:13px;font-weight:600;}
+.t-sub{font-size:11px;color:var(--beige-600);margin-top:2px;font-weight:300;}
+.toggle{width:46px;height:27px;background:var(--beige-200);border-radius:14px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;border:none;}
+.toggle.on{background:var(--green-400);}
+.toggle::after{content:'';position:absolute;width:21px;height:21px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.toggle.on::after{left:22px;}
+.prog-wrap{margin-bottom:10px;}
+.prog-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--beige-600);margin-bottom:5px;}
+.prog-track{height:7px;border-radius:4px;background:var(--beige-100);overflow:hidden;}
+.prog-fill{height:100%;border-radius:4px;}
+.lib-folder{background:var(--cream);border:1px solid var(--beige-100);border-radius:20px;margin:0 20px 10px;overflow:hidden;}
+.folder-head{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .15s;}
+.folder-head:hover{background:var(--beige-50);}
+.folder-icon{width:38px;height:38px;border-radius:11px;background:var(--beige-50);border:1px solid var(--beige-100);display:flex;align-items:center;justify-content:center;color:var(--beige-600);flex-shrink:0;}
+.folder-name{font-size:14px;font-weight:700;flex:1;}
+.folder-meta{font-size:11px;color:var(--beige-400);font-weight:300;}
+.folder-chev{color:var(--beige-400);transition:transform .2s;flex-shrink:0;}
+.folder-head.open .folder-chev{transform:rotate(90deg);}
+.folder-body{display:none;border-top:1px solid var(--beige-50);}
+.folder-body.open{display:block;}
+.sess-entry{padding:12px 16px;border-bottom:1px solid var(--beige-50);}
+.sess-entry:last-child{border-bottom:none;}
+.sess-date{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--beige-400);margin-bottom:6px;}
+.ex-line{display:flex;justify-content:space-between;padding:2px 0;}
+.ex-name{font-size:12px;font-weight:600;}
+.ex-stats{font-size:11px;color:var(--beige-600);font-weight:300;}
+.disclaimer{font-size:11px;color:var(--beige-400);line-height:1.65;padding:12px 14px;background:var(--beige-50);border:1px solid var(--beige-100);border-radius:12px;margin:0 20px 16px;font-weight:300;display:flex;gap:8px;align-items:flex-start;}
+.empty-state{text-align:center;padding:32px 20px;color:var(--beige-400);font-size:13px;font-weight:300;line-height:1.6;}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{display:flex;background:var(--cream);border-top:1px solid var(--beige-100);padding:10px 0 24px;flex-shrink:0;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 0;background:none;border:none;font-family:'Jost',sans-serif;}
+.nav-btn svg{color:var(--beige-200);transition:color .15s;}
+.nav-btn span{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--beige-200);transition:color .15s;}
+.nav-btn.active svg,.nav-btn.active span{color:var(--beige-800);}
+.nav-dot{width:4px;height:4px;border-radius:50%;background:var(--blush-400);margin-top:-1px;display:none;}
+.nav-btn.active .nav-dot{display:block;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--beige-800);color:var(--cream);padding:11px 22px;border-radius:30px;font-size:12px;font-weight:600;opacity:0;transition:all .25s;pointer-events:none;z-index:9999;white-space:nowrap;font-family:'Jost',sans-serif;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* ── WELLBEING CATEGORIES ── */
+.cat-hdr{font-size:11px;font-weight:700;color:var(--beige-600);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.cat-hdr svg{flex-shrink:0;color:var(--beige-400);}
+.pro-badge{background:var(--blush-400);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;line-height:1.4;}
+.energy-row{display:flex;gap:5px;}
+.energy-btn{flex:1;min-height:76px;padding:10px 4px 8px;border:1.5px solid var(--beige-200);border-radius:12px;background:var(--cream);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
+.energy-btn svg{color:var(--beige-400);}
+.energy-btn span{font-size:10px;font-weight:600;color:var(--beige-500);line-height:1.2;text-align:center;}
+.energy-btn.on{background:var(--blush-50);border-color:var(--blush-400);}
+.energy-btn.on svg{color:var(--blush-500);}
+.energy-btn.on span{color:var(--blush-800);}
+.contra-row{display:flex;gap:5px;}
+.contra-btn{flex:1;min-height:76px;padding:10px 6px 8px;border:1.5px solid var(--beige-200);border-radius:12px;background:var(--cream);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
+.contra-btn svg{color:var(--beige-400);}
+.contra-btn span{font-size:10px;font-weight:600;color:var(--beige-500);line-height:1.3;text-align:center;}
+.contra-btn.on{background:var(--blush-50);border-color:var(--blush-400);}
+.contra-btn.on svg{color:var(--blush-500);}
+.contra-btn.on span{color:var(--blush-800);}
+.sleep-hrs-wrap{display:flex;align-items:center;gap:8px;margin-top:10px;}
+.sleep-hrs-wrap label{font-size:11px;font-weight:600;color:var(--beige-500);white-space:nowrap;}
+.sleep-hrs-wrap .form-input{max-width:100px;margin-bottom:0;}
+.cat-section{position:relative;}
+.cat-section.locked .chip-grid,.cat-section.locked .sleep-hrs-wrap{opacity:.22;pointer-events:none;user-select:none;}
+.sleep-lock-overlay{display:none;position:absolute;inset:28px 0 0;border-radius:12px;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:2;}
+.cat-section.locked .sleep-lock-overlay{display:flex;}
+.sleep-lock-txt{font-size:12px;font-weight:600;color:var(--beige-600);}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ SVG SYMBOLS ═══════════ -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-home" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12L14 4l10 8v12h-8v-6h-4v6H4z"/></symbol>
+  <symbol id="i-barbell" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><line x1="4" y1="14" x2="24" y2="14"/><line x1="4" y1="11" x2="7" y2="11"/><line x1="4" y1="17" x2="7" y2="17"/><line x1="21" y1="11" x2="24" y2="11"/><line x1="21" y1="17" x2="24" y2="17"/><line x1="7" y1="9" x2="7" y2="19"/><line x1="21" y1="9" x2="21" y2="19"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M18 6A10 10 0 1 0 18 22 7 7 0 1 1 18 6z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><line x1="14" y1="4" x2="14" y2="8"/><line x1="14" y1="20" x2="14" y2="24"/><line x1="4" y1="14" x2="8" y2="14"/><line x1="20" y1="14" x2="24" y2="14"/><line x1="7" y1="7" x2="10" y2="10"/><line x1="18" y1="18" x2="21" y2="21"/><line x1="21" y1="7" x2="18" y2="10"/><line x1="7" y1="21" x2="10" y2="18"/></symbol>
+  <symbol id="i-person" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="14" cy="10" r="4"/><path d="M6 24q0-6 8-6t8 6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><line x1="14" y1="5" x2="14" y2="23"/><line x1="5" y1="14" x2="23" y2="14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><polyline points="6,8 22,8"/><path d="M10 8V6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><rect x="8" y="8" width="12" height="14" rx="1"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4 8h8l2 2h10v12H4z"/></symbol>
+  <symbol id="i-chevr" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,6 18,14 10,22"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M14 5q6 8 6 12a6 6 0 0 1-12 0q0-4 6-12z"/></symbol>
+  <symbol id="i-wave" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3 14q4-6 8 0t8 0q4-6 6 0"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><rect x="7" y="13" width="14" height="10" rx="2"/><path d="M10 13v-3a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-download" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><line x1="14" y1="5" x2="14" y2="19"/><polyline points="8,13 14,19 20,13"/><line x1="5" y1="23" x2="23" y2="23"/></symbol>
+  <symbol id="i-sync" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M6 14A8 8 0 0 1 21 9"/><polyline points="18,6 21,9 18,12"/><path d="M22 14A8 8 0 0 1 7 19"/><polyline points="10,22 7,19 10,16"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M10 20a4 2 0 0 0 8 0"/><path d="M9 10a5 5 0 0 1 10 0l1 9H8z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4 14q10-9 20 0-10 9-20 0"/><circle cx="14" cy="14" r="3"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M6 22q2-12 14-14-2 12-14 14z"/><line x1="6" y1="22" x2="14" y2="14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="5,15 11,21 23,8"/></symbol>
+  <symbol id="i-arr-r" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="14" x2="23" y2="14"/><polyline points="16,7 23,14 16,21"/></symbol>
+  <symbol id="i-arr-l" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><line x1="23" y1="14" x2="5" y2="14"/><polyline points="12,7 5,14 12,21"/></symbol>
+  <symbol id="i-card" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><rect x="3" y="7" width="22" height="14" rx="2"/><line x1="3" y1="12" x2="25" y2="12"/><line x1="7" y1="17" x2="11" y2="17"/></symbol>
+  <symbol id="i-star" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="14,4 17,11 25,11 19,16 21,23 14,19 7,23 9,16 3,11 11,11"/></symbol>
+</svg>
+
+<div class="phone">
+  <div class="status-bar">
+    <span class="status-time" id="clock">9:41</span>
+    <div style="display:flex;gap:6px;align-items:center">
+      <svg width="16" height="16" viewBox="0 0 28 28" fill="none" stroke="var(--beige-400)" stroke-width="1.4" stroke-linecap="round"><path d="M2 10q12-8 24 0"/><path d="M6 15q8-6 16 0"/><path d="M10 20q4-4 8 0"/><circle cx="14" cy="24" r="1.5" fill="var(--beige-400)" stroke="none"/></svg>
+      <svg width="16" height="16" viewBox="0 0 28 28" fill="none" stroke="var(--beige-400)" stroke-width="1.4" stroke-linecap="round"><rect x="3" y="8" width="20" height="12" rx="2"/><line x1="23" y1="12" x2="25" y2="12"/><line x1="23" y1="16" x2="25" y2="16"/><rect x="5" y="10" width="14" height="8" rx="1" fill="var(--beige-300)" stroke="none"/></svg>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       ONBOARDING
+  ══════════════════════════════════════ -->
+  <div class="page active" id="page-ob" style="flex-direction:column;">
+    <div class="ob-scroll">
+      <div class="logo"><span>lunara</span>fit</div>
+
+      <!-- OB 1: Keel -->
+      <div class="ob-step active" id="ob-1">
+        <div class="eyebrow">Tere tulemast</div>
+        <div class="serif-title">Vali oma keel.</div>
+        <div class="body-text">Saad seda igal ajal muuta.</div>
+        <div class="lang-grid">
+          <div class="lang-card sel" id="lc-et" onclick="selLang('et')"><div class="lang-flag">🇪🇪</div><div class="lang-name">Eesti</div><div class="lang-native">Estonian</div></div>
+          <div class="lang-card" id="lc-en" onclick="selLang('en')"><div class="lang-flag">🇬🇧</div><div class="lang-name">English</div><div class="lang-native">English</div></div>
+        </div>
+        <button class="btn-primary-full" onclick="obGo(2)">Jätka <svg width="14" height="14"><use href="#i-arr-r"/></svg></button>
+      </div>
+
+      <!-- OB 2: Nimi + vanus -->
+      <div class="ob-step" id="ob-2">
+        <button class="back-btn" onclick="obGo(1)"><svg width="22" height="22"><use href="#i-arr-l"/></svg></button>
+        <div class="eyebrow">Sinu andmed</div>
+        <div class="serif-title">Kuidas sind kutsuda?</div>
+        <div class="body-text">Isikupärastab sinu kogemuse.</div>
+        <label class="form-label">Eesnimi</label>
+        <input class="form-input" id="ob-name" type="text" placeholder="Sinu nimi" autocomplete="given-name"/>
+        <label class="form-label" style="margin-top:14px">Sünnikuupäev</label>
+        <input class="form-input" id="ob-dob" type="date" max="2010-12-31"/>
+        <div class="err" id="ob-age-err">LunaraFit on mõeldud 16-aastastele ja vanematele.</div>
+        <button class="btn-primary-full" onclick="checkOb2()">Jätka <svg width="14" height="14"><use href="#i-arr-r"/></svg></button>
+      </div>
+
+      <!-- OB 3: Tsükkel -->
+      <div class="ob-step" id="ob-3">
+        <button class="back-btn" onclick="obGo(2)"><svg width="22" height="22"><use href="#i-arr-l"/></svg></button>
+        <div class="eyebrow">Tsükliandmed</div>
+        <div class="serif-title">Räägi oma tsüklist.</div>
+        <div class="body-text">Aitab siduda treeningu tsüklifa asidega. Saad igal ajal muuta.</div>
+        <label class="form-label">Viimase menstruatsiooni esimene päev</label>
+        <input class="form-input" id="ob-lp" type="date"/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+          <div><label class="form-label">Tsükli pikkus (päevad)</label><input class="form-input" id="ob-cl" type="number" min="21" max="45" placeholder="28"/></div>
+          <div><label class="form-label">Perioodi pikkus (päevad)</label><input class="form-input" id="ob-pl" type="number" min="2" max="10" placeholder="5"/></div>
+        </div>
+        <button class="btn-primary-full" onclick="obGo(4)">Jätka <svg width="14" height="14"><use href="#i-arr-r"/></svg></button>
+        <button class="btn-ghost" onclick="obGo(4)">Jäta vahele</button>
+      </div>
+
+      <!-- OB 4: Treeningkogemus -->
+      <div class="ob-step" id="ob-4">
+        <button class="back-btn" onclick="obGo(3)"><svg width="22" height="22"><use href="#i-arr-l"/></svg></button>
+        <div class="eyebrow">Spordikogemus</div>
+        <div class="serif-title">Milline on sinu treeningkogemus?</div>
+        <div class="body-text">Vale vastust pole.</div>
+        <div class="fit-stack">
+          <div class="fit-card" onclick="selFit(this,'algaja')"><div class="fit-icon"><svg width="22" height="22"><use href="#i-leaf"/></svg></div><div><div class="fit-title">Alles alustan</div><div class="fit-sub">Uus või naasmas jõusaali</div></div></div>
+          <div class="fit-card" onclick="selFit(this,'kesktase')"><div class="fit-icon"><svg width="22" height="22"><use href="#i-wave"/></svg></div><div><div class="fit-title">Leidmas oma rütmi</div><div class="fit-sub">Käin regulaarselt, ehitan rutiini</div></div></div>
+          <div class="fit-card" onclick="selFit(this,'kogenud')"><div class="fit-icon"><svg width="22" height="22"><use href="#i-barbell"/></svg></div><div><div class="fit-title">Järjepidev ja kogenud</div><div class="fit-sub">Treenin regulaarselt eesmärkidega</div></div></div>
+        </div>
+        <button class="btn-primary-full" id="ob-fit-btn" onclick="obGo(5)" style="opacity:.4;pointer-events:none">Jätka <svg width="14" height="14"><use href="#i-arr-r"/></svg></button>
+      </div>
+
+      <!-- OB 5: Maksmine -->
+      <div class="ob-step" id="ob-5">
+        <button class="back-btn" onclick="obGo(4)"><svg width="22" height="22"><use href="#i-arr-l"/></svg></button>
+        <div class="eyebrow">Vali pakett</div>
+        <div class="serif-title">Alusta oma teekonda.</div>
+        <div class="body-text">Tühista igal ajal. Andmed jäävad alles.</div>
+        <div class="plan-grid">
+          <div class="plan-card" id="pc-free" onclick="selPlan('free')">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div class="plan-name">Tasuta</div>
+              <span style="background:var(--green-50);color:var(--green-800);border:1px solid var(--green-200);border-radius:20px;font-size:9px;font-weight:700;padding:3px 9px;letter-spacing:.06em;text-transform:uppercase">Praegune</span>
+            </div>
+            <div style="margin-top:6px"><span class="plan-price">0€</span><span class="plan-per">/ alati</span></div>
+            <div class="plan-features">
+              <div class="plan-feat"><div class="feat-dot"></div>Kuni 10 treeningkorda kuus</div>
+              <div class="plan-feat"><div class="feat-dot"></div>Tsükli kalender</div>
+              <div class="plan-feat"><div class="feat-dot dim"></div><span style="color:var(--beige-400)">Faasipõhised ülevaated — Pro</span></div>
+              <div class="plan-feat"><div class="feat-dot dim"></div><span style="color:var(--beige-400)">Andmeeksport — Pro</span></div>
+            </div>
+          </div>
+          <div class="plan-card popular sel" id="pc-monthly" onclick="selPlan('monthly')">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div class="plan-name">Pro kuupakett</div>
+              <span style="background:var(--blush-50);color:var(--blush-800);border:1px solid var(--blush-200);border-radius:20px;font-size:9px;font-weight:700;padding:3px 9px;letter-spacing:.06em;text-transform:uppercase">Pro</span>
+            </div>
+            <div style="margin-top:6px"><span class="plan-price">3.99€</span><span class="plan-per">/ kuus</span></div>
+            <div class="plan-features">
+              <div class="plan-feat"><div class="feat-dot"></div>Piiramatud treeningkorrad</div>
+              <div class="plan-feat"><div class="feat-dot"></div>Faasipõhised ülevaated</div>
+              <div class="plan-feat"><div class="feat-dot"></div>Harjutuste faasivõrdlus</div>
+              <div class="plan-feat"><div class="feat-dot"></div>Andmeeksport (CSV)</div>
+            </div>
+          </div>
+          <div class="plan-card" id="pc-yearly" onclick="selPlan('yearly')">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div class="plan-name">Pro aastapakett</div>
+              <span style="background:var(--green-50);color:var(--green-800);border:1px solid var(--green-200);border-radius:20px;font-size:9px;font-weight:700;padding:3px 9px;letter-spacing:.06em;text-transform:uppercase">-17%</span>
+            </div>
+            <div style="margin-top:6px"><span class="plan-price">30.99€</span><span class="plan-per">/ aastas</span></div>
+            <div style="font-size:11px;color:var(--beige-400);margin-top:4px">Kõik Pro funktsioonid · 2.58€/kuus</div>
+          </div>
+        </div>
+        <div id="pay-wrap">
+          <div class="pay-method-row">
+            <button class="pay-method-btn sel" id="pm-apple" onclick="selPayMethod('apple')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.28.07 2.18.73 2.94.75.96-.13 1.87-.8 3-.82 1.41-.01 2.38.61 3.07 1.66-2.81 1.72-2.19 5.57.24 6.74-.48 1.29-1.15 2.56-1.25 4.55zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+              Apple Pay
+            </button>
+            <button class="pay-method-btn" id="pm-card" onclick="selPayMethod('card')">
+              <svg width="16" height="16"><use href="#i-card"/></svg>
+              Kaardiga
+            </button>
+          </div>
+          <div id="apple-pay-section">
+            <button class="apple-pay-btn" onclick="doPurchase()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.28.07 2.18.73 2.94.75.96-.13 1.87-.8 3-.82 1.41-.01 2.38.61 3.07 1.66-2.81 1.72-2.19 5.57.24 6.74-.48 1.29-1.15 2.56-1.25 4.55zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+              Maksa Apple Pay'ga
+            </button>
+            <div class="pay-divider"><span>või maksa kaardiga</span></div>
+          </div>
+          <div id="card-form-section" style="display:none">
+            <div class="form-group">
+              <label class="form-label">Kaardi number</label>
+              <div style="position:relative"><input class="form-input" id="pay-num" type="text" placeholder="1234 5678 9012 3456" maxlength="19" oninput="fmtCard(this)"/><svg width="20" height="20" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--beige-400)"><use href="#i-card"/></svg></div>
+            </div>
+            <div class="pay-row">
+              <div class="form-group"><label class="form-label">Kehtiv kuni</label><input class="form-input" id="pay-exp" type="text" placeholder="KK/AA" maxlength="5" oninput="fmtExp(this)"/></div>
+              <div class="form-group"><label class="form-label">CVC</label><input class="form-input" id="pay-cvc" type="text" placeholder="123" maxlength="3"/></div>
+            </div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">E-post</label><input class="form-input" id="pay-email" type="email" placeholder="sinu@email.ee"/></div>
+          </div>
+          <div class="secure-note"><svg width="12" height="12"><use href="#i-lock"/></svg>Makse on kaitstud · Tühista igal ajal</div>
+        </div>
+        <button class="btn-primary-full" id="pay-main-btn" onclick="doPurchase()"><svg width="14" height="14"><use href="#i-check"/></svg><span id="pay-btn-txt">Alusta Pro kasutamist (3.99€/kuus)</span></button>
+      </div>
+
+      <!-- OB 6: Valmis -->
+      <div class="ob-step" id="ob-6">
+        <div style="text-align:center;margin-bottom:32px">
+          <div style="width:68px;height:68px;border-radius:50%;background:var(--green-50);border:2px solid var(--green-200);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--green-600)"><svg width="32" height="32"><use href="#i-check"/></svg></div>
+          <div class="eyebrow" style="text-align:center">Kõik on valmis</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;text-align:center">Tere tulemast, <em style="color:var(--blush-400)" id="ob-welcome">sina.</em></div>
+        </div>
+        <div style="background:var(--beige-50);border:1px solid var(--beige-100);border-radius:18px;padding:14px 18px;margin-bottom:24px">
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--beige-100);font-size:13px"><span style="color:var(--beige-400)">Tsükli pikkus</span><span style="font-weight:600" id="sum-cl">28 päeva</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--beige-100);font-size:13px"><span style="color:var(--beige-400)">Treeningkogemus</span><span style="font-weight:600" id="sum-fit">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px"><span style="color:var(--beige-400)">Pakett</span><span style="font-weight:600" id="sum-plan">—</span></div>
+        </div>
+        <button class="btn-primary-full" onclick="enterApp()">Sisene LunaraFit'i <svg width="14" height="14"><use href="#i-arr-r"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       APP — HOME
+  ══════════════════════════════════════ -->
+  <div class="page" id="page-home" style="flex-direction:column;">
+    <div class="top-bar">
+      <div class="top-logo"><span>lunara</span>fit</div>
+      <div class="top-av" id="av" onclick="showTab('profile')">?</div>
+    </div>
+    <div class="tab-scroll">
+      <div class="greeting">
+        <div class="greeting-lbl" id="home-date">—</div>
+        <div class="greeting-name">Tere, <em id="home-name">sina.</em></div>
+        <div class="greeting-sub" id="home-sub">Lisa tsükliandmed profiilis.</div>
+      </div>
+      <div class="phase-banner">
+        <div class="phase-icon"><svg width="24" height="24"><use href="#i-moon"/></svg></div>
+        <div style="flex:1">
+          <div class="p-eye">Praegune faas</div>
+          <div class="p-name" id="phase-name">—</div>
+          <div class="p-desc" id="phase-desc">Lisa tsükliandmed, et näha oma faasi.</div>
+        </div>
+        <div class="p-meta"><div class="p-days-n" id="phase-days">—</div><div class="p-days-l">päeva jäänud</div></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-tile"><div class="s-lbl"><svg width="10" height="10"><use href="#i-barbell"/></svg>Treeningkordi</div><div class="s-val" id="st-sess">0</div><div class="s-sub">viimase 7 päeva</div></div>
+        <div class="stat-tile"><div class="s-lbl"><svg width="10" height="10"><use href="#i-spark"/></svg>Nädala maht</div><div class="s-val" id="st-vol">—</div><div class="s-sub" id="st-vol-sub">kg sel nädalal</div></div>
+        <div class="stat-tile"><div class="s-lbl"><svg width="10" height="10"><use href="#i-wave"/></svg>Faasivõrdlus</div><div class="s-val" id="st-diff" style="font-size:18px">—</div><div class="s-sub">follik. vs luteaal</div></div>
+      </div>
+      <div class="quick-row">
+        <button class="btn btn-dark btn-sm" onclick="showTab('workouts')"><svg width="13" height="13"><use href="#i-barbell"/></svg>Lisa treening</button>
+        <button class="btn btn-blush btn-sm" onclick="showTab('cycle')"><svg width="13" height="13"><use href="#i-drop"/></svg>Lisa tsüklimärge</button>
+        <button class="btn btn-green btn-sm" onclick="showTab('insights')"><svg width="13" height="13"><use href="#i-spark"/></svg>Ülevaated</button>
+      </div>
+      <div class="card">
+        <div class="c-lbl"><svg width="12" height="12"><use href="#i-wave"/></svg>Nädala aktiivsus</div>
+        <div class="chart-wrap" id="home-chart"><div class="empty-state" style="width:100%;padding:8px;font-size:12px">Lisa treeninguid, et näha graafikut.</div></div>
+      </div>
+      <div class="card-flat">
+        <div class="i-eye" style="color:var(--green-600)"><svg width="10" height="10"><use href="#i-spark"/></svg>Muster</div>
+        <div style="font-size:14px;font-weight:700;margin:5px 0 4px" id="ins-title">Lisa andmeid, et mustrid ilmneksid.</div>
+        <div style="font-size:12px;color:var(--beige-600);line-height:1.55;font-weight:300" id="ins-body">Vähemalt 2 treeningut eri faasides annab esimese võrdluse.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       APP — WORKOUTS
+  ══════════════════════════════════════ -->
+  <div class="page" id="page-workouts" style="flex-direction:column;">
+    <div class="top-bar">
+      <div><div class="page-header-txt">Treeningud</div><div class="page-sub-txt">Lisa treeningkordi · jälgi arengut</div></div>
+      <button class="btn btn-dark btn-sm" onclick="addExRow()"><svg width="13" height="13"><use href="#i-plus"/></svg></button>
+    </div>
+    <div class="tab-scroll" style="padding-top:4px">
+      <div class="slbl"><svg width="12" height="12"><use href="#i-plus"/></svg>Lisa treeningkord</div>
+      <div class="card">
+        <div class="form-group"><label class="form-label">Kuupäev</label><input class="form-input" type="date" id="w-date"/></div>
+        <div class="form-group"><label class="form-label">Treeningkava nimi</label><input class="form-input" type="text" id="w-name" placeholder="nt Ülakeha jõutreening"/></div>
+        <div class="form-group">
+          <label class="form-label">Harjutused · seeriad · kordused · kaal (kg)</label>
+          <div id="ex-rows"></div>
+          <button class="btn btn-outline btn-sm" style="margin-top:8px;width:100%" onclick="addExRow()"><svg width="12" height="12"><use href="#i-plus"/></svg>Lisa harjutus</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kuidas tundus?</label>
+          <div class="chip-grid" id="w-chips">
+            <span class="chip" onclick="toggleChip(this)">Väsinud</span>
+            <span class="chip" onclick="toggleChip(this)">Energiline</span>
+            <span class="chip" onclick="toggleChip(this)">Tugev</span>
+            <span class="chip" onclick="toggleChip(this)">Raske</span>
+            <span class="chip" onclick="toggleChip(this)">Kerge</span>
+            <span class="chip" onclick="toggleChip(this)">Motiveeritud</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">Märkmed (vabatahtlik)</label><input class="form-input" type="text" id="w-notes" placeholder="Midagi tähelepanuväärset?"/></div>
+        <button class="btn btn-dark btn-full" style="margin-top:16px" onclick="saveWorkout()">Salvesta treeningkord</button>
+      </div>
+      <div class="slbl"><svg width="12" height="12"><use href="#i-eye"/></svg>Logitud treeningud</div>
+      <div id="w-list"><div class="empty-state">Treeninguid pole veel lisatud.</div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       APP — CYCLE
+  ══════════════════════════════════════ -->
+  <div class="page" id="page-cycle" style="flex-direction:column;">
+    <div class="top-bar">
+      <div><div class="page-header-txt">Tsükkel</div><div class="page-sub-txt" id="cycle-sub">—</div></div>
+    </div>
+    <div class="tab-scroll" style="padding-top:12px">
+      <div class="cal-hrow"><div class="cal-hday">E</div><div class="cal-hday">T</div><div class="cal-hday">K</div><div class="cal-hday">N</div><div class="cal-hday">R</div><div class="cal-hday">L</div><div class="cal-hday">P</div></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:var(--blush-400)"></div>Menstruatsioon (märgitud)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--blush-50);border:1px solid var(--blush-400)"></div>Menstruatsioon (ennustatud)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--green-400)"></div>Ovulatsioon</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--green-200)"></div>Viljakas päev</div>
+      </div>
+      <div class="slbl" style="margin-top:18px"><svg width="12" height="12"><use href="#i-drop"/></svg>Tänane märge</div>
+      <div class="card">
+        <div class="form-group"><label class="form-label">Kuupäev</label><input class="form-input" type="date" id="c-date"/></div>
+        <div class="form-group">
+          <label class="form-label">Menstruatsioon täna?</label>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline btn-sm" id="btn-period-y" onclick="togglePeriod(true)">Jah</button>
+            <button class="btn btn-outline btn-sm" id="btn-period-n" onclick="togglePeriod(false)">Ei</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="9" r="6"/><path d="M7 11Q10 14 13 11"/></svg>Tuju</div>
+          <div class="chip-grid" id="c-mood">
+            <span class="chip chip-icon" onclick="selMood(this,'halb')"><svg viewBox="0 0 36 36" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 22Q18 15 26 22"/></svg>Halb</span>
+            <span class="chip chip-icon" onclick="selMood(this,'keskmine')"><svg viewBox="0 0 36 36" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="10" y1="18" x2="26" y2="18"/></svg>Keskmine</span>
+            <span class="chip chip-icon" onclick="selMood(this,'hea')"><svg viewBox="0 0 36 36" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 15Q18 23 26 15"/></svg>Hea</span>
+            <span class="chip chip-icon" onclick="selMood(this,'suurepärane')"><svg viewBox="0 0 36 36" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="18" r="8"/></svg>Suurepärane</span>
+            <span class="chip chip-icon" onclick="selMood(this,'ergas')"><svg viewBox="0 0 36 36" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="10" x2="18" y2="13"/><line x1="18" y1="23" x2="18" y2="26"/><line x1="10" y1="18" x2="13" y2="18"/><line x1="23" y1="18" x2="26" y2="18"/><line x1="12.5" y1="12.5" x2="14.8" y2="14.8"/><line x1="21.2" y1="21.2" x2="23.5" y2="23.5"/><line x1="23.5" y1="12.5" x2="21.2" y2="14.8"/><line x1="12.5" y1="23.5" x2="14.8" y2="21.2"/></svg>Ergas</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2 L5 11 h5 L9 18 L15 9 h-5 Z"/></svg>Energia</div>
+          <div class="chip-grid" id="c-energy">
+            <span class="chip chip-icon" data-v="kurnatud" onclick="selEnergy(this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/></svg>Kurnatud</span>
+            <span class="chip chip-icon" data-v="väsinud" onclick="selEnergy(this)"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 12 L12 3 A9 9 0 0 1 21 12 Z" fill="currentColor" stroke="none" opacity=".5"/></svg>Väsinud</span>
+            <span class="chip chip-icon" data-v="normaalne" onclick="selEnergy(this)"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 1 12 21 Z" fill="currentColor" stroke="none" opacity=".5"/></svg>Normaalne</span>
+            <span class="chip chip-icon" data-v="energiline" onclick="selEnergy(this)"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 12 L12 3 A9 9 0 1 1 3 12 Z" fill="currentColor" stroke="none" opacity=".5"/></svg>Energiline</span>
+            <span class="chip chip-icon" data-v="täis energiat" onclick="selEnergy(this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>Täis energiat</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 17s-7-4.5-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 17 8c0 4.5-7 9-7 9z"/></svg>Tunded</div>
+          <div class="chip-grid" id="c-feelings">
+            <span class="chip" onclick="toggleChip(this)">Meeleolumuutused</span>
+            <span class="chip" onclick="toggleChip(this)">Kontrollikaotus</span>
+            <span class="chip" onclick="toggleChip(this)">Hea</span>
+            <span class="chip" onclick="toggleChip(this)">Õnnelik</span>
+            <span class="chip" onclick="toggleChip(this)">Kurb</span>
+            <span class="chip" onclick="toggleChip(this)">Tundlik</span>
+            <span class="chip" onclick="toggleChip(this)">Vihane</span>
+            <span class="chip" onclick="toggleChip(this)">Enesekindel</span>
+            <span class="chip" onclick="toggleChip(this)">Põnevil</span>
+            <span class="chip" onclick="toggleChip(this)">Ärritunud</span>
+            <span class="chip" onclick="toggleChip(this)">Ärev</span>
+            <span class="chip" onclick="toggleChip(this)">Ebakindel</span>
+            <span class="chip" onclick="toggleChip(this)">Masendunud</span>
+            <span class="chip" onclick="toggleChip(this)">Enesekritiseeriv</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="8" r="5"/><path d="M6 18c0-3.5 8-3.5 8 0"/></svg>Meeleseisund</div>
+          <div class="chip-grid" id="c-mind">
+            <span class="chip" onclick="toggleChip(this)">Unustlik</span>
+            <span class="chip" onclick="toggleChip(this)">Ajuudu</span>
+            <span class="chip" onclick="toggleChip(this)">Rahulik</span>
+            <span class="chip" onclick="toggleChip(this)">Stressis</span>
+            <span class="chip" onclick="toggleChip(this)">Fokuseeritud</span>
+            <span class="chip" onclick="toggleChip(this)">Hajameelne</span>
+            <span class="chip" onclick="toggleChip(this)">Motiveeritud</span>
+            <span class="chip" onclick="toggleChip(this)">Motiveerimata</span>
+            <span class="chip" onclick="toggleChip(this)">Produktiivne</span>
+            <span class="chip" onclick="toggleChip(this)">Ebaproduktiivne</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="10" y1="3" x2="10" y2="17"/><line x1="3" y1="10" x2="17" y2="10"/></svg>Valu</div>
+          <div class="chip-grid" id="c-pain">
+            <span class="chip" onclick="toggleChip(this)">Valuta</span>
+            <span class="chip" onclick="toggleChip(this)">Krambid</span>
+            <span class="chip" onclick="toggleChip(this)">Ovulatsioonivalu</span>
+            <span class="chip" onclick="toggleChip(this)">Rindade hellus</span>
+            <span class="chip" onclick="toggleChip(this)">Peavalu</span>
+            <span class="chip" onclick="toggleChip(this)">Migreen</span>
+            <span class="chip" onclick="toggleChip(this)">Migreen auraga</span>
+            <span class="chip" onclick="toggleChip(this)">Alaseljavalu</span>
+            <span class="chip" onclick="toggleChip(this)">Üldine lihasvalu</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 10 Q5 6 8 10 Q11 14 14 10 Q17 6 20 10"/></svg>Isu</div>
+          <div class="chip-grid" id="c-cravings">
+            <span class="chip" onclick="toggleChip(this)">Magus</span>
+            <span class="chip" onclick="toggleChip(this)">Soolane</span>
+            <span class="chip" onclick="toggleChip(this)">Rasvane</span>
+            <span class="chip" onclick="toggleChip(this)">Vürtsikas</span>
+            <span class="chip" onclick="toggleChip(this)">Süsivesikud</span>
+            <span class="chip" onclick="toggleChip(this)">Värske</span>
+          </div>
+        </div>
+        <div class="form-group cat-section" id="c-sleep-section">
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M16 11A7 7 0 1 1 9 4a5 5 0 0 0 7 7z"/></svg>Unekvaliteet <span class="pro-badge">PRO</span></div>
+          <div class="chip-grid" id="c-sleep">
+            <span class="chip" onclick="toggleChip(this)">Raske uinuda</span>
+            <span class="chip" onclick="toggleChip(this)">Värske ärkamine</span>
+            <span class="chip" onclick="toggleChip(this)">Väsinud ärkamine</span>
+            <span class="chip" onclick="toggleChip(this)">Rahutu uni</span>
+            <span class="chip" onclick="toggleChip(this)">Eredad unenäod</span>
+            <span class="chip" onclick="toggleChip(this)">Öised higistamised</span>
+          </div>
+          <div class="sleep-hrs-wrap">
+            <label>Unetunnid:</label>
+            <input class="form-input" id="c-sleep-hrs" type="number" min="0" max="24" step="0.5" placeholder="nt 7.5"/>
+          </div>
+          <div class="sleep-lock-overlay" id="c-sleep-lock">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--beige-400)" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <div class="sleep-lock-txt">Saadaval Pro paketiga</div>
+            <button class="btn btn-blush btn-sm" onclick="obGo(5);showOb()">Uuenda Pro&#8209;le</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="10" r="7"/><path d="M7 10 Q8.5 8 10 10 Q11.5 12 13 10"/></svg>Seedimine</div>
+          <div class="chip-grid" id="c-digestion">
+            <span class="chip" onclick="toggleChip(this)">Korras</span>
+            <span class="chip" onclick="toggleChip(this)">Puhitus</span>
+            <span class="chip" onclick="toggleChip(this)">Gaasid</span>
+            <span class="chip" onclick="toggleChip(this)">Iiveldus</span>
+            <span class="chip" onclick="toggleChip(this)">Oksendamine</span>
+            <span class="chip" onclick="toggleChip(this)">Kõhulahtisus</span>
+            <span class="chip" onclick="toggleChip(this)">Kõhukinnisus</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="cat-hdr"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="7" width="12" height="6" rx="3"/><line x1="10" y1="7" x2="10" y2="13"/></svg>Rasestumisvastased</div>
+          <div class="contra-row" id="c-contra">
+            <button class="contra-btn" data-v="ei kasuta" onclick="selContra(this)">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="6.5" y1="6.5" x2="17.5" y2="17.5"/></svg>
+              <span>Ei kasuta</span>
+            </button>
+            <button class="contra-btn" data-v="õigeaegselt" onclick="selContra(this)">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 L9 17 L20 6"/></svg>
+              <span>Õigeaegselt võetud</span>
+            </button>
+            <button class="contra-btn" data-v="hilinemisega" onclick="selContra(this)">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 L12 12 L15.5 15"/></svg>
+              <span>Hilinemisega võetud</span>
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-blush btn-full" onclick="saveCycleDay()">Salvesta tänane märge</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       APP — INSIGHTS
+  ══════════════════════════════════════ -->
+  <div class="page" id="page-insights" style="flex-direction:column;">
+    <div class="top-bar">
+      <div><div class="page-header-txt">Ülevaated</div><div class="page-sub-txt">Mustrid sinu andmetes</div></div>
+    </div>
+    <div class="tab-scroll" style="padding-top:8px" id="insights-body">
+      <div class="empty-state">Lisa treeninguid ja tsükliandmeid.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       APP — PROFILE
+  ══════════════════════════════════════ -->
+  <div class="page" id="page-profile" style="flex-direction:column;">
+    <div class="top-bar">
+      <div><div class="page-header-txt">Profiil</div><div class="page-sub-txt">Seaded · privaatsus · andmed</div></div>
+    </div>
+    <div class="tab-scroll" style="padding-top:12px">
+      <div class="slbl"><svg width="12" height="12"><use href="#i-star"/></svg>Sinu pakett</div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-size:15px;font-weight:700" id="prof-plan-name">Tasuta pakett</div><div style="font-size:12px;color:var(--beige-400);margin-top:3px;font-weight:300" id="prof-plan-sub">Uuenda Pro-le täielike ülevaadete jaoks</div></div>
+          <button class="btn btn-blush btn-sm" id="upgrade-btn" onclick="obGo(5);showOb()">Uuenda</button>
+        </div>
+      </div>
+      <div class="slbl"><svg width="12" height="12"><use href="#i-person"/></svg>Isiklikud andmed</div>
+      <div class="card">
+        <div class="form-group"><label class="form-label">Nimi</label><input class="form-input" id="p-name" type="text" placeholder="Sinu nimi"/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="form-group"><label class="form-label">Tsükli pikkus (päevad)</label><input class="form-input" id="p-cl" type="number" min="21" max="45" placeholder="28"/></div>
+          <div class="form-group"><label class="form-label">Perioodi pikkus (päevad)</label><input class="form-input" id="p-pl" type="number" min="2" max="10" placeholder="5"/></div>
+        </div>
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">Viimase menstruatsiooni esimene päev</label><input class="form-input" id="p-lp" type="date"/></div>
+        <button class="btn btn-dark btn-full" style="margin-top:16px" onclick="saveProfile()">Salvesta muudatused</button>
+      </div>
+      <div class="slbl"><svg width="12" height="12"><use href="#i-lock"/></svg>Privaatsus</div>
+      <div class="card">
+        <div class="toggle-wrap"><div class="t-info"><svg width="16" height="16" color="var(--beige-400)"><use href="#i-sync"/></svg><div><div class="t-title">Sünkrooni kõigis seadmetes</div><div class="t-sub">Hoia andmed ajakohasena</div></div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+        <div class="toggle-wrap"><div class="t-info"><svg width="16" height="16" color="var(--beige-400)"><use href="#i-bell"/></svg><div><div class="t-title">Õrnad meeldetuletused</div><div class="t-sub">Õrn meeldetuletus märgete lisamiseks</div></div></div><button class="toggle" onclick="this.classList.toggle('on')"></button></div>
+        <div class="toggle-wrap"><div class="t-info"><svg width="16" height="16" color="var(--beige-400)"><use href="#i-eye"/></svg><div><div class="t-title">Anonüümne andmeanalüüs</div><div class="t-sub">Aita rakendust parendada</div></div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+      </div>
+      <div class="slbl"><svg width="12" height="12"><use href="#i-folder"/></svg>Treeningute logiraamat</div>
+      <div id="prof-library"><div class="empty-state">Treeninguid pole veel lisatud.</div></div>
+      <div class="slbl" style="margin-top:20px"><svg width="12" height="12"><use href="#i-download"/></svg>Andmed</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-outline btn-full" onclick="exportCSV()"><svg width="13" height="13"><use href="#i-download"/></svg>Ekspordi kõik andmed (CSV)</button>
+          <button class="btn btn-danger btn-full" onclick="if(confirm('Kustutada kõik andmed?'))clearAll()"><svg width="13" height="13"><use href="#i-trash"/></svg>Kustuta kõik andmed</button>
+        </div>
+        <div style="font-size:11px;color:var(--beige-400);margin-top:14px;line-height:1.65;font-weight:300">Sinu andmed on salvestatud ainult selles seadmes.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       BOTTOM NAV (always visible in app)
+  ══════════════════════════════════════ -->
+  <div class="bottom-nav" id="bottom-nav" style="display:none">
+    <button class="nav-btn active" id="nav-home" onclick="showTab('home')">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12L14 4l10 8v12h-8v-6h-4v6H4z"/></svg>
+      <span>Avaleht</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-workouts" onclick="showTab('workouts')">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><line x1="4" y1="14" x2="24" y2="14"/><line x1="4" y1="11" x2="7" y2="11"/><line x1="4" y1="17" x2="7" y2="17"/><line x1="21" y1="11" x2="24" y2="11"/><line x1="21" y1="17" x2="24" y2="17"/><line x1="7" y1="9" x2="7" y2="19"/><line x1="21" y1="9" x2="21" y2="19"/></svg>
+      <span>Treeningud</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-cycle" onclick="showTab('cycle')">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M18 6A10 10 0 1 0 18 22 7 7 0 1 1 18 6z"/></svg>
+      <span>Tsükkel</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-insights" onclick="showTab('insights')">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><line x1="14" y1="4" x2="14" y2="8"/><line x1="14" y1="20" x2="14" y2="24"/><line x1="4" y1="14" x2="8" y2="14"/><line x1="20" y1="14" x2="24" y2="14"/><line x1="7" y1="7" x2="10" y2="10"/><line x1="18" y1="18" x2="21" y2="21"/><line x1="21" y1="7" x2="18" y2="10"/><line x1="7" y1="21" x2="10" y2="18"/></svg>
+      <span>Ülevaated</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-profile" onclick="showTab('profile')">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="14" cy="10" r="4"/><path d="M6 24q0-6 8-6t8 6"/></svg>
+      <span>Profiil</span><div class="nav-dot"></div>
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       AGE BLOCK — alla 16-aastased
+  ══════════════════════════════════════ -->
+  <div class="page" id="page-ageblock" style="flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center;">
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--err-bg);border:2px solid #E0A0A0;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:32px;">🔒</div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--beige-400);margin-bottom:10px;">Juurdepääs piiratud</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--beige-800);line-height:1.2;margin-bottom:14px;">LunaraFit on mõeldud 16-aastastele ja vanematele.</div>
+    <div style="font-size:13px;color:var(--beige-600);line-height:1.65;font-weight:300;max-width:280px;">Kahjuks ei saa seda rakendust kasutada, kui oled noorem kui 16 aastat.</div>
+  </div>
+
+</div>
+<div class="toast" id="toast-el"></div>
+
+<script>
+'use strict';
+
+// ── STATE ─────────────────────────────────────────────
+var S = { profile:{name:'',cycleLen:28,periodLen:5,lastPeriod:''}, plan:'free', workouts:[], cycleDays:[], _mood:'', _period:false, _energy:'', _contra:'' };
+(function(){ try{ var d=localStorage.getItem('lf3'); if(d) S=JSON.parse(d); }catch(e){} })();
+function save(){ try{ localStorage.setItem('lf3',JSON.stringify(S)); }catch(e){} }
+
+// ── CLOCK ─────────────────────────────────────────────
+function tick(){ var n=new Date(),h=n.getHours(),m=n.getMinutes(); document.getElementById('clock').textContent=h+':'+(m<10?'0'+m:m); }
+tick(); setInterval(tick,30000);
+
+// ── TOAST ─────────────────────────────────────────────
+function toast(m){ var t=document.getElementById('toast-el'); t.textContent=m; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2400); }
+
+// ── UTILS ─────────────────────────────────────────────
+var NOW = new Date();
+function fd(d){ return d.toISOString().slice(0,10); }
+function disp(s){ if(!s)return'—'; var p=s.split('-'); return p[2]+'.'+p[1]+'.'+p[0]; }
+function toggleChip(el){ el.classList.toggle('on'); }
+function selMood(el,v){ document.querySelectorAll('#c-mood .chip').forEach(function(m){m.classList.remove('on');}); el.classList.add('on'); S._mood=v; }
+function selEnergy(el){ document.querySelectorAll('#c-energy .chip').forEach(function(b){b.classList.remove('on');}); el.classList.add('on'); S._energy=el.dataset.v; }
+function selContra(el){ document.querySelectorAll('#c-contra .contra-btn').forEach(function(b){b.classList.remove('on');}); el.classList.add('on'); S._contra=el.dataset.v; }
+function togglePeriod(v){
+  S._period=v;
+  document.getElementById('btn-period-y').className=v?'btn btn-blush btn-sm':'btn btn-outline btn-sm';
+  document.getElementById('btn-period-n').className=!v?'btn btn-dark btn-sm':'btn btn-outline btn-sm';
+}
+function fmtCard(el){ var v=el.value.replace(/\D/g,'').slice(0,16); el.value=v.replace(/(.{4})/g,'$1 ').trim(); }
+function fmtExp(el){ var v=el.value.replace(/\D/g,'').slice(0,4); el.value=v.length>2?v.slice(0,2)+'/'+v.slice(2):v; }
+
+// ── PAGE ROUTING ──────────────────────────────────────
+// All pages: page-ob, page-home, page-workouts, page-cycle, page-insights, page-profile
+var APP_PAGES = ['home','workouts','cycle','insights','profile'];
+
+function showOb(){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('page-ob').classList.add('active');
+  document.getElementById('bottom-nav').style.display='none';
+}
+
+function showTab(name){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('bottom-nav').style.display='flex';
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('nav-'+name).classList.add('active');
+  if(name==='insights') renderInsights();
+  if(name==='home') renderHome();
+  if(name==='profile'){ renderLibrary(); updatePlanUI(); loadProfileForm(); }
+  if(name==='cycle') applySleepLock();
+}
+function applySleepLock(){
+  var sec=document.getElementById('c-sleep-section');
+  if(!sec) return;
+  if(S.plan==='free') sec.classList.add('locked'); else sec.classList.remove('locked');
+}
+
+// ── ONBOARDING ────────────────────────────────────────
+var _obLang='et', _obFit='', _obPlan='monthly';
+
+function obGo(n){
+  document.querySelectorAll('.ob-step').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('ob-'+n).classList.add('active');
+}
+function selLang(l){
+  _obLang=l;
+  ['et','en'].forEach(function(x){ document.getElementById('lc-'+x).classList.toggle('sel',x===l); });
+}
+function checkOb2(){
+  var name=document.getElementById('ob-name').value.trim();
+  var dobVal=document.getElementById('ob-dob').value;
+  var err=document.getElementById('ob-age-err');
+  if(!name){ toast('Palun sisesta oma nimi'); return; }
+  if(dobVal){
+    var dob=new Date(dobVal);
+    var today=new Date();
+    var age=today.getFullYear()-dob.getFullYear()-(today<new Date(today.getFullYear(),dob.getMonth(),dob.getDate())?1:0);
+    if(age<16){ err.style.display='block'; S.profile.birthDate=dobVal; save(); showAgeBlock(); return; }
+    S.profile.birthDate=dobVal;
+  }
+  err.style.display='none';
+  S.profile.name=name;
+  obGo(3);
+}
+function selFit(card,v){
+  document.querySelectorAll('.fit-card').forEach(function(c){c.classList.remove('sel');}); card.classList.add('sel'); _obFit=v;
+  var b=document.getElementById('ob-fit-btn'); b.style.opacity='1'; b.style.pointerEvents='auto';
+}
+function selPlan(p){
+  _obPlan=p;
+  ['free','monthly','yearly'].forEach(function(x){ document.getElementById('pc-'+x).classList.toggle('sel',x===p); });
+  var wrap=document.getElementById('pay-wrap'), txt=document.getElementById('pay-btn-txt');
+  if(p==='free'){ wrap.style.display='none'; txt.textContent='Jätka tasuta'; }
+  else { wrap.style.display='block'; txt.textContent=p==='monthly'?'Alusta Pro kasutamist (3.99€/kuus)':'Alusta Pro kasutamist (30.99€/aastas)'; }
+}
+var _payMethod='apple';
+function selPayMethod(m){
+  _payMethod=m;
+  document.getElementById('pm-apple').classList.toggle('sel',m==='apple');
+  document.getElementById('pm-card').classList.toggle('sel',m==='card');
+  document.getElementById('apple-pay-section').style.display=m==='apple'?'block':'none';
+  document.getElementById('card-form-section').style.display=m==='card'?'block':'none';
+  var btn=document.getElementById('pay-main-btn');
+  btn.style.display=m==='apple'?'none':'flex';
+}
+function doPurchase(){
+  if(_obPlan!=='free'&&_payMethod==='card'){
+    var num=document.getElementById('pay-num').value.replace(/\s/g,'');
+    var exp=document.getElementById('pay-exp').value;
+    var cvc=document.getElementById('pay-cvc').value;
+    var email=document.getElementById('pay-email').value;
+    if(num.length<16||!exp||cvc.length<3||!email.includes('@')){ toast('Palun täida kõik makseväljad korrektselt'); return; }
+  }
+  S.plan=_obPlan;
+  var lp=document.getElementById('ob-lp').value;
+  if(lp) S.profile.lastPeriod=lp;
+  S.profile.cycleLen=parseInt(document.getElementById('ob-cl').value)||28;
+  S.profile.periodLen=parseInt(document.getElementById('ob-pl').value)||5;
+  document.getElementById('ob-welcome').textContent=(S.profile.name||'sina')+'.';
+  document.getElementById('sum-cl').textContent=S.profile.cycleLen+' päeva';
+  document.getElementById('sum-fit').textContent={algaja:'Algaja',kesktase:'Kesktase',kogenud:'Kogenud'}[_obFit]||'—';
+  document.getElementById('sum-plan').textContent={free:'Tasuta',monthly:'Pro kuupakett',yearly:'Pro aastapakett'}[_obPlan];
+  obGo(6);
+}
+function isUnderAge(){
+  if(!S.profile.birthDate) return false;
+  var dob=new Date(S.profile.birthDate);
+  var today=new Date();
+  var age=today.getFullYear()-dob.getFullYear()-(today<new Date(today.getFullYear(),dob.getMonth(),dob.getDate())?1:0);
+  return age<16;
+}
+function showAgeBlock(){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('page-ageblock').classList.add('active');
+  document.getElementById('bottom-nav').style.display='none';
+}
+function enterApp(){
+  if(isUnderAge()){ showAgeBlock(); return; }
+  save();
+  document.getElementById('w-date').value=fd(NOW);
+  document.getElementById('c-date').value=fd(NOW);
+  addExRow();
+  buildCal();
+  renderHome();
+  showTab('home');
+}
+
+// ── AUTO-ENTER IF ALREADY ONBOARDED ──────────────────
+if(S.profile.name){
+  if(isUnderAge()){ showAgeBlock(); }
+  else {
+    document.getElementById('w-date').value=fd(NOW);
+    document.getElementById('c-date').value=fd(NOW);
+    addExRow();
+    buildCal();
+    renderHome();
+    showTab('home');
+  }
+}
+
+// ── PLAN UI ───────────────────────────────────────────
+function updatePlanUI(){
+  var n={free:'Tasuta pakett',monthly:'Pro — kuupakett',yearly:'Pro — aastapakett'}[S.plan]||'Tasuta pakett';
+  var s={free:'Uuenda Pro-le täielike ülevaadete jaoks',monthly:'Kõik Pro funktsioonid aktiivsed',yearly:'Kõik Pro funktsioonid aktiivsed'}[S.plan]||'';
+  document.getElementById('prof-plan-name').textContent=n;
+  document.getElementById('prof-plan-sub').textContent=s;
+  document.getElementById('upgrade-btn').style.display=S.plan==='free'?'':'none';
+}
+
+// ── PHASE CALC ────────────────────────────────────────
+function getCycleInfo(ds){
+  if(!S.profile.lastPeriod) return null;
+  var cl=S.profile.cycleLen||28, pl=S.profile.periodLen||5;
+  var last=new Date(S.profile.lastPeriod), tgt=ds?new Date(ds):NOW;
+  var diff=Math.floor((tgt-last)/86400000);
+  var d=((diff%cl)+cl)%cl+1;
+  var left=cl-d+1;
+  var phase,desc;
+  if(d<=pl){phase='Menstruatsioonifaas';desc='Puhkus ja kerge liikumine on õige valik.';}
+  else if(d<=Math.floor(cl/2)-2){phase='Follikulaarfaas';desc='Energia tõuseb — hea aeg raskemalt treenida.';}
+  else if(d<=Math.floor(cl/2)+1){phase='Ovulatsioon';desc='Energiatipp — ideaalne uute rekordite püstitamiseks.';}
+  else{phase='Luteaalfaas';desc='Madalam intensiivsus on tark — puhkus on osa rutiinist.';}
+  return{d,left,phase,desc,cl};
+}
+function phaseKey(ds){
+  if(!S.profile.lastPeriod) return 'teadmata';
+  var cl=S.profile.cycleLen||28,pl=S.profile.periodLen||5;
+  var last=new Date(S.profile.lastPeriod),tgt=new Date(ds);
+  var d=((Math.floor((tgt-last)/86400000)%cl)+cl)%cl+1;
+  if(d<=pl) return 'menstruation';
+  if(d<=Math.floor(cl/2)-2) return 'follicular';
+  if(d<=Math.floor(cl/2)+1) return 'ovulation';
+  return 'luteal';
+}
+var PHASE_LBL={follicular:'Follikulaarfaas',luteal:'Luteaalfaas',menstruation:'Menstruatsioonifaas',ovulation:'Ovulatsioon',teadmata:'—'};
+
+// ── CALENDAR ─────────────────────────────────────────
+function buildCal(){
+  var cal=document.getElementById('cal-grid'); cal.innerHTML='';
+  var yr=NOW.getFullYear(),mo=NOW.getMonth();
+  var cl=S.profile.cycleLen||28,pl=S.profile.periodLen||5;
+  var blank=((new Date(yr,mo,1).getDay()+6)%7);
+  var dim=new Date(yr,mo+1,0).getDate();
+  var logged=new Set(S.cycleDays.filter(function(d){return d.period;}).map(function(d){return d.date;}));
+  var pred=new Set(),fertile=new Set(),ov=new Set();
+  if(S.profile.lastPeriod){
+    var last=new Date(S.profile.lastPeriod);
+    for(var i=0;i<=4;i++){
+      var cs=new Date(last.getTime()+i*cl*86400000);
+      for(var j=0;j<pl;j++){var pd=new Date(cs.getTime()+j*86400000);if(pd.getFullYear()===yr&&pd.getMonth()===mo){var pds=fd(pd);if(!logged.has(pds))pred.add(pd.getDate());}}
+      var ov0=Math.floor(cl/2);
+      for(var k=ov0-3;k<=ov0+1;k++){var fd2=new Date(cs.getTime()+k*86400000);if(fd2.getFullYear()===yr&&fd2.getMonth()===mo){if(k===ov0)ov.add(fd2.getDate());else fertile.add(fd2.getDate());}}
+    }
+  }
+  for(var b=0;b<blank;b++) cal.appendChild(document.createElement('div'));
+  for(var day=1;day<=dim;day++){
+    var el=document.createElement('div'); el.className='cal-day'; el.textContent=day;
+    var ds=yr+'-'+String(mo+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    if(logged.has(ds)) el.classList.add('period-logged');
+    else if(pred.has(day)) el.classList.add('period-pred');
+    else if(ov.has(day)) el.classList.add('ovulation');
+    else if(fertile.has(day)) el.classList.add('fertile');
+    if(day===NOW.getDate()) el.classList.add('today');
+    cal.appendChild(el);
+  }
+  var ci=getCycleInfo();
+  var MONTHS=['jaanuar','veebruar','märts','aprill','mai','juuni','juuli','august','september','oktoober','november','detsember'];
+  document.getElementById('cycle-sub').textContent=MONTHS[mo]+' '+yr+(ci?' · Päev '+ci.d+' / '+ci.cl:'');
+}
+
+// ── PROFILE ───────────────────────────────────────────
+function loadProfileForm(){
+  document.getElementById('p-name').value=S.profile.name||'';
+  document.getElementById('p-cl').value=S.profile.cycleLen||28;
+  document.getElementById('p-pl').value=S.profile.periodLen||5;
+  document.getElementById('p-lp').value=S.profile.lastPeriod||'';
+}
+function saveProfile(){
+  S.profile.name=document.getElementById('p-name').value.trim();
+  S.profile.cycleLen=parseInt(document.getElementById('p-cl').value)||28;
+  S.profile.periodLen=parseInt(document.getElementById('p-pl').value)||5;
+  S.profile.lastPeriod=document.getElementById('p-lp').value;
+  save(); buildCal(); renderHome();
+  document.getElementById('av').textContent=S.profile.name?S.profile.name[0].toUpperCase():'?';
+  document.getElementById('home-name').textContent=(S.profile.name||'sina')+'.';
+  toast('Profiil salvestatud');
+}
+
+// ── WORKOUTS ─────────────────────────────────────────
+function addExRow(){
+  var row=document.createElement('div'); row.className='ex-log-row';
+  row.innerHTML='<div class="ex-name-row"><input class="form-input" style="font-size:13px;padding:6px 10px" placeholder="Harjutuse nimi" data-f="n"/><button onclick="this.closest(\'.ex-log-row\').remove()" style="background:none;border:none;cursor:pointer;color:var(--beige-400);padding:4px;flex-shrink:0"><svg width="14" height="14"><use href="#i-trash"/></svg></button></div><div class="ex-metrics"><div class="m-wrap"><div class="m-lbl">Seeriad</div><input class="m-input" type="number" min="1" placeholder="3" data-f="s"/></div><div class="m-wrap"><div class="m-lbl">Kordused</div><input class="m-input" type="number" min="1" placeholder="10" data-f="r"/></div><div class="m-wrap"><div class="m-lbl">kg</div><input class="m-input" type="number" min="0" step="0.5" placeholder="0" data-f="k"/></div></div>';
+  document.getElementById('ex-rows').appendChild(row);
+}
+function saveWorkout(){
+  var date=document.getElementById('w-date').value;
+  var name=document.getElementById('w-name').value.trim();
+  if(!date||!name){toast('Palun täida kuupäev ja treeningkava nimi');return;}
+  var exs=[];
+  document.querySelectorAll('#ex-rows .ex-log-row').forEach(function(row){
+    var n=row.querySelector('[data-f="n"]').value.trim();
+    var s=parseFloat(row.querySelector('[data-f="s"]').value)||0;
+    var r=parseFloat(row.querySelector('[data-f="r"]').value)||0;
+    var k=parseFloat(row.querySelector('[data-f="k"]').value)||0;
+    if(n) exs.push({name:n,sets:s,reps:r,kg:k});
+  });
+  if(!exs.length){toast('Lisa vähemalt üks harjutus');return;}
+  var feel=[]; document.querySelectorAll('#w-chips .chip.on').forEach(function(c){feel.push(c.textContent);});
+  S.workouts.push({date,name,exercises:exs,feel,notes:document.getElementById('w-notes').value.trim(),phase:phaseKey(date)});
+  S.workouts.sort(function(a,b){return b.date.localeCompare(a.date);});
+  save(); renderHome(); renderWorkoutLog(); renderLibrary();
+  document.getElementById('w-name').value=''; document.getElementById('w-notes').value='';
+  document.getElementById('ex-rows').innerHTML=''; addExRow();
+  document.querySelectorAll('#w-chips .chip').forEach(function(c){c.classList.remove('on');});
+  toast('Treeningkord salvestatud');
+}
+function renderWorkoutLog(){
+  var el=document.getElementById('w-list');
+  if(!S.workouts.length){el.innerHTML='<div class="empty-state">Treeninguid pole veel lisatud.</div>';return;}
+  el.innerHTML=S.workouts.slice(0,20).map(function(w,i){
+    var exStr=w.exercises.map(function(e){return e.name+' '+e.sets+'×'+e.reps+(e.kg?' · '+e.kg+' kg':'');}).join(', ');
+    return '<div class="list-row"><div class="list-icon blush"><svg width="20" height="20"><use href="#i-barbell"/></svg></div><div style="flex:1"><div class="l-title">'+w.name+'</div><div class="l-sub">'+disp(w.date)+' · '+(PHASE_LBL[w.phase]||w.phase)+'</div><div class="l-sub" style="margin-top:2px;font-size:10px">'+exStr+'</div></div><button class="btn btn-danger btn-sm" onclick="delW('+i+')"><svg width="13" height="13"><use href="#i-trash"/></svg></button></div>';
+  }).join('');
+}
+function delW(i){if(!confirm('Kustutada?'))return;S.workouts.splice(i,1);save();renderHome();renderInsights();renderWorkoutLog();renderLibrary();}
+
+// ── CYCLE DAY ─────────────────────────────────────────
+function saveCycleDay(){
+  var date=document.getElementById('c-date').value;
+  if(!date){toast('Palun vali kuupäev');return;}
+  var syms=[];
+  ['#c-feelings','#c-mind','#c-pain','#c-cravings','#c-sleep','#c-digestion'].forEach(function(id){
+    document.querySelectorAll(id+' .chip.on').forEach(function(c){syms.push(c.textContent.trim());});
+  });
+  var sleepHrsEl=document.getElementById('c-sleep-hrs');
+  var sleepHrs=sleepHrsEl.value?parseFloat(sleepHrsEl.value):null;
+  var entry={date,period:!!S._period,mood:S._mood,energy:S._energy||'',contra:S._contra||'',symptoms:syms,sleepHrs:sleepHrs};
+  var idx=S.cycleDays.findIndex(function(d){return d.date===date;});
+  if(idx>=0) S.cycleDays[idx]=entry; else S.cycleDays.push(entry);
+  if(S._period&&(!S.profile.lastPeriod||date<S.profile.lastPeriod)){S.profile.lastPeriod=date;document.getElementById('p-lp').value=date;}
+  save(); buildCal(); renderHome(); renderInsights();
+  document.querySelectorAll('#c-mood .chip,#c-energy .chip,#c-feelings .chip,#c-mind .chip,#c-pain .chip,#c-cravings .chip,#c-sleep .chip,#c-digestion .chip').forEach(function(c){c.classList.remove('on');});
+  document.querySelectorAll('#c-contra .contra-btn').forEach(function(b){b.classList.remove('on');});
+  sleepHrsEl.value='';
+  S._period=false; S._mood=''; S._energy=''; S._contra=''; togglePeriod(false);
+  toast('Tsüklimärge salvestatud');
+}
+
+// ── PHASE DIFF ────────────────────────────────────────
+function phaseDiff(){
+  var f=S.workouts.filter(function(w){return w.phase==='follicular';}),l=S.workouts.filter(function(w){return w.phase==='luteal';});
+  if(!f.length||!l.length) return null;
+  function avg(ws){var t=0,c=0;ws.forEach(function(w){w.exercises.forEach(function(e){if(e.kg>0){t+=e.kg;c++;}});});return c?t/c:0;}
+  var fa=avg(f),la=avg(l); if(!la) return null;
+  return((fa-la)/la)*100;
+}
+
+// ── HOME ──────────────────────────────────────────────
+function renderHome(){
+  var DAYS=['pühapäev','esmaspäev','teisipäev','kolmapäev','neljapäev','reede','laupäev'];
+  var MONTHS=['jaanuar','veebruar','märts','aprill','mai','juuni','juuli','august','september','oktoober','november','detsember'];
+  document.getElementById('home-date').textContent=DAYS[NOW.getDay()]+', '+NOW.getDate()+'. '+MONTHS[NOW.getMonth()];
+  document.getElementById('home-name').textContent=(S.profile.name||'sina')+'.';
+  document.getElementById('av').textContent=S.profile.name?S.profile.name[0].toUpperCase():'?';
+  var ci=getCycleInfo();
+  if(ci){document.getElementById('phase-name').textContent=ci.phase;document.getElementById('phase-desc').textContent=ci.desc;document.getElementById('phase-days').textContent=ci.left;document.getElementById('home-sub').textContent='Tsükli päev '+ci.d+' · '+ci.left+' päeva jäänud';}
+  var d7=new Date(NOW.getTime()-7*86400000);
+  var rec=S.workouts.filter(function(w){return new Date(w.date)>=d7;});
+  document.getElementById('st-sess').textContent=rec.length;
+  var weekVol=0;
+  rec.forEach(function(w){w.exercises.forEach(function(e){if(e.kg>0&&e.sets>0&&e.reps>0)weekVol+=e.kg*e.sets*e.reps;});});
+  document.getElementById('st-vol').textContent=weekVol>0?Math.round(weekVol)+'kg':'—';
+  document.getElementById('st-vol-sub').textContent=weekVol>0?'kg sel nädalal':'trenn puudub';
+  var pd=phaseDiff();
+  if(pd!=null){var sign=pd>=0?'+':'';document.getElementById('st-diff').textContent=sign+pd.toFixed(1)+'%';document.getElementById('st-diff').style.color=pd>=0?'var(--green-600)':'var(--blush-400)';}
+  // chart
+  var DLBLS=['E','T','K','N','R','L','P'],bars='';
+  for(var i=6;i>=0;i--){var d=new Date(NOW.getTime()-i*86400000),ds=fd(d),has=S.workouts.some(function(w){return w.date===ds;});bars+='<div class="bar-col"><div class="bar-fill" style="height:'+(has?'82%':'10%')+';background:'+(has?'var(--blush-400)':'var(--beige-100)')+'"></div><div class="bar-lbl">'+DLBLS[(d.getDay()+6)%7]+'</div></div>';}
+  document.getElementById('home-chart').innerHTML=bars||'<div class="empty-state" style="width:100%;padding:8px;font-size:12px">Lisa treeninguid.</div>';
+  // insight preview
+  if(pd!=null&&ci){var b2=pd>=0?'follikulaarfaasis':'luteaalfaasis';document.getElementById('ins-title').textContent='Tulemused on '+b2+' '+Math.abs(pd).toFixed(1)+'% kõrgemad';document.getElementById('ins-body').textContent='Põhineb '+S.workouts.length+' treeningkorral.'+(ci.phase==='Luteaalfaas'&&pd>0?' Follikulaarfaas algab '+ci.left+' päeva pärast.':'');}
+  else if(S.workouts.length){document.getElementById('ins-title').textContent=S.workouts.length+' treeningkorda logitud';document.getElementById('ins-body').textContent='Lisa tsükliandmed, et saada faasipõhiseid ülevaateid.';}
+}
+
+// ── INSIGHTS ─────────────────────────────────────────
+function renderInsights(){
+  var el=document.getElementById('insights-body');
+  if(!S.workouts.length&&!S.cycleDays.length){el.innerHTML='<div class="empty-state">Lisa treeninguid ja tsükliandmeid.</div>';return;}
+  var html='',pd=phaseDiff();
+  if(pd!=null){
+    var f=S.workouts.filter(function(w){return w.phase==='follicular';}),l=S.workouts.filter(function(w){return w.phase==='luteal';});
+    var b=pd>=0?'follikulaarfaasis':'luteaalfaasis';
+    html+='<div class="insight-card '+(pd>=0?'blush':'')+'"><div class="i-eye"><svg width="10" height="10"><use href="#i-spark"/></svg>Faasivõrdlus</div><div class="i-title">Tulemused on '+b+' '+Math.abs(pd).toFixed(1)+'% kõrgemad</div><div class="i-body">Follikulaarfaasis '+f.length+' treeningkorda, luteaalfaasis '+l.length+'.</div></div>';
+  }
+  var exMap={};
+  S.workouts.forEach(function(w){w.exercises.forEach(function(e){if(!e.name||!e.kg)return;if(!exMap[e.name])exMap[e.name]={f:[],l:[]};if(w.phase==='follicular')exMap[e.name].f.push(e.kg);else if(w.phase==='luteal')exMap[e.name].l.push(e.kg);});});
+  var rows='';
+  Object.keys(exMap).forEach(function(name){var d=exMap[name];if(!d.f.length||!d.l.length)return;var fa=d.f.reduce(function(a,b){return a+b;},0)/d.f.length,la=d.l.reduce(function(a,b){return a+b;},0)/d.l.length,diff=((fa-la)/la*100),mx=Math.max(fa,la);rows+='<div class="prog-wrap"><div class="prog-lbl"><span>'+name+'</span><span style="font-weight:700">'+(diff>=0?'+':'')+diff.toFixed(1)+'% follik.</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px"><div><div style="font-size:10px;color:var(--beige-400);margin-bottom:3px">Follikulaar · '+fa.toFixed(1)+' kg</div><div class="prog-track"><div class="prog-fill" style="width:'+(fa/mx*100)+'%;background:var(--beige-400)"></div></div></div><div><div style="font-size:10px;color:var(--blush-400);margin-bottom:3px">Luteaal · '+la.toFixed(1)+' kg</div><div class="prog-track"><div class="prog-fill" style="width:'+(la/mx*100)+'%;background:var(--blush-400)"></div></div></div></div></div>';});
+  if(rows) html+='<div class="card" style="margin-top:4px"><div class="c-lbl"><svg width="12" height="12"><use href="#i-spark"/></svg>Harjutuste faasivõrdlus</div>'+rows+'</div>';
+  if(S.workouts.length){
+    html+='<div class="slbl" style="margin-top:4px"><svg width="12" height="12"><use href="#i-eye"/></svg>Viimased treeningkorrad</div>';
+    S.workouts.slice(0,3).forEach(function(w){var exStr=w.exercises.map(function(e){return e.name+' '+e.sets+'×'+e.reps+(e.kg?' ('+e.kg+' kg)':'');}).join(' · ');html+='<div class="insight-card"><div class="i-eye"><svg width="10" height="10"><use href="#i-barbell"/></svg>'+(PHASE_LBL[w.phase]||w.phase)+'</div><div class="i-title">'+w.name+' · '+disp(w.date)+'</div><div class="i-body">'+exStr+(w.feel.length?' · Tunne: '+w.feel.join(', '):'')+'</div></div>';});
+  }
+  var mc={};S.cycleDays.forEach(function(d){if(d.mood){mc[d.mood]=(mc[d.mood]||0)+1;}});
+  if(Object.keys(mc).length){var top=Object.keys(mc).sort(function(a,b){return mc[b]-mc[a];})[0];html+='<div class="insight-card green"><div class="i-eye"><svg width="10" height="10"><use href="#i-moon"/></svg>Tujumuster</div><div class="i-title">Sagedaim märgitud tuju: '+top+'</div><div class="i-body">Logitud '+S.cycleDays.length+' tsüklimärget.</div></div>';}
+  html+='<div class="disclaimer"><svg width="14" height="14" style="flex-shrink:0;margin-top:1px"><use href="#i-eye"/></svg><span>Need ülevaated põhinevad sinu enda salvestatud andmetes ega ole meditsiiniline nõuanne.</span></div>';
+  el.innerHTML=html;
+}
+
+// ── LIBRARY ───────────────────────────────────────────
+function renderLibrary(){
+  var el=document.getElementById('prof-library');
+  if(!S.workouts.length){el.innerHTML='<div class="empty-state">Treeninguid pole veel lisatud.</div>';return;}
+  var g={};S.workouts.forEach(function(w){if(!g[w.name])g[w.name]=[];g[w.name].push(w);});
+  el.innerHTML=Object.keys(g).map(function(name){
+    var ss=g[name];
+    var rows=ss.map(function(w){return '<div class="sess-entry"><div class="sess-date">'+disp(w.date)+' · '+(PHASE_LBL[w.phase]||w.phase)+'</div>'+w.exercises.map(function(e){return '<div class="ex-line"><span class="ex-name">'+e.name+'</span><span class="ex-stats">'+e.sets+'×'+e.reps+(e.kg?' · '+e.kg+' kg':'')+'</span></div>';}).join('')+'</div>';}).join('');
+    return '<div class="lib-folder"><div class="folder-head" onclick="toggleFolder(this)"><div class="folder-icon"><svg width="20" height="20"><use href="#i-folder"/></svg></div><div><div class="folder-name">'+name+'</div><div class="folder-meta">'+ss.length+' treeningkorda · viimane '+disp(ss[0].date)+'</div></div><svg width="18" height="18" class="folder-chev"><use href="#i-chevr"/></svg></div><div class="folder-body">'+rows+'</div></div>';
+  }).join('');
+}
+function toggleFolder(h){h.classList.toggle('open');h.nextElementSibling.classList.toggle('open');}
+
+// ── EXPORT / CLEAR ────────────────────────────────────
+function exportCSV(){
+  var rows=['Kuupäev,Treeningkava,Harjutus,Seeriad,Kordused,kg,Faas'];
+  S.workouts.forEach(function(w){w.exercises.forEach(function(e){rows.push([w.date,'"'+w.name+'"','"'+e.name+'"',e.sets,e.reps,e.kg,w.phase].join(','));});});
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));a.download='lunarafit.csv';a.click();
+}
+function clearAll(){S={profile:{name:'',cycleLen:28,periodLen:5,lastPeriod:''},plan:'free',workouts:[],cycleDays:[],_mood:'',_period:false,_energy:'',_contra:''};save();location.reload();}
+
+// ── INIT DATE FIELDS ──────────────────────────────────
+document.getElementById('w-date').value=fd(NOW);
+document.getElementById('c-date').value=fd(NOW);
+applySleepLock();
+</script>
+</body>
+</html>
