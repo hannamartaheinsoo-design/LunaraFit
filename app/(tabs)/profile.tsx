@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert, Share } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Share, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuth } from '../../lib/authContext';
@@ -31,6 +31,8 @@ export default function ProfileScreen() {
   const [reminders, setReminders] = useState(false);
   const [analytics, setAnalytics] = useState(true);
   const [openFolder, setOpenFolder] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Sync form fields when profile loads
   useEffect(() => {
@@ -65,16 +67,23 @@ export default function ProfileScreen() {
   };
 
   const handleClearAll = () => {
-    Alert.alert(t('prof.clear.title'), t('prof.clear.body'), [
-      { text: t('prof.clear.cancel'), style: 'cancel' },
-      {
-        text: t('prof.clear.confirm'), style: 'destructive',
-        onPress: async () => {
-          await clearAll();
-          await signOut();
-        },
-      },
-    ]);
+    if (Platform.OS !== 'web') {
+      Alert.alert(t('prof.clear.title'), t('prof.clear.body'), [
+        { text: t('prof.clear.cancel'), style: 'cancel' },
+        { text: t('prof.clear.confirm'), style: 'destructive', onPress: doDeleteAll },
+      ]);
+    } else {
+      setConfirmDelete(true);
+    }
+  };
+
+  const doDeleteAll = async () => {
+    setDeleting(true);
+    try {
+      await clearAll();
+    } catch (_) {}
+    await signOut();
+    router.replace('/(auth)/login' as any);
   };
 
   const planName = {
@@ -209,9 +218,24 @@ export default function ProfileScreen() {
           <Button variant="outline" fullWidth onPress={handleExport} style={{ marginBottom: 8 }}>
             {t('prof.export')}
           </Button>
-          <Button variant="danger" fullWidth onPress={handleClearAll}>
-            {t('prof.clear')}
-          </Button>
+          {confirmDelete ? (
+            <View style={styles.confirmBox}>
+              <Text style={styles.confirmTitle}>{t('prof.clear.title')}</Text>
+              <Text style={styles.confirmBody}>{t('prof.clear.body')}</Text>
+              <View style={styles.confirmRow}>
+                <Button variant="outline" style={styles.confirmBtn} onPress={() => setConfirmDelete(false)} disabled={deleting}>
+                  {t('prof.clear.cancel')}
+                </Button>
+                <Button variant="danger" style={styles.confirmBtn} onPress={doDeleteAll} disabled={deleting}>
+                  {deleting ? '...' : t('prof.clear.confirm')}
+                </Button>
+              </View>
+            </View>
+          ) : (
+            <Button variant="danger" fullWidth onPress={handleClearAll}>
+              {t('prof.clear')}
+            </Button>
+          )}
           <Text style={styles.dataNote}>{t('prof.local')}</Text>
         </Card>
         <View style={{ height: 20 }} />
@@ -267,4 +291,9 @@ const styles = StyleSheet.create({
   exStats: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[600] },
   empty: { fontFamily: Fonts.sansLight, textAlign: 'center', padding: 20, color: Colors.beige[400], fontSize: 13 },
   dataNote: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 14, lineHeight: 18 },
+  confirmBox: { borderWidth: 1, borderColor: '#E0A0A0', borderRadius: 10, padding: 16, backgroundColor: Colors.error.bg, marginBottom: 4 },
+  confirmTitle: { fontFamily: Fonts.sansSemiBold, fontSize: 14, color: Colors.error.text, marginBottom: 6 },
+  confirmBody: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.error.text, marginBottom: 14 },
+  confirmRow: { flexDirection: 'row', gap: 10 },
+  confirmBtn: { flex: 1 },
 });

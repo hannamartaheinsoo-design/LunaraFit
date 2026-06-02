@@ -35,6 +35,7 @@ This project uses **Convex** as the backend and **`@convex-dev/auth`** for authe
 **Platform guards:**
 - `expo-secure-store` is native-only — always wrap with `Platform.OS !== 'web'`
 - Pass `storage={undefined}` to `ConvexAuthProvider` on web (falls back to `localStorage`)
+- `Alert.alert` is a **silent no-op on web** — never use it for confirmations without a web fallback. On web, render inline confirmation UI via React state instead.
 
 **Provider nesting order in `_layout.tsx`:**
 ```

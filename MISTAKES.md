@@ -85,3 +85,9 @@
 **Root cause:** The gitStatus snapshot is captured once at session start and does not reflect subsequent commits or stash pops made before the conversation began.
 **Fix applied:** Ran `git status` directly before acting on the snapshot.
 **Rule going forward:** Always run `git status` live before deciding how to handle "conflicts" reported in the session-start snapshot. Never trust the snapshot as current state.
+
+### [2026-06-02] Alert.alert does not work on Expo web
+**What happened:** The "Delete all data" button appeared to do nothing on web — pressing it had no visible effect.
+**Root cause:** `Alert.alert` from React Native uses a native dialog on iOS/Android but is a no-op (silently ignored) on the web platform. The confirmation never appeared, so the delete flow never ran.
+**Fix applied:** Added `Platform.OS !== 'web'` guard: on native it still uses `Alert.alert`; on web it sets a `confirmDelete` state flag that renders an inline confirmation UI (title + body + Cancel/Delete buttons) directly in the component.
+**Rule going forward:** Never use `Alert.alert` for user-facing confirmations without a web fallback. On web, always render confirmation UI as React state. Check every `Alert.alert` call in the codebase when adding web support.
