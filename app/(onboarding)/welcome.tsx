@@ -5,14 +5,28 @@ import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
 
-const FEATURES = [
-  { icon: 'barbell' as const, title: 'Treeningute jälgimine', sub: 'Logi harjutused, seeriad ja kaalud.' },
-  { icon: 'moon'    as const, title: 'Tsükli teadlikkus',     sub: 'Mõista oma faaside mõju energiale.' },
-  { icon: 'spark'   as const, title: 'Isiklikud mustrid',     sub: 'Avasta, millal treening kõige paremini läheb.' },
-];
+const FEATURES = {
+  et: [
+    { icon: 'barbell' as const, title: 'Treeningute jälgimine', sub: 'Logi harjutused, seeriad ja kaalud.' },
+    { icon: 'moon'    as const, title: 'Tsükli teadlikkus',     sub: 'Mõista oma faaside mõju energiale.' },
+    { icon: 'spark'   as const, title: 'Isiklikud mustrid',     sub: 'Avasta, millal treening kõige paremini läheb.' },
+  ],
+  en: [
+    { icon: 'barbell' as const, title: 'Workout Tracking',    sub: 'Log exercises, sets, and weights.' },
+    { icon: 'moon'    as const, title: 'Cycle Awareness',     sub: 'Understand how your phases affect energy.' },
+    { icon: 'spark'   as const, title: 'Personal Patterns',   sub: 'Discover when training works best for you.' },
+  ],
+};
+
+const COPY = {
+  et: { tagline: 'Treening kohtub tsükliga.', langLabel: 'Vali keel', cta: 'Alusta →', privacy: 'Privaatsus ennekõike — andmed jäävad ainult sinu seadmesse.' },
+  en: { tagline: 'Training meets your cycle.', langLabel: 'Choose language', cta: 'Get started →', privacy: 'Privacy first — your data stays on your device only.' },
+};
 
 export default function WelcomeScreen() {
   const [lang, setLang] = useState<'et' | 'en'>('et');
+  const features = FEATURES[lang];
+  const copy = COPY[lang];
 
   return (
     <ScrollView
@@ -25,12 +39,12 @@ export default function WelcomeScreen() {
         <Text style={styles.logo}>
           <Text style={styles.logoAccent}>Lunara</Text>Fit
         </Text>
-        <Text style={styles.tagline}>Treening kohtub tsükliga.</Text>
+        <Text style={styles.tagline}>{copy.tagline}</Text>
       </View>
 
       {/* Feature list */}
       <View style={styles.features}>
-        {FEATURES.map((f) => (
+        {features.map((f) => (
           <View key={f.title} style={styles.featureRow}>
             <View style={styles.featureIcon}>
               <Icon name={f.icon} size={18} color={Colors.blush[600]} strokeWidth={1.4} />
@@ -44,7 +58,7 @@ export default function WelcomeScreen() {
       </View>
 
       {/* Language picker */}
-      <Text style={styles.langLabel}>Vali keel</Text>
+      <Text style={styles.langLabel}>{copy.langLabel}</Text>
       <View style={styles.langRow}>
         {[
           { code: 'et', flag: '🇪🇪', name: 'Eesti' },
@@ -64,12 +78,10 @@ export default function WelcomeScreen() {
 
       {/* CTA */}
       <Button variant="dark" size="lg" fullWidth onPress={() => router.push('/(onboarding)/name')} style={styles.btn}>
-        Alusta →
+        {copy.cta}
       </Button>
 
-      <Text style={styles.privacy}>
-        Privaatsus ennekõike — andmed jäävad ainult sinu seadmesse.
-      </Text>
+      <Text style={styles.privacy}>{copy.privacy}</Text>
     </ScrollView>
   );
 }
