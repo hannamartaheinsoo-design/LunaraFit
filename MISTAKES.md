@@ -79,3 +79,9 @@
 **Root cause:** Two large parallel cross-cutting changes (data layer vs. i18n strings) edited the same lines in every file. Never stash across a pull when both branches have touched the same files.
 **Fix applied:** Manually resolved every conflict keeping Convex queries + i18n strings, dropping all `storage.*`/`AsyncStorage` calls.
 **Rule going forward:** Commit and push a large cross-cutting change immediately — never leave it stashed. If a conflict is inevitable, resolve it in a dedicated merge commit and communicate with collaborators first.
+
+### [2026-06-02] git status snapshot at conversation start is stale
+**What happened:** The gitStatus context injected at session start showed many modified files, but the actual working tree was clean — caused unnecessary conflict-resolution attempts.
+**Root cause:** The gitStatus snapshot is captured once at session start and does not reflect subsequent commits or stash pops made before the conversation began.
+**Fix applied:** Ran `git status` directly before acting on the snapshot.
+**Rule going forward:** Always run `git status` live before deciding how to handle "conflicts" reported in the session-start snapshot. Never trust the snapshot as current state.
