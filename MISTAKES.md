@@ -37,3 +37,21 @@
 **Root cause:** `typedRoutes` (experimental) was enabled but caused the expo-router module to fail to resolve on web.
 **Fix applied:** Disabled `typedRoutes` in the expo-router plugin config.
 **Rule going forward:** Keep `typedRoutes` disabled unless explicitly testing typed routes on a branch where web builds are not required.
+
+### [2026-06-02] Language selection on welcome screen was not persisted or applied globally
+**What happened:** A language picker existed on the welcome screen but selected language was never saved or applied anywhere else. All screens remained hardcoded in Estonian even when English was selected.
+**Root cause:** `selLang` only updated local component state. No context, storage write, or translation system was wired up to propagate the choice app-wide.
+**Fix applied:** Built full translation system: `lib/i18n.ts` (all ET/EN strings), `lib/LangContext.tsx` (React context + `useTranslation` hook), wrapped root with `LangProvider`, updated every screen and lib files to be lang-aware.
+**Rule going forward:** Any language/locale selection UI must immediately (a) persist to storage and (b) update a shared context every screen reads. Never hardcode display strings in screens — always use a translation function from the start.
+
+### [2026-06-02] lib/cycleInsights.ts content left in Estonian after i18n rollout
+**What happened:** After translating all UI strings, the science-based phase content in `lib/cycleInsights.ts` remained hardcoded in Estonian. The insights page showed mixed English/Estonian.
+**Root cause:** Large content library files were missed during the initial translation pass — only `app/` screen files were updated.
+**Fix applied:** Restructured `cycleInsights.ts` with separate ET/EN content objects and exported lang-aware functions: `getPhaseInsights(lang)`, `detectPatterns(..., lang)`, `getConfidenceLabels(lang)`, `getDisclaimer(lang)`.
+**Rule going forward:** When adding i18n, audit ALL files with user-visible text — not just screen components. Always check `lib/` files too. Any file that exports display strings must be made lang-aware.
+
+### [2026-06-02] git add with bare paths containing parentheses fails in zsh
+**What happened:** `git add app/(onboarding)/cycle.tsx` failed with "no matches found" because zsh treats parentheses as glob special characters.
+**Root cause:** zsh glob expansion interprets `(` and `)` in unquoted paths.
+**Fix applied:** Used `git add -A` to stage all changes at once.
+**Rule going forward:** When file paths contain parentheses (common with Expo's `(tabs)` and `(onboarding)` route groups), use `git add -A` or wrap paths in single quotes.
