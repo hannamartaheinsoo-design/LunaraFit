@@ -8,17 +8,23 @@ import { storage } from '../../lib/storage';
 import { getCycleInfo } from '../../lib/cycle';
 import { Profile, Workout, CycleDay } from '../../types';
 import {
-  PHASE_INSIGHTS, detectPatterns, CONFIDENCE_LABELS, DISCLAIMER,
+  getPhaseInsights, detectPatterns, getConfidenceLabels, getDisclaimer,
   DetectedPattern, TrainingTip,
 } from '../../lib/cycleInsights';
+import { useTranslation } from '../../lib/LangContext';
 
 function IntensityDot({ level }: { level: TrainingTip['intensity'] }) {
+  const { t } = useTranslation();
   const colors = {
     kerge:    Colors.green[400],
     mõõdukas: Colors.beige[400],
     kõrge:    Colors.blush[400],
   };
-  const labels = { kerge: 'Kerge', mõõdukas: 'Mõõdukas', kõrge: 'Kõrge' };
+  const labels = {
+    kerge:    t('ins.intensity.kerge'),
+    mõõdukas: t('ins.intensity.mõõdukas'),
+    kõrge:    t('ins.intensity.kõrge'),
+  };
   return (
     <View style={styles.intensityRow}>
       <View style={[styles.intensityDot, { backgroundColor: colors[level] }]} />
@@ -44,6 +50,7 @@ function ConfidenceBadge({ level }: { level: DetectedPattern['confidence'] }) {
 }
 
 export default function InsightsScreen() {
+  const { lang, t } = useTranslation();
   const [profile,   setProfile]   = useState<Partial<Profile>>({});
   const [workouts,  setWorkouts]  = useState<Workout[]>([]);
   const [cycleDays, setCycleDays] = useState<CycleDay[]>([]);
@@ -64,11 +71,15 @@ export default function InsightsScreen() {
     profile.last_period_date ?? null,
     profile.cycle_length ?? 28,
     profile.period_length ?? 5,
+    undefined,
+    lang,
   );
 
   const phaseKey = ci?.phaseKey ?? 'unknown';
-  const insight  = PHASE_INSIGHTS[phaseKey];
-  const patterns = detectPatterns(workouts, cycleDays);
+  const insight  = getPhaseInsights(lang)[phaseKey];
+  const patterns = detectPatterns(workouts, cycleDays, lang);
+  const CONFIDENCE_LABELS = getConfidenceLabels(lang);
+  const DISCLAIMER = getDisclaimer(lang);
 
   const hasData  = workouts.length > 0 || cycleDays.length > 0;
 
@@ -76,8 +87,8 @@ export default function InsightsScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
         <View>
-          <Text style={styles.heading}>Ülevaated</Text>
-          <Text style={styles.subheading}>Mustrid Sinu Andmetes</Text>
+          <Text style={styles.heading}>{t('ins.heading')}</Text>
+          <Text style={styles.subheading}>{t('ins.sub')}</Text>
         </View>
       </View>
 
@@ -88,14 +99,14 @@ export default function InsightsScreen() {
         <View style={[styles.phaseCard, { backgroundColor: insight.colors.bg, borderColor: insight.colors.border }]}>
           <View style={styles.phaseCardTop}>
             <View>
-              <Text style={[styles.phaseEye, { color: insight.colors.sub }]}>PRAEGUNE FAAS</Text>
+              <Text style={[styles.phaseEye, { color: insight.colors.sub }]}>{t('phase.current')}</Text>
               <Text style={[styles.phaseName, { color: insight.colors.text }]}>{insight.phase}</Text>
               <Text style={[styles.phaseDays, { color: insight.colors.sub }]}>{insight.daysRange}</Text>
             </View>
             {ci && (
               <View style={styles.phaseDaysLeft}>
                 <Text style={[styles.phaseDaysN, { color: insight.colors.text }]}>{ci.daysLeft}</Text>
-                <Text style={[styles.phaseDaysLbl, { color: insight.colors.sub }]}>päeva{'\n'}jäänud</Text>
+                <Text style={[styles.phaseDaysLbl, { color: insight.colors.sub }]}>{t('phase.daysleft')}</Text>
               </View>
             )}
           </View>
@@ -114,7 +125,7 @@ export default function InsightsScreen() {
           <>
             <View style={styles.sectionRow}>
               <Icon name="spark" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>Mis toimub hormonaalselt</Text>
+              <Text style={styles.sectionLbl}>{t('ins.hormone')}</Text>
             </View>
             <View style={styles.infoCard}>
               <Text style={styles.infoTxt}>{insight.hormoneContext}</Text>
@@ -127,7 +138,7 @@ export default function InsightsScreen() {
           <>
             <View style={styles.sectionRow}>
               <Icon name="energized" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>Energia ja jõudlus</Text>
+              <Text style={styles.sectionLbl}>{t('ins.energy')}</Text>
             </View>
             <View style={styles.infoCard}>
               <Text style={styles.infoTxt}>{insight.energyPattern}</Text>
@@ -140,7 +151,7 @@ export default function InsightsScreen() {
           <>
             <View style={styles.sectionRow}>
               <Icon name="barbell" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>Treeningusoovitused selleks faasiks</Text>
+              <Text style={styles.sectionLbl}>{t('ins.training')}</Text>
             </View>
             {insight.trainingFocus.map((tip, i) => (
               <TouchableOpacity
@@ -173,7 +184,7 @@ export default function InsightsScreen() {
           <>
             <View style={styles.sectionRow}>
               <Icon name="moon" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>Taastumine ja uni</Text>
+              <Text style={styles.sectionLbl}>{t('ins.recovery')}</Text>
             </View>
             <View style={styles.infoCard}>
               <Text style={styles.infoTxt}>{insight.recoveryNote}</Text>
@@ -186,7 +197,7 @@ export default function InsightsScreen() {
           <>
             <View style={styles.sectionRow}>
               <Icon name="leaf" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>Heaolunõuanded</Text>
+              <Text style={styles.sectionLbl}>{t('ins.wellness')}</Text>
             </View>
             <View style={styles.wellnessCard}>
               {insight.wellnessTips.map((tip, i) => (
@@ -204,7 +215,7 @@ export default function InsightsScreen() {
           <>
             <View style={styles.sectionRow}>
               <Icon name="eye" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>Sinu isiklikud mustrid</Text>
+              <Text style={styles.sectionLbl}>{t('ins.patterns')}</Text>
             </View>
             {patterns.map(p => (
               <View key={p.id} style={[
@@ -224,12 +235,10 @@ export default function InsightsScreen() {
           <>
             <View style={styles.sectionRow}>
               <Icon name="eye" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>Sinu isiklikud mustrid</Text>
+              <Text style={styles.sectionLbl}>{t('ins.patterns')}</Text>
             </View>
             <View style={styles.emptyPatterns}>
-              <Text style={styles.emptyTxt}>
-                Lisa vähemalt 3–4 treeningkorda eri tsüklifaasides, et mustrid ilmneksid.
-              </Text>
+              <Text style={styles.emptyTxt}>{t('ins.patterns.empty')}</Text>
             </View>
           </>
         )}
@@ -246,7 +255,7 @@ export default function InsightsScreen() {
         <View style={styles.disclaimer}>
           <View style={styles.disclaimerHeader}>
             <Icon name="lock" size={13} color={Colors.beige[500]} />
-            <Text style={styles.disclaimerTitle}>Oluline märkus</Text>
+            <Text style={styles.disclaimerTitle}>{t('ins.note')}</Text>
           </View>
           <Text style={styles.disclaimerTxt}>{DISCLAIMER}</Text>
         </View>

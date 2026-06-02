@@ -8,8 +8,7 @@ import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
 import { Icon } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import { storage } from '../../lib/storage';
-import { formatDate, todayISO, getPhaseKey } from '../../lib/cycle';
-import { PHASE_LABELS } from '../../lib/cycle';
+import { formatDate, todayISO, getPhaseKey, getPhaseLabel } from '../../lib/cycle';
 import {
   CATEGORIES, getAllExercises,
   getRecentExerciseIds, recordRecentExercise,
@@ -21,8 +20,7 @@ import {
   getExerciseProgress, detectNewPRs, getWeeklyVolume,
   getWorkoutStats, ExerciseProgress, PersonalRecord, WeeklyVolume, WorkoutStats,
 } from '../../lib/workoutAnalysis';
-
-const FEEL_CHIPS = ['Väsinud', 'Energiline', 'Tugev', 'Raske', 'Kerge', 'Motiveeritud'];
+import { useTranslation } from '../../lib/LangContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface LoggedExercise {
@@ -32,14 +30,13 @@ interface LoggedExercise {
 
 // ─── Exercise Picker Modal ────────────────────────────────────────────────────
 function ExercisePicker({
-  visible,
-  onSelect,
-  onClose,
+  visible, onSelect, onClose,
 }: {
   visible: boolean;
   onSelect: (ex: ExerciseTemplate) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [query,        setQuery]        = useState('');
   const [category,     setCategory]     = useState('all');
   const [allExercises, setAllExercises] = useState<ExerciseTemplate[]>([]);
@@ -87,7 +84,7 @@ function ExercisePicker({
         <SafeAreaView edges={['top']} style={{ backgroundColor: Colors.cream }}>
           {/* Header */}
           <View style={styles.pickerHeader}>
-            <Text style={styles.pickerTitle}>Vali harjutus</Text>
+            <Text style={styles.pickerTitle}>{t('w.picker.title')}</Text>
             <TouchableOpacity onPress={onClose} style={styles.pickerClose}>
               <Icon name="close" size={20} color={Colors.beige[600]} />
             </TouchableOpacity>
@@ -98,7 +95,7 @@ function ExercisePicker({
             <Icon name="search" size={16} color={Colors.beige[400]} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Otsi harjutust..."
+              placeholder={t('w.picker.search')}
               placeholderTextColor={Colors.beige[300]}
               value={query}
               onChangeText={setQuery}
@@ -145,9 +142,9 @@ function ExercisePicker({
           ListEmptyComponent={
             query ? (
               <View style={styles.noResults}>
-                <Text style={styles.noResultsTxt}>Harjutust „{query}" ei leitud.</Text>
+                <Text style={styles.noResultsTxt}>„{query}" {t('w.picker.noresult')}</Text>
                 <Text style={[styles.noResultsTxt, { fontSize: 11, marginTop: 4 }]}>
-                  Kasuta alumist välja, et see kohe lisada.
+                  {t('w.picker.noresult.hint')}
                 </Text>
               </View>
             ) : null
@@ -166,12 +163,12 @@ function ExercisePicker({
                     <Text style={styles.exerciseName}>{item.name}</Text>
                     {item.custom && (
                       <View style={styles.customBadge}>
-                        <Text style={styles.customBadgeTxt}>KOHANDATUD</Text>
+                        <Text style={styles.customBadgeTxt}>{t('w.picker.badge.custom')}</Text>
                       </View>
                     )}
                     {isRecent && !item.custom && (
                       <View style={styles.recentBadge}>
-                        <Text style={styles.recentBadgeTxt}>HILJUTINE</Text>
+                        <Text style={styles.recentBadgeTxt}>{t('w.picker.badge.recent')}</Text>
                       </View>
                     )}
                   </View>
@@ -186,13 +183,11 @@ function ExercisePicker({
 
         {/* Always-visible custom name bar at bottom */}
         <View style={[styles.pickerFooter, { paddingBottom: insets.bottom + 8 }]}>
-          <Text style={styles.customNameLbl}>
-            Ei leia? Kirjuta oma harjutuse nimi:
-          </Text>
+          <Text style={styles.customNameLbl}>{t('w.picker.custom.lbl')}</Text>
           <View style={styles.createRow}>
             <TextInput
               style={styles.createInput}
-              placeholder={query || 'nt Kätekõverdus, Jooks...'}
+              placeholder={query || t('w.picker.custom.ph')}
               placeholderTextColor={Colors.beige[200]}
               value={customName}
               onChangeText={setCustomName}
@@ -204,7 +199,7 @@ function ExercisePicker({
               onPress={handleAddCustom}
               disabled={!(customName.trim() || query.trim())}
             >
-              <Text style={styles.createBtnTxt}>Lisa</Text>
+              <Text style={styles.createBtnTxt}>{t('w.picker.custom.add')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -215,16 +210,14 @@ function ExercisePicker({
 
 // ─── Set Logger ───────────────────────────────────────────────────────────────
 function SetLogger({
-  exercise,
-  sets,
-  onChange,
-  onRemove,
+  exercise, sets, onChange, onRemove,
 }: {
   exercise: ExerciseTemplate;
   sets: ExerciseSet[];
   onChange: (sets: ExerciseSet[]) => void;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation();
   const addSet = () => onChange([...sets, {}]);
   const removeSet = (i: number) => onChange(sets.filter((_, idx) => idx !== i));
   const updateSet = (i: number, key: keyof ExerciseSet, val: string) => {
@@ -255,8 +248,8 @@ function SetLogger({
       {/* Column headers */}
       {sets.length > 0 && (
         <View style={styles.setColHeaders}>
-          {isSets && <Text style={styles.setColHdr}>Seeria</Text>}
-          {showReps     && <Text style={styles.setColHdr}>Kord.</Text>}
+          {isSets && <Text style={styles.setColHdr}>{t('w.ex.sets.col')}</Text>}
+          {showReps     && <Text style={styles.setColHdr}>{t('w.ex.reps.col')}</Text>}
           {showWeight   && <Text style={styles.setColHdr}>kg</Text>}
           {showDuration && <Text style={styles.setColHdr}>min</Text>}
           {showDistance && <Text style={styles.setColHdr}>km</Text>}
@@ -321,9 +314,7 @@ function SetLogger({
       {/* Add set */}
       <TouchableOpacity style={styles.addSetBtn} onPress={addSet}>
         <Icon name="plus" size={12} color={Colors.beige[600]} />
-        <Text style={styles.addSetTxt}>
-          {sets.length === 0 ? 'Lisa seeria' : 'Lisa seeria'}
-        </Text>
+        <Text style={styles.addSetTxt}>{t('w.ex.addset')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -331,6 +322,7 @@ function SetLogger({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function WorkoutsScreen() {
+  const { lang, t } = useTranslation();
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [showBuilder, setShowBuilder] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
@@ -360,8 +352,8 @@ export default function WorkoutsScreen() {
   };
 
   const handleSave = async () => {
-    if (!date) { Alert.alert('', 'Palun vali kuupäev'); return; }
-    if (loggedExercises.length === 0) { Alert.alert('', 'Lisa vähemalt üks harjutus'); return; }
+    if (!date) { Alert.alert('', t('w.err.date')); return; }
+    if (loggedExercises.length === 0) { Alert.alert('', t('w.err.noex')); return; }
 
     const name = workoutName.trim() || loggedExercises[0].template.name;
 
@@ -416,16 +408,16 @@ export default function WorkoutsScreen() {
       const prLines = prs.map(pr =>
         `🏆 ${pr.exerciseName}: ${pr.value}${pr.unit} (+${pr.improvement}${pr.type === 'weight' || pr.type === 'distance' ? '%' : ''})`
       ).join('\n');
-      Alert.alert('Uus isiklik rekord!', prLines);
+      Alert.alert(t('w.pr.title'), prLines);
     } else {
-      Alert.alert('', 'Treeningkord salvestatud ✓');
+      Alert.alert('', t('w.saved'));
     }
   };
 
   const handleDelete = (id: string) => {
-    Alert.alert('Kustuta?', '', [
-      { text: 'Tühista', style: 'cancel' },
-      { text: 'Kustuta', style: 'destructive', onPress: async () => setWorkouts(await storage.deleteWorkout(id)) },
+    Alert.alert(t('w.delete.confirm'), '', [
+      { text: t('w.delete.cancel'), style: 'cancel' },
+      { text: t('w.delete.ok'), style: 'destructive', onPress: async () => setWorkouts(await storage.deleteWorkout(id)) },
     ]);
   };
 
@@ -437,9 +429,9 @@ export default function WorkoutsScreen() {
           <TouchableOpacity onPress={() => { resetBuilder(); setShowBuilder(false); }} style={styles.backBtn}>
             <Icon name="arr-l" size={20} color={Colors.beige[600]} />
           </TouchableOpacity>
-          <Text style={styles.heading}>Uus treening</Text>
+          <Text style={styles.heading}>{t('w.builder.title')}</Text>
           <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSave}>
-            <Text style={styles.saveHeaderTxt}>Salvesta</Text>
+            <Text style={styles.saveHeaderTxt}>{t('w.builder.save')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -448,24 +440,24 @@ export default function WorkoutsScreen() {
 
             {/* Date */}
             <View style={styles.builderSection}>
-              <Text style={styles.fieldLbl}>Kuupäev</Text>
+              <Text style={styles.fieldLbl}>{t('w.date.lbl')}</Text>
               <TextInput
                 style={styles.fieldInput}
                 value={date}
                 onChangeText={setDate}
-                placeholder="aaaa-kk-pp"
+                placeholder={lang === 'en' ? 'yyyy-mm-dd' : 'aaaa-kk-pp'}
                 placeholderTextColor={Colors.beige[200]}
               />
             </View>
 
             {/* Workout name */}
             <View style={styles.builderSection}>
-              <Text style={styles.fieldLbl}>Treeningu nimi (vabatahtlik)</Text>
+              <Text style={styles.fieldLbl}>{t('w.builder.name.lbl')}</Text>
               <TextInput
                 style={styles.fieldInput}
                 value={workoutName}
                 onChangeText={setWorkoutName}
-                placeholder={loggedExercises[0]?.template.name ?? 'nt Ülaosa jõutreening'}
+                placeholder={loggedExercises[0]?.template.name ?? t('w.builder.name.ph')}
                 placeholderTextColor={Colors.beige[200]}
               />
             </View>
@@ -473,7 +465,7 @@ export default function WorkoutsScreen() {
             {/* Exercises */}
             <View style={styles.sectionLblRow}>
               <Icon name="barbell" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>Harjutused</Text>
+              <Text style={styles.sectionLbl}>{t('w.ex.lbl')}</Text>
             </View>
 
             {loggedExercises.map((le, i) => (
@@ -492,16 +484,16 @@ export default function WorkoutsScreen() {
               onPress={() => setShowPicker(true)}
             >
               <Icon name="plus" size={16} color={Colors.beige[800]} />
-              <Text style={styles.addExerciseTxt}>Lisa harjutus</Text>
+              <Text style={styles.addExerciseTxt}>{t('w.ex.add')}</Text>
             </TouchableOpacity>
 
             {/* How did it feel */}
             <View style={[styles.sectionLblRow, { marginTop: 8 }]}>
               <Icon name="smile-good" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>Kuidas tundus?</Text>
+              <Text style={styles.sectionLbl}>{t('w.feel.lbl')}</Text>
             </View>
             <View style={styles.chips}>
-              {FEEL_CHIPS.map(chip => (
+              {([t('w.feel.tired'), t('w.feel.energetic'), t('w.feel.strong'), t('w.feel.hard'), t('w.feel.easy'), t('w.feel.motivated')]).map(chip => (
                 <TouchableOpacity
                   key={chip}
                   activeOpacity={0.7}
@@ -515,12 +507,12 @@ export default function WorkoutsScreen() {
 
             {/* Notes */}
             <View style={styles.builderSection}>
-              <Text style={styles.fieldLbl}>Märkmed (vabatahtlik)</Text>
+              <Text style={styles.fieldLbl}>{t('w.notes.lbl')}</Text>
               <TextInput
                 style={[styles.fieldInput, { height: 72, textAlignVertical: 'top', paddingTop: 12 }]}
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="Midagi tähelepanuväärset?"
+                placeholder={t('w.notes.ph')}
                 placeholderTextColor={Colors.beige[200]}
                 multiline
               />
@@ -549,8 +541,8 @@ export default function WorkoutsScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
         <View>
-          <Text style={styles.heading}>Treeningud</Text>
-          <Text style={styles.subheading}>Lisa Treeningkordi · Jälgi Arengut</Text>
+          <Text style={styles.heading}>{t('w.heading')}</Text>
+          <Text style={styles.subheading}>{t('w.sub')}</Text>
         </View>
       </View>
 
@@ -560,13 +552,13 @@ export default function WorkoutsScreen() {
           style={[styles.tabBtn, activeTab === 'log' && styles.tabBtnOn]}
           onPress={() => setActiveTab('log')} activeOpacity={0.8}
         >
-          <Text style={[styles.tabBtnTxt, activeTab === 'log' && styles.tabBtnTxtOn]}>Logi</Text>
+          <Text style={[styles.tabBtnTxt, activeTab === 'log' && styles.tabBtnTxtOn]}>{t('w.tab.log')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'progress' && styles.tabBtnOn]}
           onPress={() => setActiveTab('progress')} activeOpacity={0.8}
         >
-          <Text style={[styles.tabBtnTxt, activeTab === 'progress' && styles.tabBtnTxtOn]}>Areng</Text>
+          <Text style={[styles.tabBtnTxt, activeTab === 'progress' && styles.tabBtnTxtOn]}>{t('w.tab.progress')}</Text>
           {progress.some(p => p.isNew) && <View style={styles.prDot} />}
         </TouchableOpacity>
       </View>
@@ -576,8 +568,8 @@ export default function WorkoutsScreen() {
           <>
             {workouts.length === 0 ? (
               <View style={styles.empty}>
-                <Text style={styles.emptyTxt}>Arengut pole veel näidata.</Text>
-                <Text style={styles.emptyHint}>Lisa oma esimesed treeningkorrad!</Text>
+                <Text style={styles.emptyTxt}>{t('w.progress.empty')}</Text>
+                <Text style={styles.emptyHint}>{t('w.progress.hint')}</Text>
               </View>
             ) : (
               <>
@@ -585,15 +577,15 @@ export default function WorkoutsScreen() {
                 <View style={styles.statsGrid}>
                   <View style={styles.statCard}>
                     <Text style={styles.statVal}>{stats.totalWorkouts}</Text>
-                    <Text style={styles.statLbl}>Treeningut kokku</Text>
+                    <Text style={styles.statLbl}>{t('w.progress.total')}</Text>
                   </View>
                   <View style={styles.statCard}>
                     <Text style={styles.statVal}>{stats.currentStreak}</Text>
-                    <Text style={styles.statLbl}>Praegune järjekord</Text>
+                    <Text style={styles.statLbl}>{t('w.progress.streak')}</Text>
                   </View>
                   <View style={styles.statCard}>
                     <Text style={styles.statVal}>{stats.uniqueExercises}</Text>
-                    <Text style={styles.statLbl}>Eri harjutust</Text>
+                    <Text style={styles.statLbl}>{t('w.progress.unique')}</Text>
                   </View>
                 </View>
 
@@ -603,17 +595,17 @@ export default function WorkoutsScreen() {
                     <View style={styles.monthRow}>
                       <View>
                         <Text style={styles.monthVal}>{stats.totalThisMonth}</Text>
-                        <Text style={styles.monthLbl}>See kuu</Text>
+                        <Text style={styles.monthLbl}>{t('w.progress.thismonth')}</Text>
                       </View>
                       <View style={styles.monthArrow}>
                         <Text style={[styles.monthTrend, { color: stats.monthTrend >= 0 ? Colors.green[600] : Colors.blush[400] }]}>
                           {stats.monthTrend >= 0 ? '↑' : '↓'} {Math.abs(stats.monthTrend)}%
                         </Text>
-                        <Text style={styles.monthSub}>vs eelmine kuu</Text>
+                        <Text style={styles.monthSub}>{t('w.progress.vsmonth')}</Text>
                       </View>
                       <View style={{ alignItems: 'flex-end' }}>
                         <Text style={styles.monthVal}>{stats.totalLastMonth}</Text>
-                        <Text style={styles.monthLbl}>Eelmine kuu</Text>
+                        <Text style={styles.monthLbl}>{t('w.progress.lastmonth')}</Text>
                       </View>
                     </View>
                   </View>
@@ -622,7 +614,7 @@ export default function WorkoutsScreen() {
                 {/* Weekly volume chart */}
                 <View style={styles.sectionLblRow}>
                   <Icon name="wave" size={12} color={Colors.beige[400]} />
-                  <Text style={styles.sectionLbl}>Nädala maht (kg)</Text>
+                  <Text style={styles.sectionLbl}>{t('w.progress.weekly')}</Text>
                 </View>
                 <View style={styles.chartCard}>
                   <View style={styles.chartBars}>
@@ -647,7 +639,7 @@ export default function WorkoutsScreen() {
                 {/* Exercise progress */}
                 <View style={styles.sectionLblRow}>
                   <Icon name="spark" size={12} color={Colors.beige[400]} />
-                  <Text style={styles.sectionLbl}>Harjutuste areng</Text>
+                  <Text style={styles.sectionLbl}>{t('w.progress.exheader')}</Text>
                 </View>
 
                 {progress.filter(p => p.totalSessions >= 1).map(p => (
@@ -663,7 +655,7 @@ export default function WorkoutsScreen() {
                           )}
                         </View>
                         <Text style={styles.progressMeta}>
-                          {p.totalSessions} {p.totalSessions === 1 ? 'kord' : 'korda'} logitud
+                          {p.totalSessions} {t('w.progress.logged')}
                         </Text>
                       </View>
                     </View>
@@ -673,7 +665,7 @@ export default function WorkoutsScreen() {
                       {p.bestWeight > 0 && (
                         <View style={styles.progressMetric}>
                           <Text style={styles.progressMetricVal}>{p.bestWeight} kg</Text>
-                          <Text style={styles.progressMetricLbl}>Parim raskus</Text>
+                          <Text style={styles.progressMetricLbl}>{t('w.progress.bestkg')}</Text>
                           {p.weightGainPct !== null && p.weightGainPct > 0 && (
                             <Text style={styles.progressGain}>+{p.weightGainPct}%</Text>
                           )}
@@ -682,19 +674,19 @@ export default function WorkoutsScreen() {
                       {p.bestReps > 0 && (
                         <View style={styles.progressMetric}>
                           <Text style={styles.progressMetricVal}>{p.bestReps}</Text>
-                          <Text style={styles.progressMetricLbl}>Parim kordus</Text>
+                          <Text style={styles.progressMetricLbl}>{t('w.progress.bestreps')}</Text>
                         </View>
                       )}
                       {p.bestDistance > 0 && (
                         <View style={styles.progressMetric}>
                           <Text style={styles.progressMetricVal}>{p.bestDistance} km</Text>
-                          <Text style={styles.progressMetricLbl}>Parim distants</Text>
+                          <Text style={styles.progressMetricLbl}>{t('w.progress.bestdist')}</Text>
                         </View>
                       )}
                       {p.bestDuration > 0 && (
                         <View style={styles.progressMetric}>
                           <Text style={styles.progressMetricVal}>{p.bestDuration} min</Text>
-                          <Text style={styles.progressMetricLbl}>Pikim kestus</Text>
+                          <Text style={styles.progressMetricLbl}>{t('w.progress.bestdur')}</Text>
                         </View>
                       )}
                     </View>
@@ -715,7 +707,7 @@ export default function WorkoutsScreen() {
                             </View>
                           );
                         })}
-                        <Text style={styles.sparkLbl}>viimased {Math.min(p.sessions.length, 8)} seanssi</Text>
+                        <Text style={styles.sparkLbl}>{t('w.progress.lastsessions')} {Math.min(p.sessions.length, 8)} {t('w.progress.sessions')}</Text>
                       </View>
                     )}
                   </View>
@@ -735,19 +727,19 @@ export default function WorkoutsScreen() {
           onPress={() => setShowBuilder(true)}
         >
           <Icon name="plus" size={18} color={Colors.cream} />
-          <Text style={styles.newWorkoutTxt}>Lisa treeningkord</Text>
+          <Text style={styles.newWorkoutTxt}>{t('w.add.btn')}</Text>
         </TouchableOpacity>
 
         {/* History */}
         <View style={styles.sectionLblRow}>
           <Icon name="eye" size={12} color={Colors.beige[400]} />
-          <Text style={styles.sectionLbl}>Logitud treeningud</Text>
+          <Text style={styles.sectionLbl}>{t('w.log.lbl')}</Text>
         </View>
 
         {workouts.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyTxt}>Treeninguid pole veel lisatud.</Text>
-            <Text style={styles.emptyHint}>Alusta oma esimese treeninguga 💪</Text>
+            <Text style={styles.emptyTxt}>{t('w.empty')}</Text>
+            <Text style={styles.emptyHint}>{t('w.empty.hint')}</Text>
           </View>
         ) : (
           workouts.slice(0, 30).map(w => (
@@ -756,7 +748,7 @@ export default function WorkoutsScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.workoutName}>{w.name}</Text>
                   <Text style={styles.workoutMeta}>
-                    {formatDate(w.date)} · {PHASE_LABELS[w.phase]}
+                    {formatDate(w.date)} · {getPhaseLabel(w.phase, lang)}
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => handleDelete(w.id)} style={styles.deleteBtn}>

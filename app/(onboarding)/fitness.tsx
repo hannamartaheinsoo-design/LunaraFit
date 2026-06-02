@@ -7,74 +7,52 @@ import { Icon } from '../../components/ui/Icon';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { FitnessLevel } from '../../types';
+import { useTranslation } from '../../lib/LangContext';
 
-const LEVELS: { key: FitnessLevel; title: string; sub: string; icon: any }[] = [
-  { key: 'beginner',     title: 'Alles alustan',         sub: 'Uus või naasmas jõusaali',              icon: 'leaf' },
-  { key: 'intermediate', title: 'Leidmas oma rütmi',     sub: 'Käin regulaarselt, ehitan rutiini',     icon: 'wave' },
-  { key: 'advanced',     title: 'Järjepidev ja kogenud', sub: 'Treenin regulaarselt eesmärkidega',     icon: 'barbell' },
+const LEVEL_KEYS: { key: FitnessLevel; titleKey: any; subKey: any; icon: any }[] = [
+  { key: 'beginner',     titleKey: 'fitness.lv1.title', subKey: 'fitness.lv1.sub', icon: 'leaf' },
+  { key: 'intermediate', titleKey: 'fitness.lv2.title', subKey: 'fitness.lv2.sub', icon: 'wave' },
+  { key: 'advanced',     titleKey: 'fitness.lv3.title', subKey: 'fitness.lv3.sub', icon: 'barbell' },
 ];
 
 export default function FitnessScreen() {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<FitnessLevel | null>(null);
 
   const handleContinue = async () => {
     if (!selected) return;
     const existing = await AsyncStorage.getItem('lf_profile');
     const profile = existing ? JSON.parse(existing) : {};
-    await AsyncStorage.setItem('lf_profile', JSON.stringify({
-      ...profile,
-      fitness_level: selected,
-    }));
+    await AsyncStorage.setItem('lf_profile', JSON.stringify({ ...profile, fitness_level: selected }));
     router.push('/(onboarding)/plan');
   };
 
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-        <Text style={styles.backText}>← Tagasi</Text>
+        <Text style={styles.backText}>{t('ob.back')}</Text>
       </TouchableOpacity>
 
-      <Eyebrow>Spordikogemus</Eyebrow>
-      <SerifTitle>Milline on sinu treeningkogemus?</SerifTitle>
-      <BodyText>Vale vastust pole.</BodyText>
+      <Eyebrow>{t('fitness.eyebrow')}</Eyebrow>
+      <SerifTitle>{t('fitness.title')}</SerifTitle>
+      <BodyText>{t('fitness.body')}</BodyText>
 
       <View style={styles.stack}>
-        {LEVELS.map((level) => (
-          <TouchableOpacity
-            key={level.key}
-            activeOpacity={0.8}
-            style={[styles.card, selected === level.key && styles.cardSel]}
-            onPress={() => setSelected(level.key)}
-          >
+        {LEVEL_KEYS.map((level) => (
+          <TouchableOpacity key={level.key} activeOpacity={0.8} style={[styles.card, selected === level.key && styles.cardSel]} onPress={() => setSelected(level.key)}>
             <View style={[styles.iconWrap, selected === level.key && styles.iconWrapSel]}>
-              <Icon
-                name={level.icon}
-                size={22}
-                color={selected === level.key ? Colors.blush[800] : Colors.beige[600]}
-                strokeWidth={1.4}
-              />
+              <Icon name={level.icon} size={22} color={selected === level.key ? Colors.blush[800] : Colors.beige[600]} strokeWidth={1.4} />
             </View>
             <View style={styles.cardText}>
-              <Text style={styles.cardTitle}>{level.title}</Text>
-              <Text style={styles.cardSub}>{level.sub}</Text>
+              <Text style={styles.cardTitle}>{t(level.titleKey)}</Text>
+              <Text style={styles.cardSub}>{t(level.subKey)}</Text>
             </View>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Button
-        variant="dark"
-        size="lg"
-        fullWidth
-        onPress={handleContinue}
-        disabled={!selected}
-        style={styles.btn}
-      >
-        Jätka →
+      <Button variant="dark" size="lg" fullWidth onPress={handleContinue} disabled={!selected} style={styles.btn}>
+        {t('fitness.cta')}
       </Button>
     </ScrollView>
   );

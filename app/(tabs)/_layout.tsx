@@ -1,19 +1,16 @@
 import { Tabs } from 'expo-router';
 import { Colors, Fonts } from '../../constants/theme';
 import { Icon } from '../../components/ui/Icon';
+import { useTranslation } from '../../lib/LangContext';
 
 function TabIcon({ name, focused }: { name: any; focused: boolean }) {
   return (
-    <Icon
-      name={name}
-      size={22}
-      color={focused ? Colors.beige[800] : Colors.beige[200]}
-      strokeWidth={1.4}
-    />
+    <Icon name={name} size={22} color={focused ? Colors.beige[800] : Colors.beige[200]} strokeWidth={1.4} />
   );
 }
 
 export default function TabLayout() {
+  const { t } = useTranslation();
   return (
     <Tabs
       screenOptions={{
@@ -36,41 +33,11 @@ export default function TabLayout() {
         },
       }}
     >
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Avaleht',
-          tabBarIcon: ({ focused }) => <TabIcon name="home" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="workouts"
-        options={{
-          title: 'Treeningud',
-          tabBarIcon: ({ focused }) => <TabIcon name="barbell" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="cycle"
-        options={{
-          title: 'Tsükkel',
-          tabBarIcon: ({ focused }) => <TabIcon name="moon" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="insights"
-        options={{
-          title: 'Ülevaated',
-          tabBarIcon: ({ focused }) => <TabIcon name="spark" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profiil',
-          tabBarIcon: ({ focused }) => <TabIcon name="person" focused={focused} />,
-        }}
-      />
+      <Tabs.Screen name="home" options={{ title: t('nav.home'), tabBarIcon: ({ focused }) => <TabIcon name="home" focused={focused} /> }} />
+      <Tabs.Screen name="workouts" options={{ title: t('nav.workouts'), tabBarIcon: ({ focused }) => <TabIcon name="barbell" focused={focused} /> }} />
+      <Tabs.Screen name="cycle" options={{ title: t('nav.cycle'), tabBarIcon: ({ focused }) => <TabIcon name="moon" focused={focused} /> }} />
+      <Tabs.Screen name="insights" options={{ title: t('nav.insights'), tabBarIcon: ({ focused }) => <TabIcon name="spark" focused={focused} /> }} />
+      <Tabs.Screen name="profile" options={{ title: t('nav.profile'), tabBarIcon: ({ focused }) => <TabIcon name="person" focused={focused} /> }} />
     </Tabs>
   );
 }

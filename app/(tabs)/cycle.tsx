@@ -11,42 +11,24 @@ import { Icon } from '../../components/ui/Icon';
 import { storage } from '../../lib/storage';
 import { getCycleInfo, todayISO } from '../../lib/cycle';
 import { Profile, CycleDay, Mood } from '../../types';
+import { useTranslation } from '../../lib/LangContext';
 
 type MoodKey = 'bad' | 'neutral' | 'good' | 'great' | 'energized';
-type EnergyKey = 'kurnatud' | 'väsinud' | 'normaalne' | 'energiline' | 'täis energiat';
-type ContraKey = 'ei kasuta' | 'õigeaegselt' | 'hilinemisega';
+type EnergyKey = 'et0' | 'et1' | 'et2' | 'et3' | 'et4';
+type ContraKey = 'none' | 'taken' | 'late';
 
-const MOODS: { key: MoodKey; label: string; icon: any }[] = [
-  { key: 'bad',       label: 'Halb',         icon: 'smile-bad' },
-  { key: 'neutral',   label: 'Keskmine',      icon: 'smile-neutral' },
-  { key: 'good',      label: 'Hea',           icon: 'smile-good' },
-  { key: 'great',     label: 'Suurepärane',   icon: 'smile-great' },
-  { key: 'energized', label: 'Ergas',         icon: 'energized' },
+const MOOD_ICONS: { key: MoodKey; icon: any }[] = [
+  { key: 'bad',       icon: 'smile-bad' },
+  { key: 'neutral',   icon: 'smile-neutral' },
+  { key: 'good',      icon: 'smile-good' },
+  { key: 'great',     icon: 'smile-great' },
+  { key: 'energized', icon: 'energized' },
 ];
 
-const ENERGY_OPTS: { key: EnergyKey; label: string }[] = [
-  { key: 'kurnatud',      label: 'Kurnatud' },
-  { key: 'väsinud',       label: 'Väsinud' },
-  { key: 'normaalne',     label: 'Normaalne' },
-  { key: 'energiline',    label: 'Energiline' },
-  { key: 'täis energiat', label: 'Täis energiat' },
-];
+const ENERGY_KEYS: EnergyKey[] = ['et0','et1','et2','et3','et4'];
+const CONTRA_ICONS = ['shield','check','sync'];
+const CONTRA_KEYS: ContraKey[] = ['none','taken','late'];
 
-const FEELINGS    = ['Meeleolumuutused','Kontrollikaotus','Hea','Õnnelik','Kurb','Tundlik','Vihane','Enesekindel','Põnevil','Ärritunud','Ärev','Ebakindel','Masendunud','Enesekritiseeriv'];
-const MIND        = ['Unustlik','Ajuudu','Rahulik','Stressis','Fokuseeritud','Hajameelne','Motiveeritud','Motiveerimata','Produktiivne','Ebaproduktiivne'];
-const PAIN        = ['Valuta','Krambid','Ovulatsioonivalu','Rindade hellus','Peavalu','Migreen','Migreen auraga','Alaseljavalu','Üldine lihasvalu'];
-const CRAVINGS    = ['Magus','Soolane','Rasvane','Vürtsikas','Süsivesikud','Värske'];
-const SLEEP_CHIPS = ['Raske uinuda','Värske ärkamine','Väsinud ärkamine','Rahutu uni','Eredad unenäod','Öised higistamised'];
-const DIGESTION   = ['Korras','Puhitus','Gaasid','Iiveldus','Oksendamine','Kõhulahtisus','Kõhukinnisus'];
-
-const CONTRA_OPTS: { key: ContraKey; label: string; icon: any }[] = [
-  { key: 'ei kasuta',     label: 'Ei kasuta',            icon: 'shield' },
-  { key: 'õigeaegselt',   label: 'Õigeaegselt võetud',   icon: 'check' },
-  { key: 'hilinemisega',  label: 'Hilinemisega võetud',  icon: 'sync' },
-];
-
-const WEEKDAYS = ['E', 'T', 'K', 'N', 'R', 'L', 'P'];
-const MONTHS   = ['jaanuar','veebruar','märts','aprill','mai','juuni','juuli','august','september','oktoober','november','detsember'];
 const CAL_H_PADDING = 16;
 
 function CatHeader({ icon, label, badge }: { icon: any; label: string; badge?: string }) {
@@ -60,6 +42,7 @@ function CatHeader({ icon, label, badge }: { icon: any; label: string; badge?: s
 }
 
 export default function CycleScreen() {
+  const { lang, t, tArr } = useTranslation();
   const [profile,    setProfile]    = useState<Partial<Profile>>({});
   const [cycleDays,  setCycleDays]  = useState<CycleDay[]>([]);
   const [date,       setDate]       = useState(todayISO());
@@ -102,7 +85,7 @@ export default function CycleScreen() {
   };
 
   const handleSave = async () => {
-    if (!date) { Alert.alert('', 'Palun vali kuupäev'); return; }
+    if (!date) { Alert.alert('', t('c.err.date')); return; }
     const allSymptoms = [
       ...(energy ? [energy] : []),
       ...Array.from(feelings),
@@ -137,7 +120,7 @@ export default function CycleScreen() {
     setFeelings(new Set()); setMind(new Set()); setPain(new Set());
     setCravings(new Set()); setSleepChips(new Set()); setDigestion(new Set());
     setSleepHours('');
-    Alert.alert('', 'Tsüklimärge salvestatud ✓');
+    Alert.alert('', t('c.saved'));
   };
 
   // Calendar calculations for displayed month
@@ -172,14 +155,25 @@ export default function CycleScreen() {
     }
   }
 
-  const ci = getCycleInfo(profile.last_period_date ?? null, cl, pl);
+  const ci = getCycleInfo(profile.last_period_date ?? null, cl, pl, undefined, lang);
+  const WEEKDAYS = tArr('c.cal.weekdays');
+  const MONTHS = tArr('c.cal.months');
+  const MOODS = MOOD_ICONS.map((m, i) => ({ ...m, label: t(`c.mood.${m.key}` as any) }));
+  const ENERGY_OPTS = ENERGY_KEYS.map((k, i) => ({ key: k, label: tArr('c.energy')[i] ?? k }));
+  const FEELINGS = tArr('c.feelings');
+  const MIND = tArr('c.mind');
+  const PAIN = tArr('c.pain');
+  const CRAVINGS = tArr('c.cravings');
+  const SLEEP_CHIPS = tArr('c.sleep.chips');
+  const DIGESTION = tArr('c.digestion');
+  const CONTRA_OPTS = CONTRA_KEYS.map((k, i) => ({ key: k, label: t(`c.contra.${k}` as any), icon: CONTRA_ICONS[i] }));
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
         <View>
-          <Text style={styles.heading}>Tsükkel</Text>
-          {ci && <Text style={styles.subheading}>Päev {ci.day} / {ci.cycleLength}</Text>}
+          <Text style={styles.heading}>{t('c.heading')}</Text>
+          {ci && <Text style={styles.subheading}>{t('c.day')} {ci.day} / {ci.cycleLength}</Text>}
         </View>
       </View>
 
@@ -191,7 +185,7 @@ export default function CycleScreen() {
             <Text style={styles.calNavArrow}>‹</Text>
           </TouchableOpacity>
           <Text style={styles.calNavTitle}>
-            {MONTHS[displayMonth].charAt(0).toUpperCase() + MONTHS[displayMonth].slice(1)} {displayYear}
+            {(MONTHS[displayMonth] ?? '').charAt(0).toUpperCase() + (MONTHS[displayMonth] ?? '').slice(1)} {displayYear}
           </Text>
           <TouchableOpacity onPress={goToNextMonth} style={styles.calNavBtn} activeOpacity={0.7}>
             <Text style={styles.calNavArrow}>›</Text>
@@ -246,10 +240,10 @@ export default function CycleScreen() {
         {/* Legend */}
         <View style={styles.legend}>
           {[
-            { color: Colors.blush[600], label: 'Menstruatsioon (märgitud)' },
-            { color: Colors.blush[50],  label: 'Ennustatud', border: Colors.blush[200] },
-            { color: Colors.green[400], label: 'Ovulatsioon' },
-            { color: Colors.green[200], label: 'Viljakas päev' },
+            { color: Colors.blush[600], label: t('c.period.logged') },
+            { color: Colors.blush[50],  label: t('c.period.pred'), border: Colors.blush[200] },
+            { color: Colors.green[400], label: t('c.ovulation') },
+            { color: Colors.green[200], label: t('c.fertile') },
           ].map((l, i) => (
             <View key={i} style={styles.legItem}>
               <View style={[styles.legDot, { backgroundColor: l.color, borderWidth: l.border ? 1 : 0, borderColor: l.border }]} />
@@ -261,20 +255,20 @@ export default function CycleScreen() {
         {/* Log entry */}
         <View style={styles.sectionLblRow}>
           <Icon name="drop" size={12} color={Colors.beige[400]} />
-          <Text style={styles.sectionLbl}>Tänane märge</Text>
+          <Text style={styles.sectionLbl}>{t('c.cal.today')}</Text>
         </View>
 
         <Card>
-          <Input label="Kuupäev" value={date} onChangeText={setDate} placeholder="aaaa-kk-pp" />
+          <Input label={t('c.date.lbl')} value={date} onChangeText={setDate} placeholder={lang === 'en' ? 'yyyy-mm-dd' : 'aaaa-kk-pp'} />
 
-          <Text style={styles.fieldLabel}>Menstruatsioon täna?</Text>
+          <Text style={styles.fieldLabel}>{t('c.period.lbl')}</Text>
           <View style={styles.rowGap8}>
-            <Button variant={period ? 'blush' : 'outline'} size="sm" onPress={() => setPeriod(true)}>Jah</Button>
-            <Button variant={!period ? 'dark' : 'outline'} size="sm" onPress={() => setPeriod(false)}>Ei</Button>
+            <Button variant={period ? 'blush' : 'outline'} size="sm" onPress={() => setPeriod(true)}>{t('c.period.yes')}</Button>
+            <Button variant={!period ? 'dark' : 'outline'} size="sm" onPress={() => setPeriod(false)}>{t('c.period.no')}</Button>
           </View>
 
           {/* Mood */}
-          <CatHeader icon="smile-good" label="Tuju" />
+          <CatHeader icon="smile-good" label={t('c.mood.lbl')} />
           <View style={styles.chipGrid}>
             {MOODS.map((m) => (
               <TouchableOpacity
@@ -289,7 +283,7 @@ export default function CycleScreen() {
           </View>
 
           {/* Energy */}
-          <CatHeader icon="energized" label="Energia" />
+          <CatHeader icon="energized" label={t('c.energy.lbl')} />
           <View style={styles.chipGrid}>
             {ENERGY_OPTS.map((e) => (
               <Chip key={e.key} label={e.label} selected={energy === e.key} onPress={() => setEnergy(energy === e.key ? null : e.key)} />
@@ -297,7 +291,7 @@ export default function CycleScreen() {
           </View>
 
           {/* Feelings */}
-          <CatHeader icon="heart" label="Tunded" />
+          <CatHeader icon="heart" label={t('c.feelings.lbl')} />
           <View style={styles.chipGrid}>
             {FEELINGS.map((f) => (
               <Chip key={f} label={f} selected={feelings.has(f)} onPress={() => toggle(feelings, setFeelings, f)} />
@@ -305,7 +299,7 @@ export default function CycleScreen() {
           </View>
 
           {/* Mind */}
-          <CatHeader icon="brain" label="Meeleseisund" />
+          <CatHeader icon="brain" label={t('c.mind.lbl')} />
           <View style={styles.chipGrid}>
             {MIND.map((f) => (
               <Chip key={f} label={f} selected={mind.has(f)} onPress={() => toggle(mind, setMind, f)} />
@@ -313,7 +307,7 @@ export default function CycleScreen() {
           </View>
 
           {/* Pain */}
-          <CatHeader icon="pain" label="Valu" />
+          <CatHeader icon="pain" label={t('c.pain.lbl')} />
           <View style={styles.chipGrid}>
             {PAIN.map((f) => (
               <Chip key={f} label={f} selected={pain.has(f)} onPress={() => toggle(pain, setPain, f)} />
@@ -321,7 +315,7 @@ export default function CycleScreen() {
           </View>
 
           {/* Cravings */}
-          <CatHeader icon="craving" label="Isu" />
+          <CatHeader icon="craving" label={t('c.cravings.lbl')} />
           <View style={styles.chipGrid}>
             {CRAVINGS.map((f) => (
               <Chip key={f} label={f} selected={cravings.has(f)} onPress={() => toggle(cravings, setCravings, f)} />
@@ -329,7 +323,7 @@ export default function CycleScreen() {
           </View>
 
           {/* Sleep — Pro only */}
-          <CatHeader icon="sleep" label="Unekvaliteet" badge="PRO" />
+          <CatHeader icon="sleep" label={t('c.sleep.lbl')} badge="PRO" />
           <View style={styles.sleepSection}>
             <View style={profile.plan === 'free' || !profile.plan ? styles.lockedContent : undefined}>
               <View style={styles.chipGrid}>
@@ -338,10 +332,10 @@ export default function CycleScreen() {
                 ))}
               </View>
               <View style={styles.sleepHrsRow}>
-                <Text style={styles.sleepHrsLbl}>Unetunnid:</Text>
+                <Text style={styles.sleepHrsLbl}>{t('c.sleep.hrs')}</Text>
                 <TextInput
                   style={styles.sleepHrsInput}
-                  placeholder="nt 7.5"
+                  placeholder={t('c.sleep.hrs.ph')}
                   placeholderTextColor={Colors.beige[200]}
                   keyboardType="decimal-pad"
                   value={sleepHours}
@@ -353,13 +347,13 @@ export default function CycleScreen() {
             {(profile.plan === 'free' || !profile.plan) && (
               <View style={styles.lockOverlay}>
                 <Icon name="lock" size={22} color={Colors.beige[400]} />
-                <Text style={styles.lockTxt}>Saadaval Pro paketiga</Text>
+                <Text style={styles.lockTxt}>{t('c.sleep.lock')}</Text>
               </View>
             )}
           </View>
 
           {/* Digestion */}
-          <CatHeader icon="digestion" label="Seedimine" />
+          <CatHeader icon="digestion" label={t('c.digestion.lbl')} />
           <View style={styles.chipGrid}>
             {DIGESTION.map((f) => (
               <Chip key={f} label={f} selected={digestion.has(f)} onPress={() => toggle(digestion, setDigestion, f)} />
@@ -367,7 +361,7 @@ export default function CycleScreen() {
           </View>
 
           {/* Contraception */}
-          <CatHeader icon="pill" label="Rasestumisvastased" />
+          <CatHeader icon="pill" label={t('c.contra.lbl')} />
           <View style={styles.contraRow}>
             {CONTRA_OPTS.map((c) => (
               <TouchableOpacity
@@ -382,7 +376,7 @@ export default function CycleScreen() {
           </View>
 
           <Button variant="blush" fullWidth onPress={handleSave} style={styles.saveBtn}>
-            Salvesta tänane märge
+            {t('c.save')}
           </Button>
         </Card>
         <View style={{ height: 20 }} />

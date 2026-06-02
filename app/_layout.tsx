@@ -18,6 +18,7 @@ import {
 } from '@expo-google-fonts/jost';
 import { Colors } from '../constants/theme';
 import { AuthProvider, useAuth } from '../lib/authContext';
+import { LangProvider } from '../lib/LangContext';
 
 function NavigationController() {
   const { isReady, isOnboarded } = useAuth();
@@ -64,13 +65,15 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <StatusBar style="dark" />
-      <NavigationController />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.cream } }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(onboarding)" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
+      <LangProvider>
+        <StatusBar style="dark" />
+        <NavigationController />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.cream } }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(onboarding)" />
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+      </LangProvider>
     </AuthProvider>
   );
 }

@@ -5,92 +5,65 @@ import { useAuth } from '../../lib/authContext';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
-import { Input } from '../../components/ui/Input';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Plan } from '../../types';
-
-const PLANS = [
-  {
-    key: 'free' as Plan,
-    name: 'Tasuta',
-    price: '0€',
-    per: '/ alati',
-    badge: 'Praegune',
-    badgeColor: Colors.green,
-    features: [
-      { text: 'Kuni 10 treeningkorda kuus', active: true },
-      { text: 'Tsükli kalender', active: true },
-      { text: 'Faasipõhised ülevaated — Pro', active: false },
-      { text: 'Andmeeksport — Pro', active: false },
-    ],
-  },
-  {
-    key: 'monthly' as Plan,
-    name: 'Pro kuupakett',
-    price: '4.99€',
-    per: '/ kuus',
-    badge: 'Pro',
-    badgeColor: Colors.blush,
-    popular: true,
-    features: [
-      { text: 'Piiramatud treeningkorrad', active: true },
-      { text: 'Faasipõhised ülevaated', active: true },
-      { text: 'Harjutuste faasivõrdlus', active: true },
-      { text: 'Andmeeksport (CSV)', active: true },
-    ],
-  },
-  {
-    key: 'yearly' as Plan,
-    name: 'Pro aastapakett',
-    price: '49.99€',
-    per: '/ aastas',
-    badge: '-17%',
-    badgeColor: Colors.green,
-    sub: 'Kõik Pro funktsioonid · 4.17€/kuus',
-    features: [],
-  },
-];
+import { useTranslation } from '../../lib/LangContext';
 
 export default function PlanScreen() {
   const { refreshAuth } = useAuth();
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<Plan>('monthly');
 
   const handleContinue = async () => {
     const existing = await AsyncStorage.getItem('lf_profile');
     const profile = existing ? JSON.parse(existing) : {};
-    await AsyncStorage.setItem('lf_profile', JSON.stringify({
-      ...profile,
-      plan: selected,
-    }));
+    await AsyncStorage.setItem('lf_profile', JSON.stringify({ ...profile, plan: selected }));
     await refreshAuth();
   };
 
+  const PLANS = [
+    {
+      key: 'free' as Plan,
+      name: t('plan.free.name'), price: '0€', per: t('plan.free.per'),
+      badge: t('plan.free.badge'), badgeColor: Colors.green,
+      features: [
+        { text: t('plan.free.f1'), active: true }, { text: t('plan.free.f2'), active: true },
+        { text: t('plan.free.f3'), active: false }, { text: t('plan.free.f4'), active: false },
+      ],
+    },
+    {
+      key: 'monthly' as Plan,
+      name: t('plan.monthly.name'), price: '4.99€', per: t('plan.monthly.per'),
+      badge: t('plan.monthly.badge'), badgeColor: Colors.blush, popular: true,
+      features: [
+        { text: t('plan.monthly.f1'), active: true }, { text: t('plan.monthly.f2'), active: true },
+        { text: t('plan.monthly.f3'), active: true }, { text: t('plan.monthly.f4'), active: true },
+      ],
+    },
+    {
+      key: 'yearly' as Plan,
+      name: t('plan.yearly.name'), price: '49.99€', per: t('plan.yearly.per'),
+      badge: t('plan.yearly.badge'), badgeColor: Colors.green, sub: t('plan.yearly.sub'), features: [],
+    },
+  ];
+
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-        <Text style={styles.backText}>← Tagasi</Text>
+        <Text style={styles.backText}>{t('ob.back')}</Text>
       </TouchableOpacity>
 
-      <Eyebrow>Vali pakett</Eyebrow>
-      <SerifTitle>Alusta oma teekonda.</SerifTitle>
-      <BodyText>Tühista igal ajal. Andmed jäävad alles.</BodyText>
+      <Eyebrow>{t('plan.eyebrow')}</Eyebrow>
+      <SerifTitle>{t('plan.title')}</SerifTitle>
+      <BodyText>{t('plan.body')}</BodyText>
 
       <View style={styles.planList}>
         {PLANS.map((plan) => (
-          <TouchableOpacity
-            key={plan.key}
-            activeOpacity={0.8}
-            style={[styles.planCard, selected === plan.key && styles.planCardSel]}
-            onPress={() => setSelected(plan.key)}
-          >
+          <TouchableOpacity key={plan.key} activeOpacity={0.8} style={[styles.planCard, selected === plan.key && styles.planCardSel]} onPress={() => setSelected(plan.key)}>
             {plan.popular && (
               <View style={styles.popularBadge}>
-                <Text style={styles.popularText}>Populaarseim</Text>
+                <Text style={styles.popularText}>{t('plan.popular')}</Text>
               </View>
             )}
             <View style={styles.planRow}>
@@ -115,11 +88,11 @@ export default function PlanScreen() {
       </View>
 
       <Button variant="dark" size="lg" fullWidth onPress={handleContinue} style={styles.btn}>
-        {selected === 'free' ? 'Jätka tasuta' : `Alusta Pro kasutamist (${selected === 'monthly' ? '4.99€/kuus' : '49.99€/aastas'})`}
+        {t(selected === 'free' ? 'plan.cta.free' : selected === 'monthly' ? 'plan.cta.monthly' : 'plan.cta.yearly')}
       </Button>
       <View style={styles.secureNote}>
         <Icon name="lock" size={11} color={Colors.beige[400]} />
-        <Text style={styles.secureNoteTxt}>Makse on kaitstud · Tühista igal ajal</Text>
+        <Text style={styles.secureNoteTxt}>{t('plan.secure')}</Text>
       </View>
     </ScrollView>
   );

@@ -1,26 +1,28 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
 import { router, useNavigation } from 'expo-router';
 import { Colors, Spacing } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from '../../lib/LangContext';
 
 export default function NameScreen() {
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [birthYear, setBirthYear] = useState('');
   const [ageError, setAgeError] = useState('');
 
   const handleContinue = async () => {
     if (!name.trim()) {
-      Alert.alert('', 'Palun sisesta oma nimi');
+      Alert.alert('', t('name.err.required'));
       return;
     }
     const yr = parseInt(birthYear);
     if (yr && 2026 - yr < 16) {
-      setAgeError('LunaraFit on mõeldud 16-aastastele ja vanematele.');
+      setAgeError(t('name.err.age'));
       return;
     }
     setAgeError('');
@@ -37,41 +39,30 @@ export default function NameScreen() {
   };
 
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       {navigation.canGoBack() && (
         <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-          <Text style={styles.backText}>← Tagasi</Text>
+          <Text style={styles.backText}>{t('ob.back')}</Text>
         </TouchableOpacity>
       )}
 
-      <Eyebrow>Sinu andmed</Eyebrow>
-      <SerifTitle>Kuidas sind kutsuda?</SerifTitle>
-      <BodyText>Isikupärastab sinu kogemuse.</BodyText>
+      <Eyebrow>{t('name.eyebrow')}</Eyebrow>
+      <SerifTitle>{t('name.title')}</SerifTitle>
+      <BodyText>{t('name.body')}</BodyText>
 
+      <Input label={t('name.lbl')} value={name} onChangeText={setName} placeholder={t('name.ph')} autoCapitalize="words" autoComplete="given-name" />
       <Input
-        label="Eesnimi"
-        value={name}
-        onChangeText={setName}
-        placeholder="Sinu nimi"
-        autoCapitalize="words"
-        autoComplete="given-name"
-      />
-      <Input
-        label="Sünniaasta"
+        label={t('name.year.lbl')}
         value={birthYear}
         onChangeText={(v) => { setBirthYear(v); setAgeError(''); }}
-        placeholder="aaaa"
+        placeholder={t('name.year.ph')}
         keyboardType="number-pad"
         maxLength={4}
         error={ageError}
       />
 
       <Button variant="dark" size="lg" fullWidth onPress={handleContinue} style={styles.btn}>
-        Jätka →
+        {t('name.cta')}
       </Button>
     </ScrollView>
   );

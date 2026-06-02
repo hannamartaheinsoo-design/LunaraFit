@@ -1,10 +1,12 @@
-import { CycleInfo, CyclePhase } from '../types';
+import { CycleInfo, CyclePhase, Lang } from '../types';
+import { t } from './i18n';
 
 export function getCycleInfo(
   lastPeriodDate: string | null,
   cycleLength: number,
   periodLength: number,
   targetDate?: Date,
+  lang: Lang = 'et',
 ): CycleInfo | null {
   if (!lastPeriodDate) return null;
 
@@ -18,27 +20,20 @@ export function getCycleInfo(
   const daysLeft = cl - day + 1;
   const ovDay = Math.floor(cl / 2);
 
-  let phase: string;
   let phaseKey: CyclePhase;
-  let description: string;
 
   if (day <= pl) {
-    phase = 'Menstruatsioonifaas';
     phaseKey = 'menstruation';
-    description = 'Puhkus ja kerge liikumine on õige valik.';
   } else if (day <= ovDay - 2) {
-    phase = 'Follikulaarfaas';
     phaseKey = 'follicular';
-    description = 'Energia tõuseb — hea aeg raskemalt treenida.';
   } else if (day <= ovDay + 1) {
-    phase = 'Ovulatsioon';
     phaseKey = 'ovulation';
-    description = 'Energiatipp — ideaalne uute rekordite püstitamiseks.';
   } else {
-    phase = 'Luteaalfaas';
     phaseKey = 'luteal';
-    description = 'Madalam intensiivsus on tark — puhkus on osa rutiinist.';
   }
+
+  const phase = t(`phase.${phaseKey}` as any, lang);
+  const description = t(`phase.${phaseKey}.desc` as any, lang);
 
   return { day, daysLeft, phase, phaseKey, description, cycleLength: cl };
 }
@@ -51,6 +46,10 @@ export function getPhaseKey(
 ): CyclePhase {
   const info = getCycleInfo(lastPeriodDate, cycleLength, periodLength, new Date(date));
   return info?.phaseKey ?? 'unknown';
+}
+
+export function getPhaseLabel(phaseKey: CyclePhase, lang: Lang = 'et'): string {
+  return t(`phase.lbl.${phaseKey}` as any, lang);
 }
 
 export const PHASE_LABELS: Record<CyclePhase, string> = {

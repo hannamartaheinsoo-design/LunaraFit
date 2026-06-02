@@ -1,29 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions,
-} from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Colors, Fonts, Spacing } from '../../constants/theme';
 import { Card, InsightCard } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
-import { getCycleInfo, PHASE_LABELS, formatDate, todayISO } from '../../lib/cycle';
+import { getCycleInfo, getPhaseLabel } from '../../lib/cycle';
 import { storage } from '../../lib/storage';
+import { useTranslation } from '../../lib/LangContext';
 import { Profile, Workout } from '../../types';
-
-const DAYS = ['pühapäev', 'esmaspäev', 'teisipäev', 'kolmapäev', 'neljapäev', 'reede', 'laupäev'];
-const MONTHS = ['jaanuar', 'veebruar', 'märts', 'aprill', 'mai', 'juuni', 'juuli', 'august', 'september', 'oktoober', 'november', 'detsember'];
-const WEEKDAYS = ['E', 'T', 'K', 'N', 'R', 'L', 'P'];
 
 function phaseDiff(workouts: Workout[]): number | null {
   const f = workouts.filter((w) => w.phase === 'follicular');
   const l = workouts.filter((w) => w.phase === 'luteal');
   if (!f.length || !l.length) return null;
   const avg = (ws: Workout[]) => {
-    let t = 0, c = 0;
-    ws.forEach((w) => w.exercises.forEach((e) => { if (e.weight_kg > 0) { t += e.weight_kg; c++; } }));
-    return c ? t / c : 0;
+    let total = 0, count = 0;
+    ws.forEach((w) => w.exercises.forEach((e) => { if (e.weight_kg > 0) { total += e.weight_kg; count++; } }));
+    return count ? total / count : 0;
   };
   const fa = avg(f), la = avg(l);
   if (!la) return null;
@@ -31,6 +26,7 @@ function phaseDiff(workouts: Workout[]): number | null {
 }
 
 export default function HomeScreen() {
+  const { lang, t, tArr } = useTranslation();
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const now = new Date();
@@ -47,6 +43,8 @@ export default function HomeScreen() {
     profile.last_period_date ?? null,
     profile.cycle_length ?? 28,
     profile.period_length ?? 5,
+    undefined,
+    lang,
   );
 
   const d7 = new Date(now.getTime() - 7 * 86400000);
@@ -59,7 +57,10 @@ export default function HomeScreen() {
 
   const pd = phaseDiff(workouts);
 
-  // Weekly bar chart
+  const DAYS = tArr('home.days');
+  const MONTHS = tArr('home.months');
+  const WEEKDAYS = tArr('home.weekdays');
+
   const weekBars = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(now.getTime() - (6 - i) * 86400000);
     const ds = d.toISOString().slice(0, 10);
@@ -68,14 +69,26 @@ export default function HomeScreen() {
     return { label: WEEKDAYS[dayIdx], has };
   });
 
+  const insightTitle = pd != null && ci
+    ? `${t('home.ins.based')} ${pd >= 0 ? t('home.ins.follik') : t('home.ins.luteal')} ${Math.abs(pd).toFixed(1)}${t('home.ins.higher')}`
+    : workouts.length
+    ? `${workouts.length} ${t('home.ins.count')}`
+    : t('home.pattern.empty');
+
+  const insightBody = pd != null
+    ? `${t('home.ins.based')} ${workouts.length} ${t('home.ins.sessions')}`
+    : t('home.pattern.sub');
+
+  const formatDate = (ds: string) => {
+    const [y, m, d] = ds.split('-');
+    return `${d}.${m}.${y}`;
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
         <Text style={styles.logo}><Text style={styles.logoAccent}>Lunara</Text>Fit</Text>
-        <TouchableOpacity
-          style={styles.avatar}
-          onPress={() => router.push('/(tabs)/profile')}
-        >
+        <TouchableOpacity style={styles.avatar} onPress={() => router.push('/(tabs)/profile')}>
           <Text style={styles.avatarText}>{profile.name?.[0]?.toUpperCase() ?? '?'}</Text>
         </TouchableOpacity>
       </View>
@@ -84,9 +97,9 @@ export default function HomeScreen() {
         {/* Greeting */}
         <View style={styles.greeting}>
           <Text style={styles.dateLbl}>{DAYS[now.getDay()]}, {now.getDate()}. {MONTHS[now.getMonth()]}</Text>
-          <Text style={styles.greetingName}>Tere, <Text style={styles.nameAccent}>{profile.name || 'sina'}.</Text></Text>
+          <Text style={styles.greetingName}>{t('home.greet')} <Text style={styles.nameAccent}>{profile.name || t('home.noname')}.</Text></Text>
           <Text style={styles.greetingSub}>
-            {ci ? `Tsükli päev ${ci.day} · ${ci.daysLeft} päeva jäänud` : 'Lisa tsükliandmed profiilis.'}
+            {ci ? `${t('home.cycleday')} ${ci.day} · ${ci.daysLeft} ${t('home.daysleft')}` : t('home.addcycle')}
           </Text>
         </View>
 
@@ -96,14 +109,14 @@ export default function HomeScreen() {
             <Icon name="moon" size={24} color={Colors.blush[600]} strokeWidth={1.4} />
           </View>
           <View style={styles.phaseInfo}>
-            <Text style={styles.phaseEye}>Praegune faas</Text>
+            <Text style={styles.phaseEye}>{t('home.phase.eye')}</Text>
             <Text style={styles.phaseName}>{ci?.phase ?? '—'}</Text>
-            <Text style={styles.phaseDesc}>{ci?.description ?? 'Lisa tsükliandmed, et näha oma faasi.'}</Text>
+            <Text style={styles.phaseDesc}>{ci?.description ?? t('home.phase.nodesc')}</Text>
           </View>
           {ci && (
             <View style={styles.phaseMeta}>
               <Text style={styles.phaseDaysN}>{ci.daysLeft}</Text>
-              <Text style={styles.phaseDaysL}>päeva jäänud</Text>
+              <Text style={styles.phaseDaysL}>{t('home.daysleft')}</Text>
             </View>
           )}
         </View>
@@ -111,34 +124,34 @@ export default function HomeScreen() {
         {/* Stat tiles */}
         <View style={styles.statRow}>
           <View style={styles.statTile}>
-            <View style={styles.statLblRow}><Icon name="barbell" size={10} color={Colors.beige[400]} /><Text style={styles.statLbl}>Treeningkordi</Text></View>
+            <View style={styles.statLblRow}><Icon name="barbell" size={10} color={Colors.beige[400]} /><Text style={styles.statLbl}>{t('home.stat.workouts')}</Text></View>
             <Text style={styles.statVal}>{recentCount}</Text>
-            <Text style={styles.statSub}>viimase 7 päeva</Text>
+            <Text style={styles.statSub}>{t('home.stat.workouts.sub')}</Text>
           </View>
           <View style={styles.statTile}>
-            <View style={styles.statLblRow}><Icon name="spark" size={10} color={Colors.beige[400]} /><Text style={styles.statLbl}>{bestName ? (bestName.length > 10 ? bestName.slice(0, 10) + '…' : bestName) : 'Parim tulemus'}</Text></View>
+            <View style={styles.statLblRow}><Icon name="spark" size={10} color={Colors.beige[400]} /><Text style={styles.statLbl}>{bestName ? (bestName.length > 10 ? bestName.slice(0, 10) + '…' : bestName) : t('home.stat.best')}</Text></View>
             <Text style={styles.statVal}>{bestKg ? `${bestKg}kg` : '—'}</Text>
-            <Text style={styles.statSub}>{bestDate ? formatDate(bestDate) : 'logitud andmetest'}</Text>
+            <Text style={styles.statSub}>{bestDate ? formatDate(bestDate) : t('home.stat.best.sub')}</Text>
           </View>
           <View style={styles.statTile}>
-            <View style={styles.statLblRow}><Icon name="wave" size={10} color={Colors.beige[400]} /><Text style={styles.statLbl}>Faasivõrdlus</Text></View>
+            <View style={styles.statLblRow}><Icon name="wave" size={10} color={Colors.beige[400]} /><Text style={styles.statLbl}>{t('home.stat.phase')}</Text></View>
             <Text style={[styles.statVal, { fontSize: 18 }, pd != null ? { color: pd >= 0 ? Colors.green[600] : Colors.blush[400] } : {}]}>
               {pd != null ? `${pd >= 0 ? '+' : ''}${pd.toFixed(1)}%` : '—'}
             </Text>
-            <Text style={styles.statSub}>follik. vs luteaal</Text>
+            <Text style={styles.statSub}>{t('home.stat.phase.sub')}</Text>
           </View>
         </View>
 
         {/* Quick actions */}
         <View style={styles.quickRow}>
-          <Button variant="dark" size="sm" onPress={() => router.push('/(tabs)/workouts')}>Lisa treening</Button>
-          <Button variant="blush" size="sm" onPress={() => router.push('/(tabs)/cycle')}>Lisa märge</Button>
-          <Button variant="green" size="sm" onPress={() => router.push('/(tabs)/insights')}>Ülevaated</Button>
+          <Button variant="dark" size="sm" onPress={() => router.push('/(tabs)/workouts')}>{t('home.quick.workout')}</Button>
+          <Button variant="blush" size="sm" onPress={() => router.push('/(tabs)/cycle')}>{t('home.quick.cycle')}</Button>
+          <Button variant="green" size="sm" onPress={() => router.push('/(tabs)/insights')}>{t('home.quick.insights')}</Button>
         </View>
 
         {/* Weekly chart */}
         <Card style={styles.chartCard}>
-          <View style={styles.cardLblRow}><Icon name="wave" size={12} color={Colors.beige[400]} /><Text style={styles.cardLbl}>Nädala aktiivsus</Text></View>
+          <View style={styles.cardLblRow}><Icon name="wave" size={12} color={Colors.beige[400]} /><Text style={styles.cardLbl}>{t('home.chart.lbl')}</Text></View>
           {workouts.length ? (
             <View style={styles.chartWrap}>
               {weekBars.map((bar, i) => (
@@ -149,25 +162,15 @@ export default function HomeScreen() {
               ))}
             </View>
           ) : (
-            <Text style={styles.empty}>Lisa treeninguid, et näha graafikut.</Text>
+            <Text style={styles.empty}>{t('home.chart.empty')}</Text>
           )}
         </Card>
 
         {/* Insight preview */}
         <InsightCard variant="default" style={styles.insightPreview}>
-          <View style={styles.insightEyeRow}><Icon name="spark" size={10} color={Colors.green[600]} /><Text style={styles.insightEye}>Muster</Text></View>
-          <Text style={styles.insightTitle}>
-            {pd != null && ci
-              ? `Tulemused on ${pd >= 0 ? 'follikulaarfaasis' : 'luteaalfaasis'} ${Math.abs(pd).toFixed(1)}% kõrgemad`
-              : workouts.length
-              ? `${workouts.length} treeningkorda logitud`
-              : 'Lisa andmeid, et mustrid ilmneksid.'}
-          </Text>
-          <Text style={styles.insightBody}>
-            {pd != null
-              ? `Põhineb ${workouts.length} treeningkorral.`
-              : 'Vähemalt 2 treeningut eri faasides annab esimese võrdluse.'}
-          </Text>
+          <View style={styles.insightEyeRow}><Icon name="spark" size={10} color={Colors.green[600]} /><Text style={styles.insightEye}>{t('home.pattern.eye')}</Text></View>
+          <Text style={styles.insightTitle}>{insightTitle}</Text>
+          <Text style={styles.insightBody}>{insightBody}</Text>
         </InsightCard>
 
         <View style={{ height: 20 }} />
@@ -199,10 +202,8 @@ const styles = StyleSheet.create({
   greetingSub: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 3 },
   phaseBanner: {
     marginHorizontal: Spacing.xl, marginBottom: 14,
-    backgroundColor: Colors.blush[50],
-    borderWidth: 1.5, borderColor: Colors.blush[100],
-    borderRadius: 20, padding: 16,
-    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: Colors.blush[50], borderWidth: 1.5, borderColor: Colors.blush[100],
+    borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14,
   },
   phaseIconWrap: {
     width: 48, height: 48, borderRadius: 24,

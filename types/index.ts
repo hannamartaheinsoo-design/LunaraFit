@@ -1,3 +1,5 @@
+export type Lang = 'et' | 'en';
+
 export type Plan = 'free' | 'monthly' | 'yearly';
 
 export type FitnessLevel = 'beginner' | 'intermediate' | 'advanced';
@@ -15,6 +17,7 @@ export interface Profile {
   last_period_date: string | null;
   fitness_level: FitnessLevel | null;
   plan: Plan;
+  lang: Lang;
   created_at: string;
 }
 

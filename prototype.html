@@ -753,7 +753,7 @@ body{font-family:'Jost',sans-serif;background:#1A1612;color:var(--beige-800);min
       <div class="card">
         <div style="display:flex;flex-direction:column;gap:8px">
           <button class="btn btn-outline btn-full" onclick="exportCSV()"><svg width="13" height="13"><use href="#i-download"/></svg>Ekspordi kõik andmed (CSV)</button>
-          <button class="btn btn-danger btn-full" onclick="if(confirm('Kustutada kõik andmed?'))clearAll()"><svg width="13" height="13"><use href="#i-trash"/></svg>Kustuta kõik andmed</button>
+          <button class="btn btn-danger btn-full" onclick="if(confirm(t('confirm.clearall')))clearAll()"><svg width="13" height="13"><use href="#i-trash"/></svg>Kustuta kõik andmed</button>
         </div>
         <div style="font-size:11px;color:var(--beige-400);margin-top:14px;line-height:1.65;font-weight:300">Sinu andmed on salvestatud ainult selles seadmes.</div>
       </div>
@@ -857,6 +857,454 @@ function applySleepLock(){
   if(S.plan==='free') sec.classList.add('locked'); else sec.classList.remove('locked');
 }
 
+// ── TRANSLATIONS ─────────────────────────────────────
+var STRINGS={
+  et:{
+    'ob1.eyebrow':'Tere tulemast','ob1.title':'Vali oma keel.','ob1.body':'Saad seda igal ajal muuta.','ob1.btn':'Jätka',
+    'ob2.eyebrow':'Sinu andmed','ob2.title':'Kuidas sind kutsuda?','ob2.body':'Isikupärastab sinu kogemuse.','ob2.name.lbl':'Eesnimi','ob2.name.ph':'Sinu nimi','ob2.dob.lbl':'Sünnikuupäev','ob2.ageErr':'LunaraFit on mõeldud 16-aastastele ja vanematele.','ob2.btn':'Jätka',
+    'ob3.eyebrow':'Tsükliandmed','ob3.title':'Räägi oma tsüklist.','ob3.body':'Aitab siduda treeningu tsüklifaasidega. Saad igal ajal muuta.','ob3.lp.lbl':'Viimase menstruatsiooni esimene päev','ob3.cl.lbl':'Tsükli pikkus (päevad)','ob3.pl.lbl':'Perioodi pikkus (päevad)','ob3.btn':'Jätka','ob3.skip':'Jäta vahele',
+    'ob4.eyebrow':'Spordikogemus','ob4.title':'Milline on sinu treeningkogemus?','ob4.body':'Vale vastust pole.',
+    'ob4.fit1.title':'Alles alustan','ob4.fit1.sub':'Uus või naasmas jõusaali',
+    'ob4.fit2.title':'Leidmas oma rütmi','ob4.fit2.sub':'Käin regulaarselt, ehitan rutiini',
+    'ob4.fit3.title':'Järjepidev ja kogenud','ob4.fit3.sub':'Treenin regulaarselt eesmärkidega',
+    'ob4.btn':'Jätka',
+    'ob5.eyebrow':'Vali pakett','ob5.title':'Alusta oma teekonda.','ob5.body':'Tühista igal ajal. Andmed jäävad alles.',
+    'ob5.free.name':'Tasuta','ob5.free.badge':'Praegune','ob5.free.feat1':'Kuni 10 treeningkorda kuus','ob5.free.feat2':'Tsükli kalender','ob5.free.feat3':'Faasipõhised ülevaated — Pro','ob5.free.feat4':'Andmeeksport — Pro',
+    'ob5.monthly.name':'Pro kuupakett','ob5.monthly.badge':'Pro','ob5.monthly.per':'/ kuus','ob5.monthly.feat1':'Piiramatud treeningkorrad','ob5.monthly.feat2':'Faasipõhised ülevaated','ob5.monthly.feat3':'Harjutuste faasivõrdlus','ob5.monthly.feat4':'Andmeeksport (CSV)',
+    'ob5.yearly.name':'Pro aastapakett','ob5.yearly.badge':'-17%','ob5.yearly.per':'/ aastas','ob5.yearly.sub':'Kõik Pro funktsioonid · 2.58€/kuus',
+    'ob5.card.lbl':'Kaardiga','ob5.cardnum.lbl':'Kaardi number','ob5.exp.lbl':'Kehtiv kuni','ob5.exp.ph':'KK/AA','ob5.cvc.lbl':'CVC','ob5.email.lbl':'E-post',
+    'ob5.applepay.btn':'Maksa Apple Pay\'ga','ob5.divider':'või maksa kaardiga','ob5.secure':'Makse on kaitstud · Tühista igal ajal',
+    'ob5.pay.monthly':'Alusta Pro kasutamist (3.99€/kuus)','ob5.pay.yearly':'Alusta Pro kasutamist (30.99€/aastas)','ob5.pay.free':'Jätka tasuta',
+    'ob6.eyebrow':'Kõik on valmis','ob6.welcome':'Tere tulemast,','ob6.cl.lbl':'Tsükli pikkus','ob6.fit.lbl':'Treeningkogemus','ob6.plan.lbl':'Pakett',
+    'ob6.fit.algaja':'Algaja','ob6.fit.kesktase':'Kesktase','ob6.fit.kogenud':'Kogenud',
+    'ob6.plan.free':'Tasuta','ob6.plan.monthly':'Pro kuupakett','ob6.plan.yearly':'Pro aastapakett',
+    'ob6.btn':'Sisene LunaraFit\'i',
+    'nav.home':'Avaleht','nav.workouts':'Treeningud','nav.cycle':'Tsükkel','nav.insights':'Ülevaated','nav.profile':'Profiil',
+    'home.phase.eye':'Praegune faas','home.phase.none':'—','home.phase.nodesc':'Lisa tsükliandmed, et näha oma faasi.',
+    'home.greet':'Tere','home.sub.none':'Lisa tsükliandmed profiilis.',
+    'home.days.left':'päeva jäänud','home.cycle.day':'Tsükli päev',
+    'home.stat.sess':'Treeningkordi','home.stat.sess.sub':'viimase 7 päeva',
+    'home.stat.vol':'Nädala maht','home.stat.vol.sub.none':'trenn puudub',
+    'home.stat.diff':'Faasivõrdlus','home.stat.diff.sub':'follik. vs luteaal',
+    'home.chart.empty':'Lisa treeninguid, et näha graafikut.',
+    'home.pattern.lbl':'Muster','home.pattern.none':'Lisa andmeid, et mustrid ilmneksid.',
+    'home.pattern.none.sub':'Vähemalt 2 treeningut eri faasides annab esimese võrdluse.',
+    'home.quick.workout':'Lisa treening','home.quick.cycle':'Lisa tsüklimärge','home.quick.insights':'Ülevaated',
+    'home.chart.lbl':'Nädala aktiivsus',
+    'home.ins.follik':'follikulaarfaasis','home.ins.luteal':'luteaalfaasis',
+    'home.ins.higher':'% kõrgemad','home.ins.based':'Põhineb','home.ins.sessions':'treeningkorral.',
+    'home.ins.count':'treeningkorda logitud','home.ins.addcycle':'Lisa tsükliandmed, et saada faasipõhiseid ülevaateid.',
+    'home.ins.follstart':'Follikulaarfaas algab','home.ins.days.after':'päeva pärast.',
+    'w.header':'Treeningud','w.header.sub':'Lisa treeningkordi · jälgi arengut',
+    'w.add.lbl':'Lisa treeningkord','w.date.lbl':'Kuupäev',
+    'w.name.lbl':'Treeningkava nimi','w.name.ph':'nt Ülakeha jõutreening',
+    'w.ex.lbl':'Harjutused · seeriad · kordused · kaal (kg)',
+    'w.ex.name.ph':'Harjutuse nimi','w.ex.sets':'Seeriad','w.ex.reps':'Kordused',
+    'w.ex.add':'Lisa harjutus','w.feel.lbl':'Kuidas tundus?',
+    'w.notes.lbl':'Märkmed (vabatahtlik)','w.notes.ph':'Midagi tähelepanuväärset?',
+    'w.save':'Salvesta treeningkord','w.log.lbl':'Logitud treeningud',
+    'w.empty':'Treeninguid pole veel lisatud.',
+    'w.chip.tired':'Väsinud','w.chip.energetic':'Energiline','w.chip.strong':'Tugev',
+    'w.chip.hard':'Raske','w.chip.easy':'Kerge','w.chip.motivated':'Motiveeritud',
+    'c.header':'Tsükkel','c.date.lbl':'Kuupäev',
+    'c.period.lbl':'Menstruatsioon täna?','c.period.yes':'Jah','c.period.no':'Ei',
+    'c.save':'Salvesta tänane märge',
+    'cat.mood':'Tuju','cat.energy':'Energia','cat.feelings':'Tunded','cat.mind':'Meeleseisund',
+    'cat.pain':'Valu','cat.cravings':'Isu','cat.sleep':'Unekvaliteet','cat.digestion':'Seedimine','cat.contra':'Rasestumisvastased',
+    'sleep.lock':'Saadaval Pro paketiga','sleep.upgrade':'Uuenda Pro‑le','sleep.hrs':'Unetunnid:','sleep.hrs.ph':'nt 7.5',
+    'contra.none':'Ei kasuta','contra.taken':'Õigeaegselt võetud','contra.late':'Hilinemisega võetud',
+    'leg.period.logged':'Menstruatsioon (märgitud)','leg.period.pred':'Menstruatsioon (ennustatud)',
+    'leg.ovulation':'Ovulatsioon','leg.fertile':'Viljakas päev',
+    'cal.lbl.day':'Tänane märge','cal.lbl.entry':'Märge',
+    'ins.header':'Ülevaated','ins.header.sub':'Mustrid sinu andmetes',
+    'ins.empty':'Lisa treeninguid ja tsükliandmeid.',
+    'ins.phase.compare':'Faasivõrdlus',
+    'ins.phase.higher':'% kõrgemad','ins.follik':'Follikulaarfaasis','ins.luteal':'luteaalfaasis',
+    'ins.ex.compare':'Harjutuste faasivõrdlus',
+    'ins.ex.follik':'Follikulaar','ins.ex.luteal':'Luteaal',
+    'ins.recent':'Viimased treeningkorrad',
+    'ins.mood':'Tujumuster','ins.mood.top':'Sagedaim märgitud tuju:','ins.mood.logged':'Logitud','ins.mood.entries':'tsüklimärget.',
+    'ins.disclaimer':'Need ülevaated põhinevad sinu enda salvestatud andmetes ega ole meditsiiniline nõuanne.',
+    'ins.prog.follik':'% follik.',
+    'prof.header':'Profiil','prof.header.sub':'Seaded · privaatsus · andmed',
+    'prof.plan.lbl':'Sinu pakett','prof.upgrade':'Uuenda',
+    'prof.data.lbl':'Isiklikud andmed',
+    'prof.name.lbl':'Nimi','prof.name.ph':'Sinu nimi',
+    'prof.cl.lbl':'Tsükli pikkus (päevad)','prof.pl.lbl':'Perioodi pikkus (päevad)',
+    'prof.lp.lbl':'Viimase menstruatsiooni esimene päev',
+    'prof.save':'Salvesta muudatused',
+    'prof.privacy.lbl':'Privaatsus',
+    'prof.sync.title':'Sünkrooni kõigis seadmetes','prof.sync.sub':'Hoia andmed ajakohasena',
+    'prof.notif.title':'Õrnad meeldetuletused','prof.notif.sub':'Õrn meeldetuletus märgete lisamiseks',
+    'prof.anon.title':'Anonüümne andmeanalüüs','prof.anon.sub':'Aita rakendust parendada',
+    'prof.library.lbl':'Treeningute logiraamat',
+    'prof.data.sec':'Andmed',
+    'prof.export':'Ekspordi kõik andmed (CSV)',
+    'prof.clear':'Kustuta kõik andmed',
+    'prof.local':'Sinu andmed on salvestatud ainult selles seadmes.',
+    'prof.plan.free.name':'Tasuta pakett','prof.plan.free.sub':'Uuenda Pro-le täielike ülevaadete jaoks',
+    'prof.plan.pro.name.monthly':'Pro — kuupakett','prof.plan.pro.name.yearly':'Pro — aastapakett',
+    'prof.plan.pro.sub':'Kõik Pro funktsioonid aktiivsed',
+    'phase.menstruation':'Menstruatsioonifaas','phase.menstruation.desc':'Puhkus ja kerge liikumine on õige valik.',
+    'phase.follicular':'Follikulaarfaas','phase.follicular.desc':'Energia tõuseb — hea aeg raskemalt treenida.',
+    'phase.ovulation':'Ovulatsioon','phase.ovulation.desc':'Energiatipp — ideaalne uute rekordite püstitamiseks.',
+    'phase.luteal':'Luteaalfaas','phase.luteal.desc':'Madalam intensiivsus on tark — puhkus on osa rutiinist.',
+    'phase.unknown':'—',
+    'lib.empty':'Treeninguid pole veel lisatud.',
+    'lib.sessions':'treeningkorda','lib.last':'viimane',
+    'toast.cycle.save':'Tsüklimärge salvestatud','toast.workout.save':'Treeningkord salvestatud',
+    'toast.profile.save':'Profiil salvestatud','toast.no.date':'Palun vali kuupäev',
+    'toast.fill.workout':'Palun täida kuupäev ja treeningkava nimi','toast.add.ex':'Lisa vähemalt üks harjutus',
+    'toast.fill.payment':'Palun täida kõik makseväljad korrektselt',
+    'toast.name.required':'Palun sisesta oma nimi',
+    'confirm.delete':'Kustutada?','confirm.clearall':'Kustutada kõik andmed?',
+    'months':['jaanuar','veebruar','märts','aprill','mai','juuni','juuli','august','september','oktoober','november','detsember'],
+    'days':['pühapäev','esmaspäev','teisipäev','kolmapäev','neljapäev','reede','laupäev'],
+    'days.short':['P','E','T','K','N','R','L']
+  },
+  en:{
+    'ob1.eyebrow':'Welcome','ob1.title':'Choose your language.','ob1.body':'You can change this any time.','ob1.btn':'Continue',
+    'ob2.eyebrow':'Your details','ob2.title':'What shall we call you?','ob2.body':'Personalises your experience.','ob2.name.lbl':'First name','ob2.name.ph':'Your name','ob2.dob.lbl':'Date of birth','ob2.ageErr':'LunaraFit is intended for users 16 and older.','ob2.btn':'Continue',
+    'ob3.eyebrow':'Cycle data','ob3.title':'Tell us about your cycle.','ob3.body':'Helps connect training to your cycle phases. You can edit anytime.','ob3.lp.lbl':'First day of last period','ob3.cl.lbl':'Cycle length (days)','ob3.pl.lbl':'Period length (days)','ob3.btn':'Continue','ob3.skip':'Skip',
+    'ob4.eyebrow':'Fitness experience','ob4.title':'What is your training experience?','ob4.body':'There are no wrong answers.',
+    'ob4.fit1.title':'Just starting out','ob4.fit1.sub':'New or returning to the gym',
+    'ob4.fit2.title':'Finding my rhythm','ob4.fit2.sub':'Going regularly, building a routine',
+    'ob4.fit3.title':'Consistent and experienced','ob4.fit3.sub':'Training regularly with goals',
+    'ob4.btn':'Continue',
+    'ob5.eyebrow':'Choose a plan','ob5.title':'Start your journey.','ob5.body':'Cancel any time. Your data stays.',
+    'ob5.free.name':'Free','ob5.free.badge':'Current','ob5.free.feat1':'Up to 10 workouts per month','ob5.free.feat2':'Cycle calendar','ob5.free.feat3':'Phase-based insights — Pro','ob5.free.feat4':'Data export — Pro',
+    'ob5.monthly.name':'Pro Monthly','ob5.monthly.badge':'Pro','ob5.monthly.per':'/ month','ob5.monthly.feat1':'Unlimited workouts','ob5.monthly.feat2':'Phase-based insights','ob5.monthly.feat3':'Exercise phase comparison','ob5.monthly.feat4':'Data export (CSV)',
+    'ob5.yearly.name':'Pro Yearly','ob5.yearly.badge':'-17%','ob5.yearly.per':'/ year','ob5.yearly.sub':'All Pro features · €2.58/month',
+    'ob5.card.lbl':'Card','ob5.cardnum.lbl':'Card number','ob5.exp.lbl':'Expiry','ob5.exp.ph':'MM/YY','ob5.cvc.lbl':'CVC','ob5.email.lbl':'Email',
+    'ob5.applepay.btn':'Pay with Apple Pay','ob5.divider':'or pay by card','ob5.secure':'Payment secured · Cancel any time',
+    'ob5.pay.monthly':'Start Pro (€3.99/month)','ob5.pay.yearly':'Start Pro (€30.99/year)','ob5.pay.free':'Continue for free',
+    'ob6.eyebrow':'You\'re all set','ob6.welcome':'Welcome,','ob6.cl.lbl':'Cycle length','ob6.fit.lbl':'Fitness experience','ob6.plan.lbl':'Plan',
+    'ob6.fit.algaja':'Beginner','ob6.fit.kesktase':'Intermediate','ob6.fit.kogenud':'Experienced',
+    'ob6.plan.free':'Free','ob6.plan.monthly':'Pro Monthly','ob6.plan.yearly':'Pro Yearly',
+    'ob6.btn':'Enter LunaraFit',
+    'nav.home':'Home','nav.workouts':'Workouts','nav.cycle':'Cycle','nav.insights':'Insights','nav.profile':'Profile',
+    'home.phase.eye':'Current phase','home.phase.none':'—','home.phase.nodesc':'Add cycle data to see your phase.',
+    'home.greet':'Hi','home.sub.none':'Add cycle data in your profile.',
+    'home.days.left':'days left','home.cycle.day':'Cycle day',
+    'home.stat.sess':'Workouts','home.stat.sess.sub':'last 7 days',
+    'home.stat.vol':'Weekly volume','home.stat.vol.sub.none':'no workouts',
+    'home.stat.diff':'Phase compare','home.stat.diff.sub':'follic. vs luteal',
+    'home.chart.empty':'Add workouts to see the chart.',
+    'home.pattern.lbl':'Pattern','home.pattern.none':'Add data to reveal patterns.',
+    'home.pattern.none.sub':'At least 2 workouts in different phases gives the first comparison.',
+    'home.quick.workout':'Add workout','home.quick.cycle':'Log today','home.quick.insights':'Insights',
+    'home.chart.lbl':'Weekly activity',
+    'home.ins.follik':'follicular phase','home.ins.luteal':'luteal phase',
+    'home.ins.higher':'% higher','home.ins.based':'Based on','home.ins.sessions':'workouts.',
+    'home.ins.count':'workouts logged','home.ins.addcycle':'Add cycle data to get phase-based insights.',
+    'home.ins.follstart':'Follicular phase starts in','home.ins.days.after':'days.',
+    'w.header':'Workouts','w.header.sub':'Log workouts · track progress',
+    'w.add.lbl':'Log a workout','w.date.lbl':'Date',
+    'w.name.lbl':'Workout name','w.name.ph':'e.g. Upper body strength',
+    'w.ex.lbl':'Exercises · sets · reps · weight (kg)',
+    'w.ex.name.ph':'Exercise name','w.ex.sets':'Sets','w.ex.reps':'Reps',
+    'w.ex.add':'Add exercise','w.feel.lbl':'How did it feel?',
+    'w.notes.lbl':'Notes (optional)','w.notes.ph':'Anything notable?',
+    'w.save':'Save workout','w.log.lbl':'Logged workouts',
+    'w.empty':'No workouts logged yet.',
+    'w.chip.tired':'Tired','w.chip.energetic':'Energetic','w.chip.strong':'Strong',
+    'w.chip.hard':'Hard','w.chip.easy':'Easy','w.chip.motivated':'Motivated',
+    'c.header':'Cycle','c.date.lbl':'Date',
+    'c.period.lbl':'Period today?','c.period.yes':'Yes','c.period.no':'No',
+    'c.save':'Save today\'s log',
+    'cat.mood':'Mood','cat.energy':'Energy','cat.feelings':'Feelings','cat.mind':'Mind',
+    'cat.pain':'Pain','cat.cravings':'Cravings','cat.sleep':'Sleep quality','cat.digestion':'Digestion','cat.contra':'Contraceptives',
+    'sleep.lock':'Available with Pro','sleep.upgrade':'Upgrade to Pro','sleep.hrs':'Sleep hours:','sleep.hrs.ph':'e.g. 7.5',
+    'contra.none':'Not using','contra.taken':'Taken on time','contra.late':'Taken late',
+    'leg.period.logged':'Period (logged)','leg.period.pred':'Period (predicted)',
+    'leg.ovulation':'Ovulation','leg.fertile':'Fertile day',
+    'cal.lbl.day':'Today\'s log','cal.lbl.entry':'Entry',
+    'ins.header':'Insights','ins.header.sub':'Patterns in your data',
+    'ins.empty':'Add workouts and cycle data.',
+    'ins.phase.compare':'Phase comparison',
+    'ins.phase.higher':'% higher','ins.follik':'In follicular phase','ins.luteal':'luteal phase',
+    'ins.ex.compare':'Exercise phase comparison',
+    'ins.ex.follik':'Follicular','ins.ex.luteal':'Luteal',
+    'ins.recent':'Recent workouts',
+    'ins.mood':'Mood pattern','ins.mood.top':'Most frequent mood:','ins.mood.logged':'Logged','ins.mood.entries':'cycle entries.',
+    'ins.disclaimer':'These insights are based on your own logged data and are not medical advice.',
+    'ins.prog.follik':'% follic.',
+    'prof.header':'Profile','prof.header.sub':'Settings · Privacy · Data',
+    'prof.plan.lbl':'Your Plan','prof.upgrade':'Upgrade',
+    'prof.data.lbl':'Personal Data',
+    'prof.name.lbl':'Name','prof.name.ph':'Your name',
+    'prof.cl.lbl':'Cycle length (days)','prof.pl.lbl':'Period length (days)',
+    'prof.lp.lbl':'First day of last period',
+    'prof.save':'Save changes',
+    'prof.privacy.lbl':'Privacy',
+    'prof.sync.title':'Sync across devices','prof.sync.sub':'Keep your data up to date',
+    'prof.notif.title':'Gentle reminders','prof.notif.sub':'Gentle reminder to log entries',
+    'prof.anon.title':'Anonymous data analysis','prof.anon.sub':'Help improve the app',
+    'prof.library.lbl':'Workout Library',
+    'prof.data.sec':'Data',
+    'prof.export':'Export all data (CSV)',
+    'prof.clear':'Delete all data',
+    'prof.local':'Your data is stored only on this device.',
+    'prof.plan.free.name':'Free plan','prof.plan.free.sub':'Upgrade to Pro for full insights',
+    'prof.plan.pro.name.monthly':'Pro — Monthly','prof.plan.pro.name.yearly':'Pro — Yearly',
+    'prof.plan.pro.sub':'All Pro features active',
+    'phase.menstruation':'Menstrual phase','phase.menstruation.desc':'Rest and gentle movement is the right choice.',
+    'phase.follicular':'Follicular phase','phase.follicular.desc':'Energy is rising — a good time to train harder.',
+    'phase.ovulation':'Ovulation','phase.ovulation.desc':'Energy peak — ideal for setting new records.',
+    'phase.luteal':'Luteal phase','phase.luteal.desc':'Lower intensity is smart — rest is part of the routine.',
+    'phase.unknown':'—',
+    'lib.empty':'No workouts logged yet.',
+    'lib.sessions':'workouts','lib.last':'last',
+    'toast.cycle.save':'Cycle log saved','toast.workout.save':'Workout saved',
+    'toast.profile.save':'Profile saved','toast.no.date':'Please select a date',
+    'toast.fill.workout':'Please fill in date and workout name','toast.add.ex':'Add at least one exercise',
+    'toast.fill.payment':'Please fill in all payment fields correctly',
+    'toast.name.required':'Please enter your name',
+    'confirm.delete':'Delete?','confirm.clearall':'Delete all data?',
+    'months':['January','February','March','April','May','June','July','August','September','October','November','December'],
+    'days':['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+    'days.short':['S','M','T','W','T','F','S']
+  }
+};
+
+var CHIP_DATA={
+  mood:{
+    et:[{v:'halb',sym:'☹',lbl:'Halb'},{v:'keskmine',sym:'—',lbl:'Keskmine'},{v:'hea',sym:'☺',lbl:'Hea'},{v:'suurepärane',sym:'◉',lbl:'Suurepärane'},{v:'ergas',sym:'✦',lbl:'Ergas'}],
+    en:[{v:'bad',sym:'☹',lbl:'Bad'},{v:'average',sym:'—',lbl:'Average'},{v:'good',sym:'☺',lbl:'Good'},{v:'great',sym:'◉',lbl:'Great'},{v:'energized',sym:'✦',lbl:'Energized'}]
+  },
+  energy:{
+    et:[{v:'kurnatud',pct:0,lbl:'Kurnatud'},{v:'väsinud',pct:25,lbl:'Väsinud'},{v:'normaalne',pct:50,lbl:'Normaalne'},{v:'energiline',pct:75,lbl:'Energiline'},{v:'täis energiat',pct:100,lbl:'Täis energiat'}],
+    en:[{v:'drained',pct:0,lbl:'Drained'},{v:'tired',pct:25,lbl:'Tired'},{v:'normal',pct:50,lbl:'Normal'},{v:'energetic',pct:75,lbl:'Energetic'},{v:'full of energy',pct:100,lbl:'Full of energy'}]
+  },
+  feelings:{
+    et:['Meeleolumuutused','Kontrollikaotus','Hea','Õnnelik','Kurb','Tundlik','Vihane','Enesekindel','Põnevil','Ärritunud','Ärev','Ebakindel','Masendunud','Enesekritiseeriv'],
+    en:['Mood swings','Loss of control','Good','Happy','Sad','Sensitive','Angry','Confident','Excited','Irritated','Anxious','Insecure','Depressed','Self-critical']
+  },
+  mind:{
+    et:['Unustlik','Ajuudu','Rahulik','Stressis','Fokuseeritud','Hajameelne','Motiveeritud','Motiveerimata','Produktiivne','Ebaproduktiivne'],
+    en:['Forgetful','Brain fog','Calm','Stressed','Focused','Distracted','Motivated','Unmotivated','Productive','Unproductive']
+  },
+  pain:{
+    et:['Valuta','Krambid','Ovulatsioonivalu','Rindade hellus','Peavalu','Migreen','Migreen auraga','Alaseljavalu','Üldine lihasvalu'],
+    en:['No pain','Cramps','Ovulation pain','Breast tenderness','Headache','Migraine','Migraine with aura','Lower back pain','General muscle ache']
+  },
+  cravings:{
+    et:['Magus','Soolane','Rasvane','Vürtsikas','Süsivesikud','Värske'],
+    en:['Sweet','Salty','Fatty','Spicy','Carbs','Fresh']
+  },
+  sleep:{
+    et:['Raske uinuda','Värske ärkamine','Väsinud ärkamine','Rahutu uni','Eredad unenäod','Öised higistamised'],
+    en:['Trouble falling asleep','Refreshed waking','Tired waking','Restless sleep','Vivid dreams','Night sweats']
+  },
+  digestion:{
+    et:['Korras','Puhitus','Gaasid','Iiveldus','Oksendamine','Kõhulahtisus','Kõhukinnisus'],
+    en:['Normal','Bloating','Gassy','Nausea','Vomiting','Diarrhea','Constipation']
+  }
+};
+
+function t(k){ var l=S.lang||'et'; return (STRINGS[l]&&STRINGS[l][k])||STRINGS['et'][k]||k; }
+function tArr(k){ var l=S.lang||'et'; return (STRINGS[l]&&STRINGS[l][k])||STRINGS['et'][k]||[]; }
+function txtN(el,txt){ if(!el)return; el.childNodes.forEach(function(n){if(n.nodeType===3)n.textContent=txt;}); }
+
+function energySvg(pct){
+  if(pct===0) return '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/></svg>';
+  if(pct===100) return '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>';
+  var a=Math.PI*2*(pct/100),x=12+9*Math.sin(a),y=12-9*Math.cos(a),lg=pct>50?1:0;
+  return '<svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 3 A9 9 0 '+lg+' 1 '+x.toFixed(2)+' '+y.toFixed(2)+' L12 12 Z" fill="currentColor" stroke="none" opacity=".5"/></svg>';
+}
+function buildMoodChips(){
+  var l=S.lang||'et'; var data=CHIP_DATA.mood[l]||CHIP_DATA.mood.et;
+  return data.map(function(d){return '<span class="chip" onclick="selMood(this,\''+d.v+'\')">'+d.lbl+'</span>';}).join('');
+}
+function buildEnergyChips(){
+  var l=S.lang||'et'; var data=CHIP_DATA.energy[l]||CHIP_DATA.energy.et;
+  return data.map(function(d){return '<span class="chip chip-icon" data-v="'+d.v+'" onclick="selEnergy(this)">'+energySvg(d.pct)+d.lbl+'</span>';}).join('');
+}
+function buildChips(key){
+  var l=S.lang||'et'; var arr=CHIP_DATA[key][l]||CHIP_DATA[key].et;
+  return arr.map(function(lbl){return '<span class="chip" onclick="toggleChip(this)">'+lbl+'</span>';}).join('');
+}
+function phaseLbl(key){
+  var map={menstruation:'phase.menstruation',follicular:'phase.follicular',ovulation:'phase.ovulation',luteal:'phase.luteal',teadmata:'phase.unknown'};
+  return t(map[key]||'phase.unknown');
+}
+
+function applyLang(){
+  var l=S.lang||'et';
+  var q=function(id){return document.getElementById(id);};
+  // Rebuild chip grids
+  var cm=q('c-mood'); if(cm) cm.innerHTML=buildMoodChips();
+  var ce=q('c-energy'); if(ce) ce.innerHTML=buildEnergyChips();
+  ['feelings','mind','pain','cravings','sleep','digestion'].forEach(function(k){
+    var el=q('c-'+k); if(el) el.innerHTML=buildChips(k);
+  });
+  // Contra labels
+  var cb=document.querySelectorAll('#c-contra .contra-btn');
+  var cKeys=['contra.none','contra.taken','contra.late'];
+  cb.forEach(function(btn,i){var sp=btn.querySelector('span');if(sp)sp.textContent=t(cKeys[i]);});
+  // Sleep lock
+  var sl=q('c-sleep-lock'); if(sl){var st=sl.querySelector('.sleep-lock-txt');if(st)st.textContent=t('sleep.lock');var sb=sl.querySelector('button');if(sb)sb.textContent=t('sleep.upgrade');}
+  var shw=document.querySelector('.sleep-hrs-wrap label'); if(shw) shw.textContent=t('sleep.hrs');
+  var shp=q('c-sleep-hrs'); if(shp) shp.placeholder=t('sleep.hrs.ph');
+  // Nav
+  ['home','workouts','cycle','insights','profile'].forEach(function(n){var btn=q('nav-'+n);if(btn){var sp=btn.querySelector('span');if(sp)sp.textContent=t('nav.'+n);}});
+  // OB1
+  var ob1=q('ob-1'); if(ob1){
+    var ey=ob1.querySelector('.eyebrow'); if(ey)ey.textContent=t('ob1.eyebrow');
+    var tt=ob1.querySelector('.serif-title'); if(tt)tt.textContent=t('ob1.title');
+    var bd=ob1.querySelector('.body-text'); if(bd)bd.textContent=t('ob1.body');
+    var bn=ob1.querySelector('.btn-primary-full'); if(bn) txtN(bn,t('ob1.btn')+' ');
+  }
+  // OB2
+  var ob2=q('ob-2'); if(ob2){
+    var ey=ob2.querySelector('.eyebrow'); if(ey)ey.textContent=t('ob2.eyebrow');
+    var tt=ob2.querySelector('.serif-title'); if(tt)tt.textContent=t('ob2.title');
+    var bd=ob2.querySelector('.body-text'); if(bd)bd.textContent=t('ob2.body');
+    var lbs=ob2.querySelectorAll('.form-label'); if(lbs[0])lbs[0].textContent=t('ob2.name.lbl'); if(lbs[1])lbs[1].textContent=t('ob2.dob.lbl');
+    var inp=q('ob-name'); if(inp)inp.placeholder=t('ob2.name.ph');
+    var err=q('ob-age-err'); if(err)err.textContent=t('ob2.ageErr');
+    var bn=ob2.querySelector('.btn-primary-full'); if(bn) txtN(bn,t('ob2.btn')+' ');
+  }
+  // OB3
+  var ob3=q('ob-3'); if(ob3){
+    var ey=ob3.querySelector('.eyebrow'); if(ey)ey.textContent=t('ob3.eyebrow');
+    var tt=ob3.querySelector('.serif-title'); if(tt)tt.textContent=t('ob3.title');
+    var bd=ob3.querySelector('.body-text'); if(bd)bd.textContent=t('ob3.body');
+    var lbs=ob3.querySelectorAll('.form-label'); if(lbs[0])lbs[0].textContent=t('ob3.lp.lbl'); if(lbs[1])lbs[1].textContent=t('ob3.cl.lbl'); if(lbs[2])lbs[2].textContent=t('ob3.pl.lbl');
+    var bns=ob3.querySelectorAll('button.btn-primary-full,button.btn-ghost');
+    if(bns[0]) txtN(bns[0],t('ob3.btn')+' ');
+    if(bns[1]) bns[1].textContent=t('ob3.skip');
+  }
+  // OB4
+  var ob4=q('ob-4'); if(ob4){
+    var ey=ob4.querySelector('.eyebrow'); if(ey)ey.textContent=t('ob4.eyebrow');
+    var tt=ob4.querySelector('.serif-title'); if(tt)tt.textContent=t('ob4.title');
+    var bd=ob4.querySelector('.body-text'); if(bd)bd.textContent=t('ob4.body');
+    var cards=ob4.querySelectorAll('.fit-card');
+    var keys=[['ob4.fit1.title','ob4.fit1.sub'],['ob4.fit2.title','ob4.fit2.sub'],['ob4.fit3.title','ob4.fit3.sub']];
+    cards.forEach(function(c,i){var tit=c.querySelector('.fit-title');var sub=c.querySelector('.fit-sub');if(tit)tit.textContent=t(keys[i][0]);if(sub)sub.textContent=t(keys[i][1]);});
+    var bn=ob4.querySelector('#ob-fit-btn'); if(bn) txtN(bn,t('ob4.btn')+' ');
+  }
+  // OB5
+  var ob5=q('ob-5'); if(ob5){
+    var ey=ob5.querySelector('.eyebrow'); if(ey)ey.textContent=t('ob5.eyebrow');
+    var tt=ob5.querySelector('.serif-title'); if(tt)tt.textContent=t('ob5.title');
+    var bd=ob5.querySelector('.body-text'); if(bd)bd.textContent=t('ob5.body');
+    var pf=q('pc-free'); if(pf){
+      var pn=pf.querySelector('.plan-name');if(pn)pn.textContent=t('ob5.free.name');
+      var fts=pf.querySelectorAll('.plan-feat');
+      ['ob5.free.feat1','ob5.free.feat2','ob5.free.feat3','ob5.free.feat4'].forEach(function(fk,i){if(fts[i])txtN(fts[i],t(fk));});
+    }
+    var pm=q('pc-monthly'); if(pm){
+      var pn=pm.querySelector('.plan-name');if(pn)pn.textContent=t('ob5.monthly.name');
+      var pp=pm.querySelector('.plan-per');if(pp)pp.textContent=t('ob5.monthly.per');
+      var mts=pm.querySelectorAll('.plan-feat');
+      ['ob5.monthly.feat1','ob5.monthly.feat2','ob5.monthly.feat3','ob5.monthly.feat4'].forEach(function(fk,i){if(mts[i])txtN(mts[i],t(fk));});
+    }
+    var py=q('pc-yearly'); if(py){
+      var pn=py.querySelector('.plan-name');if(pn)pn.textContent=t('ob5.yearly.name');
+      var pp=py.querySelector('.plan-per');if(pp)pp.textContent=t('ob5.yearly.per');
+      var ps=py.querySelector('[style*="2.58"]');if(ps)ps.textContent=t('ob5.yearly.sub');
+    }
+    var pcb=q('pm-card'); if(pcb) txtN(pcb,' '+t('ob5.card.lbl'));
+    var cfs=q('card-form-section'); if(cfs){var cfl=cfs.querySelectorAll('.form-label');['ob5.cardnum.lbl','ob5.exp.lbl','ob5.cvc.lbl','ob5.email.lbl'].forEach(function(fk,i){if(cfl[i])cfl[i].textContent=t(fk);});var expIn=q('pay-exp');if(expIn)expIn.placeholder=t('ob5.exp.ph');}
+    var apb=q('apple-pay-section'); if(apb){var ab=apb.querySelector('.apple-pay-btn');if(ab)txtN(ab,' '+t('ob5.applepay.btn'));var dv=apb.querySelector('.pay-divider span');if(dv)dv.textContent=t('ob5.divider');}
+    var sec=ob5.querySelector('.secure-note'); if(sec) txtN(sec,' '+t('ob5.secure'));
+    selPlan(_obPlan);
+  }
+  // OB6
+  var ob6=q('ob-6'); if(ob6){
+    var ey=ob6.querySelector('.eyebrow'); if(ey)ey.textContent=t('ob6.eyebrow');
+    var ww=q('ob-welcome-wrap'); if(ww) txtN(ww,t('ob6.welcome')+' ');
+    var rows=ob6.querySelectorAll('[style*="justify-content:space-between"] span[style*="color:var(--beige-400)"]');
+    if(rows[0])rows[0].textContent=t('ob6.cl.lbl');
+    if(rows[1])rows[1].textContent=t('ob6.fit.lbl');
+    if(rows[2])rows[2].textContent=t('ob6.plan.lbl');
+    var bn=ob6.querySelector('.btn-primary-full'); if(bn) txtN(bn,t('ob6.btn')+' ');
+  }
+  // Home
+  var hps=document.querySelector('#page-home .p-eye'); if(hps)hps.textContent=t('home.phase.eye');
+  var hpn=q('phase-desc'); if(hpn&&(hpn.textContent===STRINGS.et['home.phase.nodesc']||hpn.textContent===STRINGS.en['home.phase.nodesc']))hpn.textContent=t('home.phase.nodesc');
+  var pdl=document.querySelector('#page-home .p-days-l'); if(pdl)pdl.textContent=t('home.days.left');
+  var ss=q('st-sess')&&q('st-sess').closest('.stat-tile'); if(ss){var sl2=ss.querySelector('.s-lbl');if(sl2)txtN(sl2,' '+t('home.stat.sess'));var ssb=ss.querySelector('.s-sub');if(ssb)ssb.textContent=t('home.stat.sess.sub');}
+  var sv=q('st-vol')&&q('st-vol').closest('.stat-tile'); if(sv){var sl3=sv.querySelector('.s-lbl');if(sl3)txtN(sl3,' '+t('home.stat.vol'));var ssb2=sv.querySelector('.s-sub');if(ssb2&&(ssb2.textContent===STRINGS.et['home.stat.vol.sub.none']||ssb2.textContent===STRINGS.en['home.stat.vol.sub.none']))ssb2.textContent=t('home.stat.vol.sub.none');}
+  var sd=q('st-diff')&&q('st-diff').closest('.stat-tile'); if(sd){var sl4=sd.querySelector('.s-lbl');if(sl4)txtN(sl4,' '+t('home.stat.diff'));var ssb3=sd.querySelector('.s-sub');if(ssb3)ssb3.textContent=t('home.stat.diff.sub');}
+  var qr=document.querySelector('#page-home .quick-row'); if(qr){var qbtns=qr.querySelectorAll('button');if(qbtns[0])txtN(qbtns[0],' '+t('home.quick.workout'));if(qbtns[1])txtN(qbtns[1],' '+t('home.quick.cycle'));if(qbtns[2])txtN(qbtns[2],' '+t('home.quick.insights'));}
+  var hcl=document.querySelector('#page-home .c-lbl'); if(hcl)txtN(hcl,' '+t('home.chart.lbl'));
+  var hpl=document.querySelector('#page-home .i-eye'); if(hpl)txtN(hpl,' '+t('home.pattern.lbl'));
+  // Workouts page
+  var wp=q('page-workouts'); if(wp){
+    var ph=wp.querySelector('.page-header-txt'); if(ph)ph.textContent=t('w.header');
+    var ps=wp.querySelector('.page-sub-txt'); if(ps)ps.textContent=t('w.header.sub');
+    var slbl=wp.querySelectorAll('.slbl'); if(slbl[0])txtN(slbl[0],' '+t('w.add.lbl')); if(slbl[1])txtN(slbl[1],' '+t('w.log.lbl'));
+    var ls=wp.querySelectorAll('.form-label');
+    if(ls[0])ls[0].textContent=t('w.date.lbl'); if(ls[1])ls[1].textContent=t('w.name.lbl'); if(ls[2])ls[2].textContent=t('w.ex.lbl'); if(ls[3])ls[3].textContent=t('w.feel.lbl'); if(ls[4])ls[4].textContent=t('w.notes.lbl');
+    var wn=q('w-name'); if(wn)wn.placeholder=t('w.name.ph');
+    var wno=q('w-notes'); if(wno)wno.placeholder=t('w.notes.ph');
+    var addex=wp.querySelector('[onclick="addExRow()"].btn-outline'); if(addex)txtN(addex,' '+t('w.ex.add'));
+    var saveb=wp.querySelector('[onclick="saveWorkout()"]'); if(saveb)saveb.textContent=t('w.save');
+    var wchips=q('w-chips'); if(wchips){
+      var ck=['w.chip.tired','w.chip.energetic','w.chip.strong','w.chip.hard','w.chip.easy','w.chip.motivated'];
+      wchips.querySelectorAll('.chip').forEach(function(c,i){if(ck[i])c.textContent=t(ck[i]);});
+    }
+  }
+  // Cycle page
+  var cp=q('page-cycle'); if(cp){
+    var ph=cp.querySelector('.page-header-txt'); if(ph)ph.textContent=t('c.header');
+    var pl=cp.querySelector('.form-label'); if(pl)pl.textContent=t('c.date.lbl');
+    var plab=cp.querySelectorAll('.form-label')[1]; if(plab)plab.textContent=t('c.period.lbl');
+    var py2=q('btn-period-y'); if(py2)py2.textContent=t('c.period.yes');
+    var pn2=q('btn-period-n'); if(pn2)pn2.textContent=t('c.period.no');
+    var saveb=cp.querySelector('[onclick="saveCycleDay()"]'); if(saveb)saveb.textContent=t('c.save');
+    var legs=cp.querySelectorAll('.leg-item');
+    ['leg.period.logged','leg.period.pred','leg.ovulation','leg.fertile'].forEach(function(lk,i){if(legs[i])txtN(legs[i],' '+t(lk));});
+    var calHdays=cp.querySelectorAll('.cal-hday');
+    var wds=tArr('days.short'), wdOrder=[1,2,3,4,5,6,0];
+    calHdays.forEach(function(h,i){h.textContent=wds[wdOrder[i]];});
+    var cslbl=cp.querySelector('.slbl'); if(cslbl)txtN(cslbl,' '+t('cal.lbl.day'));
+    var catMap={'c-mood':'cat.mood','c-energy':'cat.energy','c-feelings':'cat.feelings','c-mind':'cat.mind','c-pain':'cat.pain','c-cravings':'cat.cravings','c-sleep-section':'cat.sleep','c-digestion':'cat.digestion','c-contra':'cat.contra'};
+    Object.keys(catMap).forEach(function(id){
+      var sec2=q(id); if(!sec2)return;
+      var fg=sec2.closest?sec2.closest('.form-group'):null;
+      if(!fg&&sec2.parentElement)fg=sec2.parentElement;
+      var hdr2=fg?fg.querySelector('.cat-hdr'):null;
+      if(hdr2) txtN(hdr2,' '+t(catMap[id]));
+    });
+  }
+  // Insights page
+  var ip=q('page-insights'); if(ip){
+    var ph=ip.querySelector('.page-header-txt'); if(ph)ph.textContent=t('ins.header');
+    var ps=ip.querySelector('.page-sub-txt'); if(ps)ps.textContent=t('ins.header.sub');
+  }
+  // Profile page
+  var pp2=q('page-profile'); if(pp2){
+    var ph=pp2.querySelector('.page-header-txt'); if(ph)ph.textContent=t('prof.header');
+    var ps=pp2.querySelector('.page-sub-txt'); if(ps)ps.textContent=t('prof.header.sub');
+    var slbls=pp2.querySelectorAll('.slbl');
+    ['prof.plan.lbl','prof.data.lbl','prof.privacy.lbl','prof.library.lbl','prof.data.sec'].forEach(function(sk,i){if(slbls[i])txtN(slbls[i],' '+t(sk));});
+    var upb=q('upgrade-btn'); if(upb)upb.textContent=t('prof.upgrade');
+    var ls2=pp2.querySelectorAll('.form-label');
+    ['prof.name.lbl','prof.cl.lbl','prof.pl.lbl','prof.lp.lbl'].forEach(function(lk,i){if(ls2[i])ls2[i].textContent=t(lk);});
+    var pni=q('p-name'); if(pni)pni.placeholder=t('prof.name.ph');
+    var sav=pp2.querySelector('[onclick="saveProfile()"]'); if(sav)sav.textContent=t('prof.save');
+    var tw=pp2.querySelectorAll('.t-info');
+    [['prof.sync.title','prof.sync.sub'],['prof.notif.title','prof.notif.sub'],['prof.anon.title','prof.anon.sub']].forEach(function(pair,i){var ti=tw[i];if(!ti)return;var tt2=ti.querySelector('.t-title');var ts=ti.querySelector('.t-sub');if(tt2)tt2.textContent=t(pair[0]);if(ts)ts.textContent=t(pair[1]);});
+    var btns=pp2.querySelectorAll('.card button.btn-outline,.card button.btn-danger');
+    if(btns[0])txtN(btns[0],' '+t('prof.export'));
+    if(btns[1])txtN(btns[1],' '+t('prof.clear'));
+    var note=pp2.querySelector('[style*="font-size:11px"][style*="color:var(--beige-400)"]'); if(note)note.textContent=t('prof.local');
+  }
+  // Home greeting
+  var hg=document.getElementById('home-greet'); if(hg)hg.textContent=t('home.greet');
+  var hs=document.getElementById('home-sub'); if(hs&&(hs.textContent===STRINGS.et['home.sub.none']||hs.textContent===STRINGS.en['home.sub.none']))hs.textContent=t('home.sub.none');
+  var pdesc=document.getElementById('phase-desc'); if(pdesc&&(pdesc.textContent===STRINGS.et['home.phase.nodesc']||pdesc.textContent===STRINGS.en['home.phase.nodesc']))pdesc.textContent=t('home.phase.nodesc');
+  var pdl2=document.querySelector('.p-days-l'); if(pdl2)pdl2.textContent=t('home.days.left');
+  // Lang selector sync
+  if(S.lang) ['et','en'].forEach(function(x){var lc=document.getElementById('lc-'+x);if(lc)lc.classList.toggle('sel',x===S.lang);});
+  // re-render dynamic content
+  renderHome(); renderWorkoutLog(); renderInsights(); renderLibrary(); updatePlanUI(); buildCal();
+}
+
 // ── ONBOARDING ────────────────────────────────────────
 var _obLang='et', _obFit='', _obPlan='monthly';
 
@@ -865,14 +1313,15 @@ function obGo(n){
   document.getElementById('ob-'+n).classList.add('active');
 }
 function selLang(l){
-  _obLang=l;
+  _obLang=l; S.lang=l; save();
   ['et','en'].forEach(function(x){ document.getElementById('lc-'+x).classList.toggle('sel',x===l); });
+  applyLang();
 }
 function checkOb2(){
   var name=document.getElementById('ob-name').value.trim();
   var dobVal=document.getElementById('ob-dob').value;
   var err=document.getElementById('ob-age-err');
-  if(!name){ toast('Palun sisesta oma nimi'); return; }
+  if(!name){ toast(t('toast.name.required')); return; }
   if(dobVal){
     var dob=new Date(dobVal);
     var today=new Date();
@@ -892,8 +1341,8 @@ function selPlan(p){
   _obPlan=p;
   ['free','monthly','yearly'].forEach(function(x){ document.getElementById('pc-'+x).classList.toggle('sel',x===p); });
   var wrap=document.getElementById('pay-wrap'), txt=document.getElementById('pay-btn-txt');
-  if(p==='free'){ wrap.style.display='none'; txt.textContent='Jätka tasuta'; }
-  else { wrap.style.display='block'; txt.textContent=p==='monthly'?'Alusta Pro kasutamist (3.99€/kuus)':'Alusta Pro kasutamist (30.99€/aastas)'; }
+  if(p==='free'){ wrap.style.display='none'; txt.textContent=t('ob5.pay.free'); }
+  else { wrap.style.display='block'; txt.textContent=p==='monthly'?t('ob5.pay.monthly'):t('ob5.pay.yearly'); }
 }
 var _payMethod='apple';
 function selPayMethod(m){
@@ -911,7 +1360,7 @@ function doPurchase(){
     var exp=document.getElementById('pay-exp').value;
     var cvc=document.getElementById('pay-cvc').value;
     var email=document.getElementById('pay-email').value;
-    if(num.length<16||!exp||cvc.length<3||!email.includes('@')){ toast('Palun täida kõik makseväljad korrektselt'); return; }
+    if(num.length<16||!exp||cvc.length<3||!email.includes('@')){ toast(t('toast.fill.payment')); return; }
   }
   S.plan=_obPlan;
   var lp=document.getElementById('ob-lp').value;
@@ -919,9 +1368,9 @@ function doPurchase(){
   S.profile.cycleLen=parseInt(document.getElementById('ob-cl').value)||28;
   S.profile.periodLen=parseInt(document.getElementById('ob-pl').value)||5;
   document.getElementById('ob-welcome').textContent=(S.profile.name||'sina')+'.';
-  document.getElementById('sum-cl').textContent=S.profile.cycleLen+' päeva';
-  document.getElementById('sum-fit').textContent={algaja:'Algaja',kesktase:'Kesktase',kogenud:'Kogenud'}[_obFit]||'—';
-  document.getElementById('sum-plan').textContent={free:'Tasuta',monthly:'Pro kuupakett',yearly:'Pro aastapakett'}[_obPlan];
+  document.getElementById('sum-cl').textContent=S.profile.cycleLen+(S.lang==='en'?' days':' päeva');
+  document.getElementById('sum-fit').textContent=t('ob6.fit.'+(_obFit||'algaja'));
+  document.getElementById('sum-plan').textContent=t('ob6.plan.'+_obPlan);
   obGo(6);
 }
 function isUnderAge(){
@@ -962,10 +1411,10 @@ if(S.profile.name){
 
 // ── PLAN UI ───────────────────────────────────────────
 function updatePlanUI(){
-  var n={free:'Tasuta pakett',monthly:'Pro — kuupakett',yearly:'Pro — aastapakett'}[S.plan]||'Tasuta pakett';
-  var s={free:'Uuenda Pro-le täielike ülevaadete jaoks',monthly:'Kõik Pro funktsioonid aktiivsed',yearly:'Kõik Pro funktsioonid aktiivsed'}[S.plan]||'';
-  document.getElementById('prof-plan-name').textContent=n;
-  document.getElementById('prof-plan-sub').textContent=s;
+  var nk={free:'prof.plan.free.name',monthly:'prof.plan.pro.name.monthly',yearly:'prof.plan.pro.name.yearly'};
+  var sk={free:'prof.plan.free.sub',monthly:'prof.plan.pro.sub',yearly:'prof.plan.pro.sub'};
+  document.getElementById('prof-plan-name').textContent=t(nk[S.plan]||'prof.plan.free.name');
+  document.getElementById('prof-plan-sub').textContent=t(sk[S.plan]||'prof.plan.free.sub');
   document.getElementById('upgrade-btn').style.display=S.plan==='free'?'':'none';
 }
 
@@ -978,10 +1427,10 @@ function getCycleInfo(ds){
   var d=((diff%cl)+cl)%cl+1;
   var left=cl-d+1;
   var phase,desc;
-  if(d<=pl){phase='Menstruatsioonifaas';desc='Puhkus ja kerge liikumine on õige valik.';}
-  else if(d<=Math.floor(cl/2)-2){phase='Follikulaarfaas';desc='Energia tõuseb — hea aeg raskemalt treenida.';}
-  else if(d<=Math.floor(cl/2)+1){phase='Ovulatsioon';desc='Energiatipp — ideaalne uute rekordite püstitamiseks.';}
-  else{phase='Luteaalfaas';desc='Madalam intensiivsus on tark — puhkus on osa rutiinist.';}
+  if(d<=pl){phase=t('phase.menstruation');desc=t('phase.menstruation.desc');}
+  else if(d<=Math.floor(cl/2)-2){phase=t('phase.follicular');desc=t('phase.follicular.desc');}
+  else if(d<=Math.floor(cl/2)+1){phase=t('phase.ovulation');desc=t('phase.ovulation.desc');}
+  else{phase=t('phase.luteal');desc=t('phase.luteal.desc');}
   return{d,left,phase,desc,cl};
 }
 function phaseKey(ds){
@@ -994,7 +1443,7 @@ function phaseKey(ds){
   if(d<=Math.floor(cl/2)+1) return 'ovulation';
   return 'luteal';
 }
-var PHASE_LBL={follicular:'Follikulaarfaas',luteal:'Luteaalfaas',menstruation:'Menstruatsioonifaas',ovulation:'Ovulatsioon',teadmata:'—'};
+var PHASE_LBL={get follicular(){return phaseLbl('follicular');},get luteal(){return phaseLbl('luteal');},get menstruation(){return phaseLbl('menstruation');},get ovulation(){return phaseLbl('ovulation');},get teadmata(){return phaseLbl('teadmata');}};
 
 // ── CALENDAR ─────────────────────────────────────────
 function buildCal(){
@@ -1026,8 +1475,8 @@ function buildCal(){
     cal.appendChild(el);
   }
   var ci=getCycleInfo();
-  var MONTHS=['jaanuar','veebruar','märts','aprill','mai','juuni','juuli','august','september','oktoober','november','detsember'];
-  document.getElementById('cycle-sub').textContent=MONTHS[mo]+' '+yr+(ci?' · Päev '+ci.d+' / '+ci.cl:'');
+  var CMONTHS=tArr('months');
+  document.getElementById('cycle-sub').textContent=CMONTHS[mo]+' '+yr+(ci?' · '+(S.lang==='en'?'Day':'Päev')+' '+ci.d+' / '+ci.cl:'');
 }
 
 // ── PROFILE ───────────────────────────────────────────
@@ -1045,19 +1494,19 @@ function saveProfile(){
   save(); buildCal(); renderHome();
   document.getElementById('av').textContent=S.profile.name?S.profile.name[0].toUpperCase():'?';
   document.getElementById('home-name').textContent=(S.profile.name||'sina')+'.';
-  toast('Profiil salvestatud');
+  toast(t('toast.profile.save'));
 }
 
 // ── WORKOUTS ─────────────────────────────────────────
 function addExRow(){
   var row=document.createElement('div'); row.className='ex-log-row';
-  row.innerHTML='<div class="ex-name-row"><input class="form-input" style="font-size:13px;padding:6px 10px" placeholder="Harjutuse nimi" data-f="n"/><button onclick="this.closest(\'.ex-log-row\').remove()" style="background:none;border:none;cursor:pointer;color:var(--beige-400);padding:4px;flex-shrink:0"><svg width="14" height="14"><use href="#i-trash"/></svg></button></div><div class="ex-metrics"><div class="m-wrap"><div class="m-lbl">Seeriad</div><input class="m-input" type="number" min="1" placeholder="3" data-f="s"/></div><div class="m-wrap"><div class="m-lbl">Kordused</div><input class="m-input" type="number" min="1" placeholder="10" data-f="r"/></div><div class="m-wrap"><div class="m-lbl">kg</div><input class="m-input" type="number" min="0" step="0.5" placeholder="0" data-f="k"/></div></div>';
+  row.innerHTML='<div class="ex-name-row"><input class="form-input" style="font-size:13px;padding:6px 10px" placeholder="'+t('w.ex.name.ph')+'" data-f="n"/><button onclick="this.closest(\'.ex-log-row\').remove()" style="background:none;border:none;cursor:pointer;color:var(--beige-400);padding:4px;flex-shrink:0"><svg width="14" height="14"><use href="#i-trash"/></svg></button></div><div class="ex-metrics"><div class="m-wrap"><div class="m-lbl">'+t('w.ex.sets')+'</div><input class="m-input" type="number" min="1" placeholder="3" data-f="s"/></div><div class="m-wrap"><div class="m-lbl">'+t('w.ex.reps')+'</div><input class="m-input" type="number" min="1" placeholder="10" data-f="r"/></div><div class="m-wrap"><div class="m-lbl">kg</div><input class="m-input" type="number" min="0" step="0.5" placeholder="0" data-f="k"/></div></div>';
   document.getElementById('ex-rows').appendChild(row);
 }
 function saveWorkout(){
   var date=document.getElementById('w-date').value;
   var name=document.getElementById('w-name').value.trim();
-  if(!date||!name){toast('Palun täida kuupäev ja treeningkava nimi');return;}
+  if(!date||!name){toast(t('toast.fill.workout'));return;}
   var exs=[];
   document.querySelectorAll('#ex-rows .ex-log-row').forEach(function(row){
     var n=row.querySelector('[data-f="n"]').value.trim();
@@ -1066,7 +1515,7 @@ function saveWorkout(){
     var k=parseFloat(row.querySelector('[data-f="k"]').value)||0;
     if(n) exs.push({name:n,sets:s,reps:r,kg:k});
   });
-  if(!exs.length){toast('Lisa vähemalt üks harjutus');return;}
+  if(!exs.length){toast(t('toast.add.ex'));return;}
   var feel=[]; document.querySelectorAll('#w-chips .chip.on').forEach(function(c){feel.push(c.textContent);});
   S.workouts.push({date,name,exercises:exs,feel,notes:document.getElementById('w-notes').value.trim(),phase:phaseKey(date)});
   S.workouts.sort(function(a,b){return b.date.localeCompare(a.date);});
@@ -1074,22 +1523,22 @@ function saveWorkout(){
   document.getElementById('w-name').value=''; document.getElementById('w-notes').value='';
   document.getElementById('ex-rows').innerHTML=''; addExRow();
   document.querySelectorAll('#w-chips .chip').forEach(function(c){c.classList.remove('on');});
-  toast('Treeningkord salvestatud');
+  toast(t('toast.workout.save'));
 }
 function renderWorkoutLog(){
   var el=document.getElementById('w-list');
-  if(!S.workouts.length){el.innerHTML='<div class="empty-state">Treeninguid pole veel lisatud.</div>';return;}
+  if(!S.workouts.length){el.innerHTML='<div class="empty-state">'+t('w.empty')+'</div>';return;}
   el.innerHTML=S.workouts.slice(0,20).map(function(w,i){
     var exStr=w.exercises.map(function(e){return e.name+' '+e.sets+'×'+e.reps+(e.kg?' · '+e.kg+' kg':'');}).join(', ');
     return '<div class="list-row"><div class="list-icon blush"><svg width="20" height="20"><use href="#i-barbell"/></svg></div><div style="flex:1"><div class="l-title">'+w.name+'</div><div class="l-sub">'+disp(w.date)+' · '+(PHASE_LBL[w.phase]||w.phase)+'</div><div class="l-sub" style="margin-top:2px;font-size:10px">'+exStr+'</div></div><button class="btn btn-danger btn-sm" onclick="delW('+i+')"><svg width="13" height="13"><use href="#i-trash"/></svg></button></div>';
   }).join('');
 }
-function delW(i){if(!confirm('Kustutada?'))return;S.workouts.splice(i,1);save();renderHome();renderInsights();renderWorkoutLog();renderLibrary();}
+function delW(i){if(!confirm(t('confirm.delete')))return;S.workouts.splice(i,1);save();renderHome();renderInsights();renderWorkoutLog();renderLibrary();}
 
 // ── CYCLE DAY ─────────────────────────────────────────
 function saveCycleDay(){
   var date=document.getElementById('c-date').value;
-  if(!date){toast('Palun vali kuupäev');return;}
+  if(!date){toast(t('toast.no.date'));return;}
   var syms=[];
   ['#c-feelings','#c-mind','#c-pain','#c-cravings','#c-sleep','#c-digestion'].forEach(function(id){
     document.querySelectorAll(id+' .chip.on').forEach(function(c){syms.push(c.textContent.trim());});
@@ -1105,7 +1554,7 @@ function saveCycleDay(){
   document.querySelectorAll('#c-contra .contra-btn').forEach(function(b){b.classList.remove('on');});
   sleepHrsEl.value='';
   S._period=false; S._mood=''; S._energy=''; S._contra=''; togglePeriod(false);
-  toast('Tsüklimärge salvestatud');
+  toast(t('toast.cycle.save'));
 }
 
 // ── PHASE DIFF ────────────────────────────────────────
@@ -1119,65 +1568,64 @@ function phaseDiff(){
 
 // ── HOME ──────────────────────────────────────────────
 function renderHome(){
-  var DAYS=['pühapäev','esmaspäev','teisipäev','kolmapäev','neljapäev','reede','laupäev'];
-  var MONTHS=['jaanuar','veebruar','märts','aprill','mai','juuni','juuli','august','september','oktoober','november','detsember'];
-  document.getElementById('home-date').textContent=DAYS[NOW.getDay()]+', '+NOW.getDate()+'. '+MONTHS[NOW.getMonth()];
-  document.getElementById('home-name').textContent=(S.profile.name||'sina')+'.';
+  var HDAYS=tArr('days'), HMONTHS=tArr('months');
+  document.getElementById('home-date').textContent=HDAYS[NOW.getDay()]+', '+NOW.getDate()+'. '+HMONTHS[NOW.getMonth()];
+  document.getElementById('home-name').textContent=(S.profile.name||(S.lang==='en'?'you':'sina'))+'.';
   document.getElementById('av').textContent=S.profile.name?S.profile.name[0].toUpperCase():'?';
   var ci=getCycleInfo();
-  if(ci){document.getElementById('phase-name').textContent=ci.phase;document.getElementById('phase-desc').textContent=ci.desc;document.getElementById('phase-days').textContent=ci.left;document.getElementById('home-sub').textContent='Tsükli päev '+ci.d+' · '+ci.left+' päeva jäänud';}
+  if(ci){document.getElementById('phase-name').textContent=ci.phase;document.getElementById('phase-desc').textContent=ci.desc;document.getElementById('phase-days').textContent=ci.left;document.getElementById('home-sub').textContent=t('home.cycle.day')+' '+ci.d+' · '+ci.left+' '+t('home.days.left');}
   var d7=new Date(NOW.getTime()-7*86400000);
   var rec=S.workouts.filter(function(w){return new Date(w.date)>=d7;});
   document.getElementById('st-sess').textContent=rec.length;
   var weekVol=0;
   rec.forEach(function(w){w.exercises.forEach(function(e){if(e.kg>0&&e.sets>0&&e.reps>0)weekVol+=e.kg*e.sets*e.reps;});});
   document.getElementById('st-vol').textContent=weekVol>0?Math.round(weekVol)+'kg':'—';
-  document.getElementById('st-vol-sub').textContent=weekVol>0?'kg sel nädalal':'trenn puudub';
+  document.getElementById('st-vol-sub').textContent=weekVol>0?'kg '+(S.lang==='en'?'this week':'sel nädalal'):t('home.stat.vol.sub.none');
   var pd=phaseDiff();
   if(pd!=null){var sign=pd>=0?'+':'';document.getElementById('st-diff').textContent=sign+pd.toFixed(1)+'%';document.getElementById('st-diff').style.color=pd>=0?'var(--green-600)':'var(--blush-400)';}
   // chart
-  var DLBLS=['E','T','K','N','R','L','P'],bars='';
+  var DLBLS=tArr('days.short'),bars='';
   for(var i=6;i>=0;i--){var d=new Date(NOW.getTime()-i*86400000),ds=fd(d),has=S.workouts.some(function(w){return w.date===ds;});bars+='<div class="bar-col"><div class="bar-fill" style="height:'+(has?'82%':'10%')+';background:'+(has?'var(--blush-400)':'var(--beige-100)')+'"></div><div class="bar-lbl">'+DLBLS[(d.getDay()+6)%7]+'</div></div>';}
-  document.getElementById('home-chart').innerHTML=bars||'<div class="empty-state" style="width:100%;padding:8px;font-size:12px">Lisa treeninguid.</div>';
+  document.getElementById('home-chart').innerHTML=bars||'<div class="empty-state" style="width:100%;padding:8px;font-size:12px">'+t('home.chart.empty')+'</div>';
   // insight preview
-  if(pd!=null&&ci){var b2=pd>=0?'follikulaarfaasis':'luteaalfaasis';document.getElementById('ins-title').textContent='Tulemused on '+b2+' '+Math.abs(pd).toFixed(1)+'% kõrgemad';document.getElementById('ins-body').textContent='Põhineb '+S.workouts.length+' treeningkorral.'+(ci.phase==='Luteaalfaas'&&pd>0?' Follikulaarfaas algab '+ci.left+' päeva pärast.':'');}
-  else if(S.workouts.length){document.getElementById('ins-title').textContent=S.workouts.length+' treeningkorda logitud';document.getElementById('ins-body').textContent='Lisa tsükliandmed, et saada faasipõhiseid ülevaateid.';}
+  if(pd!=null&&ci){var b2=pd>=0?t('home.ins.follik'):t('home.ins.luteal');document.getElementById('ins-title').textContent=t('home.ins.based')+' '+b2+' '+Math.abs(pd).toFixed(1)+t('home.ins.higher');document.getElementById('ins-body').textContent=t('home.ins.based')+' '+S.workouts.length+' '+t('home.ins.sessions')+(ci.phase===t('phase.luteal')&&pd>0?' '+t('home.ins.follstart')+' '+ci.left+' '+t('home.ins.days.after'):'');}
+  else if(S.workouts.length){document.getElementById('ins-title').textContent=S.workouts.length+' '+t('home.ins.count');document.getElementById('ins-body').textContent=t('home.ins.addcycle');}
 }
 
 // ── INSIGHTS ─────────────────────────────────────────
 function renderInsights(){
   var el=document.getElementById('insights-body');
-  if(!S.workouts.length&&!S.cycleDays.length){el.innerHTML='<div class="empty-state">Lisa treeninguid ja tsükliandmeid.</div>';return;}
+  if(!S.workouts.length&&!S.cycleDays.length){el.innerHTML='<div class="empty-state">'+t('ins.empty')+'</div>';return;}
   var html='',pd=phaseDiff();
   if(pd!=null){
     var f=S.workouts.filter(function(w){return w.phase==='follicular';}),l=S.workouts.filter(function(w){return w.phase==='luteal';});
-    var b=pd>=0?'follikulaarfaasis':'luteaalfaasis';
-    html+='<div class="insight-card '+(pd>=0?'blush':'')+'"><div class="i-eye"><svg width="10" height="10"><use href="#i-spark"/></svg>Faasivõrdlus</div><div class="i-title">Tulemused on '+b+' '+Math.abs(pd).toFixed(1)+'% kõrgemad</div><div class="i-body">Follikulaarfaasis '+f.length+' treeningkorda, luteaalfaasis '+l.length+'.</div></div>';
+    var b=pd>=0?t('ins.follik'):t('ins.luteal');
+    html+='<div class="insight-card '+(pd>=0?'blush':'')+'"><div class="i-eye"><svg width="10" height="10"><use href="#i-spark"/></svg>'+t('ins.phase.compare')+'</div><div class="i-title">'+b+' '+Math.abs(pd).toFixed(1)+t('ins.phase.higher')+'</div><div class="i-body">'+t('ins.ex.follik')+' '+f.length+', '+t('ins.ex.luteal')+' '+l.length+'.</div></div>';
   }
   var exMap={};
   S.workouts.forEach(function(w){w.exercises.forEach(function(e){if(!e.name||!e.kg)return;if(!exMap[e.name])exMap[e.name]={f:[],l:[]};if(w.phase==='follicular')exMap[e.name].f.push(e.kg);else if(w.phase==='luteal')exMap[e.name].l.push(e.kg);});});
   var rows='';
-  Object.keys(exMap).forEach(function(name){var d=exMap[name];if(!d.f.length||!d.l.length)return;var fa=d.f.reduce(function(a,b){return a+b;},0)/d.f.length,la=d.l.reduce(function(a,b){return a+b;},0)/d.l.length,diff=((fa-la)/la*100),mx=Math.max(fa,la);rows+='<div class="prog-wrap"><div class="prog-lbl"><span>'+name+'</span><span style="font-weight:700">'+(diff>=0?'+':'')+diff.toFixed(1)+'% follik.</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px"><div><div style="font-size:10px;color:var(--beige-400);margin-bottom:3px">Follikulaar · '+fa.toFixed(1)+' kg</div><div class="prog-track"><div class="prog-fill" style="width:'+(fa/mx*100)+'%;background:var(--beige-400)"></div></div></div><div><div style="font-size:10px;color:var(--blush-400);margin-bottom:3px">Luteaal · '+la.toFixed(1)+' kg</div><div class="prog-track"><div class="prog-fill" style="width:'+(la/mx*100)+'%;background:var(--blush-400)"></div></div></div></div></div>';});
-  if(rows) html+='<div class="card" style="margin-top:4px"><div class="c-lbl"><svg width="12" height="12"><use href="#i-spark"/></svg>Harjutuste faasivõrdlus</div>'+rows+'</div>';
+  Object.keys(exMap).forEach(function(name){var d=exMap[name];if(!d.f.length||!d.l.length)return;var fa=d.f.reduce(function(a,b){return a+b;},0)/d.f.length,la=d.l.reduce(function(a,b){return a+b;},0)/d.l.length,diff=((fa-la)/la*100),mx=Math.max(fa,la);rows+='<div class="prog-wrap"><div class="prog-lbl"><span>'+name+'</span><span style="font-weight:700">'+(diff>=0?'+':'')+diff.toFixed(1)+t('ins.prog.follik')+'</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px"><div><div style="font-size:10px;color:var(--beige-400);margin-bottom:3px">'+t('ins.ex.follik')+' · '+fa.toFixed(1)+' kg</div><div class="prog-track"><div class="prog-fill" style="width:'+(fa/mx*100)+'%;background:var(--beige-400)"></div></div></div><div><div style="font-size:10px;color:var(--blush-400);margin-bottom:3px">'+t('ins.ex.luteal')+' · '+la.toFixed(1)+' kg</div><div class="prog-track"><div class="prog-fill" style="width:'+(la/mx*100)+'%;background:var(--blush-400)"></div></div></div></div></div>';});
+  if(rows) html+='<div class="card" style="margin-top:4px"><div class="c-lbl"><svg width="12" height="12"><use href="#i-spark"/></svg>'+t('ins.ex.compare')+'</div>'+rows+'</div>';
   if(S.workouts.length){
     html+='<div class="slbl" style="margin-top:4px"><svg width="12" height="12"><use href="#i-eye"/></svg>Viimased treeningkorrad</div>';
-    S.workouts.slice(0,3).forEach(function(w){var exStr=w.exercises.map(function(e){return e.name+' '+e.sets+'×'+e.reps+(e.kg?' ('+e.kg+' kg)':'');}).join(' · ');html+='<div class="insight-card"><div class="i-eye"><svg width="10" height="10"><use href="#i-barbell"/></svg>'+(PHASE_LBL[w.phase]||w.phase)+'</div><div class="i-title">'+w.name+' · '+disp(w.date)+'</div><div class="i-body">'+exStr+(w.feel.length?' · Tunne: '+w.feel.join(', '):'')+'</div></div>';});
+    S.workouts.slice(0,3).forEach(function(w){var exStr=w.exercises.map(function(e){return e.name+' '+e.sets+'×'+e.reps+(e.kg?' ('+e.kg+' kg)':'');}).join(' · ');html+='<div class="insight-card"><div class="i-eye"><svg width="10" height="10"><use href="#i-barbell"/></svg>'+(PHASE_LBL[w.phase]||w.phase)+'</div><div class="i-title">'+w.name+' · '+disp(w.date)+'</div><div class="i-body">'+exStr+(w.feel.length?' · '+t('w.feel.lbl')+': '+w.feel.join(', '):'')+'</div></div>';});
   }
   var mc={};S.cycleDays.forEach(function(d){if(d.mood){mc[d.mood]=(mc[d.mood]||0)+1;}});
-  if(Object.keys(mc).length){var top=Object.keys(mc).sort(function(a,b){return mc[b]-mc[a];})[0];html+='<div class="insight-card green"><div class="i-eye"><svg width="10" height="10"><use href="#i-moon"/></svg>Tujumuster</div><div class="i-title">Sagedaim märgitud tuju: '+top+'</div><div class="i-body">Logitud '+S.cycleDays.length+' tsüklimärget.</div></div>';}
-  html+='<div class="disclaimer"><svg width="14" height="14" style="flex-shrink:0;margin-top:1px"><use href="#i-eye"/></svg><span>Need ülevaated põhinevad sinu enda salvestatud andmetes ega ole meditsiiniline nõuanne.</span></div>';
+  if(Object.keys(mc).length){var top=Object.keys(mc).sort(function(a,b){return mc[b]-mc[a];})[0];html+='<div class="insight-card green"><div class="i-eye"><svg width="10" height="10"><use href="#i-moon"/></svg>'+t('ins.mood')+'</div><div class="i-title">'+t('ins.mood.top')+' '+top+'</div><div class="i-body">'+t('ins.mood.logged')+' '+S.cycleDays.length+' '+t('ins.mood.entries')+'</div></div>';}
+  html+='<div class="disclaimer"><svg width="14" height="14" style="flex-shrink:0;margin-top:1px"><use href="#i-eye"/></svg><span>'+t('ins.disclaimer')+'</span></div>';
   el.innerHTML=html;
 }
 
 // ── LIBRARY ───────────────────────────────────────────
 function renderLibrary(){
   var el=document.getElementById('prof-library');
-  if(!S.workouts.length){el.innerHTML='<div class="empty-state">Treeninguid pole veel lisatud.</div>';return;}
+  if(!S.workouts.length){el.innerHTML='<div class="empty-state">'+t('lib.empty')+'</div>';return;}
   var g={};S.workouts.forEach(function(w){if(!g[w.name])g[w.name]=[];g[w.name].push(w);});
   el.innerHTML=Object.keys(g).map(function(name){
     var ss=g[name];
     var rows=ss.map(function(w){return '<div class="sess-entry"><div class="sess-date">'+disp(w.date)+' · '+(PHASE_LBL[w.phase]||w.phase)+'</div>'+w.exercises.map(function(e){return '<div class="ex-line"><span class="ex-name">'+e.name+'</span><span class="ex-stats">'+e.sets+'×'+e.reps+(e.kg?' · '+e.kg+' kg':'')+'</span></div>';}).join('')+'</div>';}).join('');
-    return '<div class="lib-folder"><div class="folder-head" onclick="toggleFolder(this)"><div class="folder-icon"><svg width="20" height="20"><use href="#i-folder"/></svg></div><div><div class="folder-name">'+name+'</div><div class="folder-meta">'+ss.length+' treeningkorda · viimane '+disp(ss[0].date)+'</div></div><svg width="18" height="18" class="folder-chev"><use href="#i-chevr"/></svg></div><div class="folder-body">'+rows+'</div></div>';
+    return '<div class="lib-folder"><div class="folder-head" onclick="toggleFolder(this)"><div class="folder-icon"><svg width="20" height="20"><use href="#i-folder"/></svg></div><div><div class="folder-name">'+name+'</div><div class="folder-meta">'+ss.length+' '+t('lib.sessions')+' · '+t('lib.last')+' '+disp(ss[0].date)+'</div></div><svg width="18" height="18" class="folder-chev"><use href="#i-chevr"/></svg></div><div class="folder-body">'+rows+'</div></div>';
   }).join('');
 }
 function toggleFolder(h){h.classList.toggle('open');h.nextElementSibling.classList.toggle('open');}
@@ -1194,6 +1642,7 @@ function clearAll(){S={profile:{name:'',cycleLen:28,periodLen:5,lastPeriod:''},p
 document.getElementById('w-date').value=fd(NOW);
 document.getElementById('c-date').value=fd(NOW);
 applySleepLock();
+if(S.lang&&S.lang!=='et') applyLang();
 </script>
 </body>
 </html>

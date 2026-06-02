@@ -7,8 +7,10 @@ import { Input } from '../../components/ui/Input';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { todayISO } from '../../lib/cycle';
+import { useTranslation } from '../../lib/LangContext';
 
 export default function CycleScreen() {
+  const { t } = useTranslation();
   const [lastPeriod, setLastPeriod] = useState('');
   const [cycleLen, setCycleLen] = useState('28');
   const [periodLen, setPeriodLen] = useState('5');
@@ -32,48 +34,25 @@ export default function CycleScreen() {
       showsVerticalScrollIndicator={false}
     >
       <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-        <Text style={styles.backText}>← Tagasi</Text>
+        <Text style={styles.backText}>{t('ob.back')}</Text>
       </TouchableOpacity>
 
-      <Eyebrow>Tsükliandmed</Eyebrow>
-      <SerifTitle>Räägi oma tsüklist.</SerifTitle>
-      <BodyText>Aitab siduda treeningu tsüklifa asidega. Saad igal ajal muuta.</BodyText>
+      <Eyebrow>{t('cycle.eyebrow')}</Eyebrow>
+      <SerifTitle>{t('cycle.title')}</SerifTitle>
+      <BodyText>{t('cycle.body')}</BodyText>
 
-      <Input
-        label="Viimase menstruatsiooni esimene päev"
-        value={lastPeriod}
-        onChangeText={setLastPeriod}
-        placeholder={todayISO()}
-        keyboardType="numbers-and-punctuation"
-        maxLength={10}
-      />
+      <Input label={t('cycle.lp.lbl')} value={lastPeriod} onChangeText={setLastPeriod} placeholder={todayISO()} keyboardType="numbers-and-punctuation" maxLength={10} />
 
       <View style={styles.row}>
-        <Input
-          label="Tsükli pikkus (päevad)"
-          value={cycleLen}
-          onChangeText={setCycleLen}
-          placeholder="28"
-          keyboardType="number-pad"
-          maxLength={2}
-          containerStyle={styles.half}
-        />
-        <Input
-          label="Perioodi pikkus (päevad)"
-          value={periodLen}
-          onChangeText={setPeriodLen}
-          placeholder="5"
-          keyboardType="number-pad"
-          maxLength={2}
-          containerStyle={styles.half}
-        />
+        <Input label={t('cycle.cl.lbl')} value={cycleLen} onChangeText={setCycleLen} placeholder="28" keyboardType="number-pad" maxLength={2} containerStyle={styles.half} />
+        <Input label={t('cycle.pl.lbl')} value={periodLen} onChangeText={setPeriodLen} placeholder="5" keyboardType="number-pad" maxLength={2} containerStyle={styles.half} />
       </View>
 
       <Button variant="dark" size="lg" fullWidth onPress={save} style={styles.btn}>
-        Jätka →
+        {t('cycle.cta')}
       </Button>
       <Button variant="ghost" size="md" fullWidth onPress={() => router.push('/(onboarding)/fitness')} style={styles.skip}>
-        Jäta vahele
+        {t('cycle.skip')}
       </Button>
     </ScrollView>
   );

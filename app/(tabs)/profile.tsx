@@ -10,18 +10,13 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Toggle } from '../../components/ui/Toggle';
 import { storage } from '../../lib/storage';
-import { formatDate, PHASE_LABELS } from '../../lib/cycle';
-import { Profile, Workout } from '../../types';
-
-const PLAN_NAMES = { free: 'Tasuta pakett', monthly: 'Pro — kuupakett', yearly: 'Pro — aastapakett' };
-const PLAN_SUBS = {
-  free: 'Uuenda Pro-le täielike ülevaadete jaoks',
-  monthly: 'Kõik Pro funktsioonid aktiivsed',
-  yearly: 'Kõik Pro funktsioonid aktiivsed',
-};
+import { formatDate, getPhaseLabel } from '../../lib/cycle';
+import { useTranslation } from '../../lib/LangContext';
+import { Profile, Workout, Lang } from '../../types';
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
+  const { lang, setLang, t } = useTranslation();
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [name, setName] = useState('');
@@ -57,85 +52,114 @@ export default function ProfileScreen() {
     };
     await storage.setProfile(updated);
     setProfile(updated);
-    Alert.alert('', 'Profiil salvestatud ✓');
+    Alert.alert('', t('prof.saved'));
   };
 
   const handleExport = async () => {
-    const rows = ['Kuupäev,Treeningkava,Harjutus,Seeriad,Kordused,kg,Faas'];
+    const rows = [lang === 'en'
+      ? 'Date,Workout,Exercise,Sets,Reps,kg,Phase'
+      : 'Kuupäev,Treeningkava,Harjutus,Seeriad,Kordused,kg,Faas'];
     workouts.forEach((w) => {
       w.exercises.forEach((e) => {
         rows.push([w.date, `"${w.name}"`, `"${e.name}"`, e.sets, e.reps, e.weight_kg, w.phase].join(','));
       });
     });
-    await Share.share({ message: rows.join('\n'), title: 'LunaraFit andmed' });
+    await Share.share({ message: rows.join('\n'), title: t('prof.export.title') });
   };
 
   const handleClearAll = () => {
-    Alert.alert('Kustuta kõik andmed?', 'Seda ei saa tagasi võtta.', [
-      { text: 'Tühista', style: 'cancel' },
-      {
-        text: 'Kustuta', style: 'destructive',
-        onPress: async () => {
-          await signOut();
-        },
-      },
+    Alert.alert(t('prof.clear.title'), t('prof.clear.body'), [
+      { text: t('prof.clear.cancel'), style: 'cancel' },
+      { text: t('prof.clear.confirm'), style: 'destructive', onPress: async () => { await signOut(); } },
     ]);
   };
 
-  // Library: group workouts by name
+  const planName = {
+    free: t('prof.plan.free.name'),
+    monthly: t('prof.plan.monthly.name'),
+    yearly: t('prof.plan.yearly.name'),
+  }[profile.plan ?? 'free'];
+
+  const planSub = profile.plan && profile.plan !== 'free'
+    ? t('prof.plan.pro.sub')
+    : t('prof.plan.free.sub');
+
   const library: Record<string, Workout[]> = {};
   workouts.forEach((w) => { if (!library[w.name]) library[w.name] = []; library[w.name].push(w); });
+
+  const LANGS: { code: Lang; flag: string; name: string }[] = [
+    { code: 'et', flag: '🇪🇪', name: 'Eesti' },
+    { code: 'en', flag: '🇬🇧', name: 'English' },
+  ];
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
-        <Text style={styles.heading}>Profiil</Text>
-        <Text style={styles.subheading}>Seaded · Privaatsus · Andmed</Text>
+        <Text style={styles.heading}>{t('prof.heading')}</Text>
+        <Text style={styles.subheading}>{t('prof.sub')}</Text>
       </View>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Plan card */}
-        <View style={styles.sectionLblRow}><Icon name="star" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>Sinu pakett</Text></View>
+        <View style={styles.sectionLblRow}><Icon name="star" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.plan.lbl')}</Text></View>
         <Card>
           <View style={styles.planRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.planName}>{PLAN_NAMES[profile.plan ?? 'free']}</Text>
-              <Text style={styles.planSub}>{PLAN_SUBS[profile.plan ?? 'free']}</Text>
+              <Text style={styles.planName}>{planName}</Text>
+              <Text style={styles.planSub}>{planSub}</Text>
             </View>
             {(!profile.plan || profile.plan === 'free') && (
               <Button variant="blush" size="sm" onPress={() => router.push('/(onboarding)/plan')}>
-                Uuenda
+                {t('prof.plan.upgrade')}
               </Button>
             )}
           </View>
         </Card>
 
-        {/* Personal data */}
-        <View style={styles.sectionLblRow}><Icon name="person" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>Isiklikud andmed</Text></View>
+        {/* Language picker */}
+        <View style={styles.sectionLblRow}><Icon name="eye" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.lang.lbl')}</Text></View>
         <Card>
-          <Input label="Nimi" value={name} onChangeText={setName} placeholder="Sinu nimi" />
-          <View style={styles.row}>
-            <Input label="Tsükli pikkus" value={cycleLen} onChangeText={setCycleLen} placeholder="28" keyboardType="number-pad" containerStyle={styles.half} />
-            <Input label="Perioodi pikkus" value={periodLen} onChangeText={setPeriodLen} placeholder="5" keyboardType="number-pad" containerStyle={styles.half} />
+          <View style={styles.langRow}>
+            {LANGS.map((l) => (
+              <Button
+                key={l.code}
+                variant={lang === l.code ? 'blush' : 'outline'}
+                size="sm"
+                style={styles.langBtn}
+                onPress={() => setLang(l.code)}
+              >
+                {l.flag}  {l.name}
+              </Button>
+            ))}
           </View>
-          <Input label="Viimase menstruatsiooni esimene päev" value={lastPeriod} onChangeText={setLastPeriod} placeholder="aaaa-kk-pp" />
+        </Card>
+
+        {/* Personal data */}
+        <View style={styles.sectionLblRow}><Icon name="person" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.data.lbl')}</Text></View>
+        <Card>
+          <Input label={t('prof.name.lbl')} value={name} onChangeText={setName} placeholder={t('prof.name.ph')} />
+          <View style={styles.row}>
+            <Input label={t('prof.cl.lbl')} value={cycleLen} onChangeText={setCycleLen} placeholder="28" keyboardType="number-pad" containerStyle={styles.half} />
+            <Input label={t('prof.pl.lbl')} value={periodLen} onChangeText={setPeriodLen} placeholder="5" keyboardType="number-pad" containerStyle={styles.half} />
+          </View>
+          <Input label={t('prof.lp.lbl')} value={lastPeriod} onChangeText={setLastPeriod} placeholder={t('prof.lp.ph')} />
           <Button variant="dark" fullWidth onPress={handleSave} style={styles.saveBtn}>
-            Salvesta muudatused
+            {t('prof.save')}
           </Button>
         </Card>
 
         {/* Privacy */}
-        <View style={styles.sectionLblRow}><Icon name="lock" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>Privaatsus</Text></View>
+        <View style={styles.sectionLblRow}><Icon name="lock" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.privacy.lbl')}</Text></View>
         <Card>
           {[
-            { title: 'Sünkrooni kõigis seadmetes', sub: 'Hoia andmed ajakohasena', val: sync, set: setSync },
-            { title: 'Õrnad meeldetuletused', sub: 'Õrn meeldetuletus märgete lisamiseks', val: reminders, set: setReminders },
-            { title: 'Anonüümne andmeanalüüs', sub: 'Aita rakendust parendada', val: analytics, set: setAnalytics },
+            { titleKey: 'prof.sync.title', subKey: 'prof.sync.sub', val: sync, set: setSync },
+            { titleKey: 'prof.notif.title', subKey: 'prof.notif.sub', val: reminders, set: setReminders },
+            { titleKey: 'prof.anon.title', subKey: 'prof.anon.sub', val: analytics, set: setAnalytics },
           ].map((item, i) => (
             <View key={i} style={[styles.toggleRow, i === 2 && { borderBottomWidth: 0 }]}>
               <View style={styles.toggleInfo}>
-                <Text style={styles.toggleTitle}>{item.title}</Text>
-                <Text style={styles.toggleSub}>{item.sub}</Text>
+                <Text style={styles.toggleTitle}>{t(item.titleKey as any)}</Text>
+                <Text style={styles.toggleSub}>{t(item.subKey as any)}</Text>
               </View>
               <Toggle value={item.val} onChange={item.set} />
             </View>
@@ -143,9 +167,9 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Library */}
-        <View style={styles.sectionLblRow}><Icon name="folder" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>Treeningute logiraamat</Text></View>
+        <View style={styles.sectionLblRow}><Icon name="folder" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.lib.lbl')}</Text></View>
         {Object.keys(library).length === 0 ? (
-          <Text style={styles.empty}>Treeninguid pole veel lisatud.</Text>
+          <Text style={styles.empty}>{t('prof.lib.empty')}</Text>
         ) : (
           Object.keys(library).map((folderName) => {
             const sessions = library[folderName];
@@ -158,11 +182,11 @@ export default function ProfileScreen() {
                   onPress={() => setOpenFolder(isOpen ? null : folderName)}
                   style={styles.folderHead}
                 >
-                  {folderName}  ·  {sessions.length} korda  {isOpen ? '▲' : '▼'}
+                  {folderName}  ·  {sessions.length} {t('prof.lib.sessions')}  {isOpen ? '▲' : '▼'}
                 </Button>
                 {isOpen && sessions.map((w) => (
                   <View key={w.id} style={styles.sessEntry}>
-                    <Text style={styles.sessDate}>{formatDate(w.date)} · {PHASE_LABELS[w.phase]}</Text>
+                    <Text style={styles.sessDate}>{formatDate(w.date)} · {getPhaseLabel(w.phase, lang)}</Text>
                     {w.exercises.map((e, i) => (
                       <View key={i} style={styles.exLine}>
                         <Text style={styles.exName}>{e.name}</Text>
@@ -177,15 +201,15 @@ export default function ProfileScreen() {
         )}
 
         {/* Data */}
-        <View style={[styles.sectionLblRow, { marginTop: 20 }]}><Icon name="download" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>Andmed</Text></View>
+        <View style={[styles.sectionLblRow, { marginTop: 20 }]}><Icon name="download" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.data.lbl2')}</Text></View>
         <Card>
           <Button variant="outline" fullWidth onPress={handleExport} style={{ marginBottom: 8 }}>
-            Ekspordi kõik andmed (CSV)
+            {t('prof.export')}
           </Button>
           <Button variant="danger" fullWidth onPress={handleClearAll}>
-            Kustuta kõik andmed
+            {t('prof.clear')}
           </Button>
-          <Text style={styles.dataNote}>Sinu andmed on salvestatud ainult selles seadmes.</Text>
+          <Text style={styles.dataNote}>{t('prof.local')}</Text>
         </Card>
         <View style={{ height: 20 }} />
       </ScrollView>
@@ -213,6 +237,8 @@ const styles = StyleSheet.create({
   planRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   planName: { fontFamily: Fonts.sansSemiBold, fontSize: 15, color: Colors.beige[800] },
   planSub: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 3 },
+  langRow: { flexDirection: 'row', gap: 10 },
+  langBtn: { flex: 1 },
   row: { flexDirection: 'row', gap: 10 },
   half: { flex: 1 },
   saveBtn: { marginTop: 16 },
