@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert, Share } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Alert, Share, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Colors, Spacing } from '../../constants/theme';
@@ -67,14 +67,20 @@ export default function ProfileScreen() {
     await Share.share({ message: rows.join('\n'), title: 'LunaraFit andmed' });
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
+    if (Platform.OS === 'web') {
+      if (!window.confirm('Kustuta kõik andmed? Seda ei saa tagasi võtta.')) return;
+      await storage.clearAll();
+      router.replace('/');
+      return;
+    }
     Alert.alert('Kustuta kõik andmed?', 'Seda ei saa tagasi võtta.', [
       { text: 'Tühista', style: 'cancel' },
       {
         text: 'Kustuta', style: 'destructive',
         onPress: async () => {
           await storage.clearAll();
-          router.replace('/(onboarding)/welcome');
+          router.replace('/');
         },
       },
     ]);
