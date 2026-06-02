@@ -3,22 +3,26 @@ import { View, Text, ScrollView, StyleSheet, Alert, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuth } from '../../lib/authContext';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { Colors, Fonts, Spacing } from '../../constants/theme';
 import { Card } from '../../components/ui/Card';
 import { Icon } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Toggle } from '../../components/ui/Toggle';
-import { storage } from '../../lib/storage';
 import { formatDate, getPhaseLabel } from '../../lib/cycle';
 import { useTranslation } from '../../lib/LangContext';
-import { Profile, Workout, Lang } from '../../types';
+import { Lang } from '../../types';
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
   const { lang, setLang, t } = useTranslation();
-  const [profile, setProfile] = useState<Partial<Profile>>({});
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const profile    = useQuery(api.profiles.get);
+  const workouts   = useQuery(api.workouts.list) ?? [];
+  const upsertProf = useMutation(api.profiles.upsert);
+  const clearAll   = useMutation(api.userData.clearAll);
+
   const [name, setName] = useState('');
   const [cycleLen, setCycleLen] = useState('28');
   const [periodLen, setPeriodLen] = useState('5');
@@ -28,30 +32,23 @@ export default function ProfileScreen() {
   const [analytics, setAnalytics] = useState(true);
   const [openFolder, setOpenFolder] = useState<string | null>(null);
 
+  // Sync form fields when profile loads
   useEffect(() => {
-    (async () => {
-      const [p, ws] = await Promise.all([storage.getProfile(), storage.getWorkouts()]);
-      if (p) {
-        setProfile(p);
-        setName(p.name ?? '');
-        setCycleLen(String(p.cycle_length ?? 28));
-        setPeriodLen(String(p.period_length ?? 5));
-        setLastPeriod(p.last_period_date ?? '');
-      }
-      setWorkouts(ws);
-    })();
-  }, []);
+    if (profile) {
+      setName(profile.name ?? '');
+      setCycleLen(String(profile.cycle_length ?? 28));
+      setPeriodLen(String(profile.period_length ?? 5));
+      setLastPeriod(profile.last_period_date ?? '');
+    }
+  }, [profile?._id]);
 
   const handleSave = async () => {
-    const updated: Partial<Profile> = {
-      ...profile,
+    await upsertProf({
       name: name.trim(),
       cycle_length: parseInt(cycleLen) || 28,
       period_length: parseInt(periodLen) || 5,
-      last_period_date: lastPeriod || null,
-    };
-    await storage.setProfile(updated);
-    setProfile(updated);
+      last_period_date: lastPeriod || undefined,
+    });
     Alert.alert('', t('prof.saved'));
   };
 
@@ -70,7 +67,13 @@ export default function ProfileScreen() {
   const handleClearAll = () => {
     Alert.alert(t('prof.clear.title'), t('prof.clear.body'), [
       { text: t('prof.clear.cancel'), style: 'cancel' },
-      { text: t('prof.clear.confirm'), style: 'destructive', onPress: async () => { await signOut(); } },
+      {
+        text: t('prof.clear.confirm'), style: 'destructive',
+        onPress: async () => {
+          await clearAll();
+          await signOut();
+        },
+      },
     ]);
   };
 
@@ -78,13 +81,13 @@ export default function ProfileScreen() {
     free: t('prof.plan.free.name'),
     monthly: t('prof.plan.monthly.name'),
     yearly: t('prof.plan.yearly.name'),
-  }[profile.plan ?? 'free'];
+  }[profile?.plan ?? 'free'];
 
-  const planSub = profile.plan && profile.plan !== 'free'
+  const planSub = profile?.plan && profile.plan !== 'free'
     ? t('prof.plan.pro.sub')
     : t('prof.plan.free.sub');
 
-  const library: Record<string, Workout[]> = {};
+  const library: Record<string, typeof workouts> = {};
   workouts.forEach((w) => { if (!library[w.name]) library[w.name] = []; library[w.name].push(w); });
 
   const LANGS: { code: Lang; flag: string; name: string }[] = [
@@ -108,7 +111,7 @@ export default function ProfileScreen() {
               <Text style={styles.planName}>{planName}</Text>
               <Text style={styles.planSub}>{planSub}</Text>
             </View>
-            {(!profile.plan || profile.plan === 'free') && (
+            {(!profile?.plan || profile?.plan === 'free') && (
               <Button variant="blush" size="sm" onPress={() => router.push('/(onboarding)/plan')}>
                 {t('prof.plan.upgrade')}
               </Button>
@@ -185,7 +188,7 @@ export default function ProfileScreen() {
                   {folderName}  ·  {sessions.length} {t('prof.lib.sessions')}  {isOpen ? '▲' : '▼'}
                 </Button>
                 {isOpen && sessions.map((w) => (
-                  <View key={w.id} style={styles.sessEntry}>
+                  <View key={w._id} style={styles.sessEntry}>
                     <Text style={styles.sessDate}>{formatDate(w.date)} · {getPhaseLabel(w.phase, lang)}</Text>
                     {w.exercises.map((e, i) => (
                       <View key={i} style={styles.exLine}>

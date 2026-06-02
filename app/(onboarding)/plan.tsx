@@ -1,25 +1,23 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
-import { useAuth } from '../../lib/authContext';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import type { Plan } from '../../types';
 import { useTranslation } from '../../lib/LangContext';
 
 export default function PlanScreen() {
-  const { refreshAuth } = useAuth();
   const { t } = useTranslation();
   const [selected, setSelected] = useState<Plan>('monthly');
+  const upsertProfile = useMutation(api.profiles.upsert);
 
   const handleContinue = async () => {
-    const existing = await AsyncStorage.getItem('lf_profile');
-    const profile = existing ? JSON.parse(existing) : {};
-    await AsyncStorage.setItem('lf_profile', JSON.stringify({ ...profile, plan: selected }));
-    await refreshAuth();
+    await upsertProfile({ plan: selected });
+    // NavigationController will detect isOnboarded=true and push to home
   };
 
   const PLANS = [

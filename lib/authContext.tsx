@@ -1,8 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext } from 'react';
+import { useConvexAuth, useQuery } from 'convex/react';
+import { useAuthActions } from '@convex-dev/auth/react';
+import { api } from '../convex/_generated/api';
 
 interface AuthContextType {
   isReady: boolean;
+  isAuthenticated: boolean;
   isOnboarded: boolean;
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;
@@ -10,38 +13,29 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   isReady: false,
+  isAuthenticated: false,
   isOnboarded: false,
   signOut: async () => {},
   refreshAuth: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isReady, setIsReady] = useState(false);
-  const [isOnboarded, setIsOnboarded] = useState(false);
+  const { isLoading, isAuthenticated } = useConvexAuth();
+  const { signOut: convexSignOut } = useAuthActions();
+  const profile = useQuery(api.profiles.get, isAuthenticated ? {} : 'skip');
 
-  const refreshAuth = useCallback(async () => {
-    try {
-      const raw = await AsyncStorage.getItem('lf_profile');
-      const profile = raw ? JSON.parse(raw) : null;
-      setIsOnboarded(!!(profile?.name));
-    } catch {
-      setIsOnboarded(false);
-    }
-  }, []);
+  const isReady = !isLoading && (profile !== undefined || !isAuthenticated);
+  const isOnboarded = isAuthenticated && !!(profile?.name);
 
-  useEffect(() => {
-    refreshAuth().finally(() => setIsReady(true));
-  }, [refreshAuth]);
+  const signOut = async () => {
+    await convexSignOut();
+  };
 
-  const signOut = useCallback(async () => {
-    try {
-      await AsyncStorage.multiRemove(['lf_profile', 'lf_workouts', 'lf_cycle_days']);
-    } catch {}
-    setIsOnboarded(false);
-  }, []);
+  // refreshAuth is a no-op — Convex queries are reactive
+  const refreshAuth = async () => {};
 
   return (
-    <AuthContext.Provider value={{ isReady, isOnboarded, signOut, refreshAuth }}>
+    <AuthContext.Provider value={{ isReady, isAuthenticated, isOnboarded, signOut, refreshAuth }}>
       {children}
     </AuthContext.Provider>
   );

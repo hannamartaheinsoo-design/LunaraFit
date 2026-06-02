@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -6,10 +6,10 @@ import { Colors, Fonts, Spacing } from '../../constants/theme';
 import { Card, InsightCard } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
-import { getCycleInfo, getPhaseLabel } from '../../lib/cycle';
-import { storage } from '../../lib/storage';
+import { getCycleInfo } from '../../lib/cycle';
 import { useTranslation } from '../../lib/LangContext';
-import { Profile, Workout } from '../../types';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 function phaseDiff(workouts: Workout[]): number | null {
   const f = workouts.filter((w) => w.phase === 'follicular');
@@ -27,24 +27,14 @@ function phaseDiff(workouts: Workout[]): number | null {
 
 export default function HomeScreen() {
   const { lang, t, tArr } = useTranslation();
-  const [profile, setProfile] = useState<Partial<Profile>>({});
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const profile = useQuery(api.profiles.get);
+  const workouts = useQuery(api.workouts.list) ?? [];
   const now = new Date();
 
-  useEffect(() => {
-    (async () => {
-      const [p, ws] = await Promise.all([storage.getProfile(), storage.getWorkouts()]);
-      if (p) setProfile(p);
-      setWorkouts(ws);
-    })();
-  }, []);
-
   const ci = getCycleInfo(
-    profile.last_period_date ?? null,
-    profile.cycle_length ?? 28,
-    profile.period_length ?? 5,
-    undefined,
-    lang,
+    profile?.last_period_date ?? null,
+    profile?.cycle_length ?? 28,
+    profile?.period_length ?? 5,
   );
 
   const d7 = new Date(now.getTime() - 7 * 86400000);
@@ -89,7 +79,7 @@ export default function HomeScreen() {
       <View style={styles.topBar}>
         <Text style={styles.logo}><Text style={styles.logoAccent}>Lunara</Text>Fit</Text>
         <TouchableOpacity style={styles.avatar} onPress={() => router.push('/(tabs)/profile')}>
-          <Text style={styles.avatarText}>{profile.name?.[0]?.toUpperCase() ?? '?'}</Text>
+          <Text style={styles.avatarText}>{profile?.name?.[0]?.toUpperCase() ?? '?'}</Text>
         </TouchableOpacity>
       </View>
 
@@ -97,7 +87,7 @@ export default function HomeScreen() {
         {/* Greeting */}
         <View style={styles.greeting}>
           <Text style={styles.dateLbl}>{DAYS[now.getDay()]}, {now.getDate()}. {MONTHS[now.getMonth()]}</Text>
-          <Text style={styles.greetingName}>{t('home.greet')} <Text style={styles.nameAccent}>{profile.name || t('home.noname')}.</Text></Text>
+          <Text style={styles.greetingName}>{t('home.greet')} <Text style={styles.nameAccent}>{profile?.name || t('home.noname')}.</Text></Text>
           <Text style={styles.greetingSub}>
             {ci ? `${t('home.cycleday')} ${ci.day} · ${ci.daysLeft} ${t('home.daysleft')}` : t('home.addcycle')}
           </Text>

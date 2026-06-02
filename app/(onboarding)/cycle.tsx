@@ -5,7 +5,8 @@ import { Colors, Spacing } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { todayISO } from '../../lib/cycle';
 import { useTranslation } from '../../lib/LangContext';
 
@@ -15,15 +16,14 @@ export default function CycleScreen() {
   const [cycleLen, setCycleLen] = useState('28');
   const [periodLen, setPeriodLen] = useState('5');
 
+  const upsertProfile = useMutation(api.profiles.upsert);
+
   const save = async () => {
-    const existing = await AsyncStorage.getItem('lf_profile');
-    const profile = existing ? JSON.parse(existing) : {};
-    await AsyncStorage.setItem('lf_profile', JSON.stringify({
-      ...profile,
-      last_period_date: lastPeriod || null,
+    await upsertProfile({
+      last_period_date: lastPeriod || undefined,
       cycle_length: parseInt(cycleLen) || 28,
       period_length: parseInt(periodLen) || 5,
-    }));
+    });
     router.push('/(onboarding)/fitness');
   };
 

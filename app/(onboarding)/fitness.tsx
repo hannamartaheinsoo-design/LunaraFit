@@ -5,7 +5,8 @@ import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import type { FitnessLevel } from '../../types';
 import { useTranslation } from '../../lib/LangContext';
 
@@ -19,11 +20,11 @@ export default function FitnessScreen() {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<FitnessLevel | null>(null);
 
+  const upsertProfile = useMutation(api.profiles.upsert);
+
   const handleContinue = async () => {
     if (!selected) return;
-    const existing = await AsyncStorage.getItem('lf_profile');
-    const profile = existing ? JSON.parse(existing) : {};
-    await AsyncStorage.setItem('lf_profile', JSON.stringify({ ...profile, fitness_level: selected }));
+    await upsertProfile({ fitness_level: selected });
     router.push('/(onboarding)/plan');
   };
 

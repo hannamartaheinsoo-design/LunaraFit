@@ -5,7 +5,8 @@ import { Colors, Spacing } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { useTranslation } from '../../lib/LangContext';
 
 export default function NameScreen() {
@@ -14,6 +15,7 @@ export default function NameScreen() {
   const [name, setName] = useState('');
   const [birthYear, setBirthYear] = useState('');
   const [ageError, setAgeError] = useState('');
+  const upsertProfile = useMutation(api.profiles.upsert);
 
   const handleContinue = async () => {
     if (!name.trim()) {
@@ -26,15 +28,7 @@ export default function NameScreen() {
       return;
     }
     setAgeError('');
-
-    const existing = await AsyncStorage.getItem('lf_profile');
-    const profile = existing ? JSON.parse(existing) : {};
-    await AsyncStorage.setItem('lf_profile', JSON.stringify({
-      ...profile,
-      name: name.trim(),
-      birth_year: yr || null,
-    }));
-
+    await upsertProfile({ name: name.trim(), birth_year: yr || undefined });
     router.push('/(onboarding)/cycle');
   };
 

@@ -7,8 +7,10 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
 import { Icon } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
-import { storage } from '../../lib/storage';
-import { formatDate, todayISO, getPhaseKey, getPhaseLabel } from '../../lib/cycle';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { Id } from '../../convex/_generated/dataModel';
+import { formatDate, todayISO, getPhaseKey } from '../../lib/cycle';
 import {
   CATEGORIES, getAllExercises,
   getRecentExerciseIds, recordRecentExercise,
@@ -323,21 +325,21 @@ function SetLogger({
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function WorkoutsScreen() {
   const { lang, t } = useTranslation();
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [showBuilder, setShowBuilder] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
   // Builder state
   const [date, setDate] = useState(todayISO());
+  const workouts = useQuery(api.workouts.list) ?? [];
+  const profile = useQuery(api.profiles.get);
+  const addWorkout = useMutation(api.workouts.add);
+  const removeWorkout = useMutation(api.workouts.remove);
+
   const [workoutName, setWorkoutName] = useState('');
   const [loggedExercises, setLoggedExercises] = useState<LoggedExercise[]>([]);
   const [feel, setFeel] = useState<Set<string>>(new Set());
   const [notes, setNotes] = useState('');
   const [activeTab, setActiveTab] = useState<'log' | 'progress'>('log');
-
-  useEffect(() => {
-    storage.getWorkouts().then(setWorkouts);
-  }, []);
 
   const resetBuilder = () => {
     setDate(todayISO());
@@ -357,7 +359,6 @@ export default function WorkoutsScreen() {
 
     const name = workoutName.trim() || loggedExercises[0].template.name;
 
-    const profile = await storage.getProfile();
     const phase = getPhaseKey(
       date,
       profile?.last_period_date ?? null,
@@ -385,25 +386,19 @@ export default function WorkoutsScreen() {
       };
     });
 
-    const workout: Workout = {
-      id: Date.now().toString(),
-      user_id: 'local',
+    const workoutId = await addWorkout({
       date,
       name,
       exercises,
       feel: Array.from(feel),
       notes: notes.trim(),
       phase,
-      created_at: new Date().toISOString(),
-    };
-
-    const updated = await storage.addWorkout(workout);
-    setWorkouts(updated);
+    });
     resetBuilder();
     setShowBuilder(false);
 
-    // PR detection
-    const prs = detectNewPRs(updated, workout.id);
+    // PR detection (workouts query updates reactively)
+    const prs = detectNewPRs(workouts, workoutId as string);
     if (prs.length > 0) {
       const prLines = prs.map(pr =>
         `🏆 ${pr.exerciseName}: ${pr.value}${pr.unit} (+${pr.improvement}${pr.type === 'weight' || pr.type === 'distance' ? '%' : ''})`
@@ -414,10 +409,10 @@ export default function WorkoutsScreen() {
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: Id<'workouts'>) => {
     Alert.alert(t('w.delete.confirm'), '', [
       { text: t('w.delete.cancel'), style: 'cancel' },
-      { text: t('w.delete.ok'), style: 'destructive', onPress: async () => setWorkouts(await storage.deleteWorkout(id)) },
+      { text: t('w.delete.ok'), style: 'destructive', onPress: () => removeWorkout({ id }) },
     ]);
   };
 
@@ -743,7 +738,7 @@ export default function WorkoutsScreen() {
           </View>
         ) : (
           workouts.slice(0, 30).map(w => (
-            <View key={w.id} style={styles.workoutCard}>
+            <View key={w._id} style={styles.workoutCard}>
               <View style={styles.workoutHeader}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.workoutName}>{w.name}</Text>
@@ -751,7 +746,7 @@ export default function WorkoutsScreen() {
                     {formatDate(w.date)} · {getPhaseLabel(w.phase, lang)}
                   </Text>
                 </View>
-                <TouchableOpacity onPress={() => handleDelete(w.id)} style={styles.deleteBtn}>
+                <TouchableOpacity onPress={() => handleDelete(w._id)} style={styles.deleteBtn}>
                   <Icon name="trash" size={16} color={Colors.error.text} />
                 </TouchableOpacity>
               </View>

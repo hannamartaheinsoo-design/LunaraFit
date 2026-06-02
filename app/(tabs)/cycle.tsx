@@ -8,7 +8,8 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Chip } from '../../components/ui/Chip';
 import { Icon } from '../../components/ui/Icon';
-import { storage } from '../../lib/storage';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { getCycleInfo, todayISO } from '../../lib/cycle';
 import { Profile, CycleDay, Mood } from '../../types';
 import { useTranslation } from '../../lib/LangContext';
@@ -43,8 +44,10 @@ function CatHeader({ icon, label, badge }: { icon: any; label: string; badge?: s
 
 export default function CycleScreen() {
   const { lang, t, tArr } = useTranslation();
-  const [profile,    setProfile]    = useState<Partial<Profile>>({});
-  const [cycleDays,  setCycleDays]  = useState<CycleDay[]>([]);
+  const profile    = useQuery(api.profiles.get);
+  const cycleDays  = useQuery(api.cycleDays.list) ?? [];
+  const upsertDay  = useMutation(api.cycleDays.upsert);
+  const upsertProf = useMutation(api.profiles.upsert);
   const [date,       setDate]       = useState(todayISO());
   const [period,     setPeriod]     = useState(false);
   const [mood,       setMood]       = useState<MoodKey | null>(null);
@@ -71,14 +74,7 @@ export default function CycleScreen() {
     else setDisplayMonth((m) => m + 1);
   };
 
-  // Reload every time the tab is focused — picks up profile changes from Settings
-  useFocusEffect(useCallback(() => {
-    (async () => {
-      const [p, cd] = await Promise.all([storage.getProfile(), storage.getCycleDays()]);
-      if (p) setProfile(p);
-      setCycleDays(cd);
-    })();
-  }, []));
+  // Convex queries are reactive — no manual reload needed
 
   const toggle = (set: Set<string>, setFn: (s: Set<string>) => void, val: string) => {
     setFn((prev) => { const n = new Set(prev); n.has(val) ? n.delete(val) : n.add(val); return n; });
@@ -95,25 +91,16 @@ export default function CycleScreen() {
       ...Array.from(sleepChips),
       ...Array.from(digestion),
     ];
-    const entry: CycleDay = {
-      id: date, user_id: 'local', date, period,
-      mood: mood as Mood | null,
+    await upsertDay({
+      date, period,
+      mood: (mood as Mood) ?? undefined,
       symptoms: allSymptoms,
-      created_at: new Date().toISOString(),
-    };
-    const updated = await storage.upsertCycleDay(entry);
-    setCycleDays(updated);
+    });
 
-    // If period logged, always update last_period_date so calendar
-    // auto-calculates ovulation and fertile window immediately
     if (period) {
-      const p = await storage.getProfile();
-      const currentLast = p?.last_period_date;
-      // Update if this is the first period log, or a more recent start date
+      const currentLast = profile?.last_period_date;
       if (!currentLast || date >= currentLast) {
-        const merged = { ...(p ?? {}), last_period_date: date };
-        await storage.setProfile(merged);
-        setProfile(merged);
+        await upsertProf({ last_period_date: date });
       }
     }
     setPeriod(false); setMood(null); setEnergy(null); setContra(null);
@@ -124,8 +111,8 @@ export default function CycleScreen() {
   };
 
   // Calendar calculations for displayed month
-  const cl = profile.cycle_length ?? 28;
-  const pl = profile.period_length ?? 5;
+  const cl = profile?.cycle_length ?? 28;
+  const pl = profile?.period_length ?? 5;
   const dim   = new Date(displayYear, displayMonth + 1, 0).getDate();
   const blank = (new Date(displayYear, displayMonth, 1).getDay() + 6) % 7;
   const loggedPeriodDates = new Set(cycleDays.filter((d) => d.period).map((d) => d.date));
@@ -133,8 +120,8 @@ export default function CycleScreen() {
   const fertDays   = new Set<number>();
   const ovDays     = new Set<number>();
 
-  if (profile.last_period_date) {
-    const last = new Date(profile.last_period_date);
+  if (profile?.last_period_date) {
+    const last = new Date(profile?.last_period_date);
     for (let i = 0; i <= 6; i++) {
       const cs = new Date(last.getTime() + i * cl * 86400000);
       for (let j = 0; j < pl; j++) {
@@ -155,7 +142,7 @@ export default function CycleScreen() {
     }
   }
 
-  const ci = getCycleInfo(profile.last_period_date ?? null, cl, pl, undefined, lang);
+  const ci = getCycleInfo(profile?.last_period_date ?? null, cl, pl);
   const WEEKDAYS = tArr('c.cal.weekdays');
   const MONTHS = tArr('c.cal.months');
   const MOODS = MOOD_ICONS.map((m, i) => ({ ...m, label: t(`c.mood.${m.key}` as any) }));
@@ -325,7 +312,7 @@ export default function CycleScreen() {
           {/* Sleep — Pro only */}
           <CatHeader icon="sleep" label={t('c.sleep.lbl')} badge="PRO" />
           <View style={styles.sleepSection}>
-            <View style={profile.plan === 'free' || !profile.plan ? styles.lockedContent : undefined}>
+            <View style={profile?.plan === 'free' || !profile?.plan ? styles.lockedContent : undefined}>
               <View style={styles.chipGrid}>
                 {SLEEP_CHIPS.map((f) => (
                   <Chip key={f} label={f} selected={sleepChips.has(f)} onPress={() => toggle(sleepChips, setSleepChips, f)} />
@@ -340,11 +327,11 @@ export default function CycleScreen() {
                   keyboardType="decimal-pad"
                   value={sleepHours}
                   onChangeText={setSleepHours}
-                  editable={!!(profile.plan && profile.plan !== 'free')}
+                  editable={!!(profile?.plan && profile?.plan !== 'free')}
                 />
               </View>
             </View>
-            {(profile.plan === 'free' || !profile.plan) && (
+            {(profile?.plan === 'free' || !profile?.plan) && (
               <View style={styles.lockOverlay}>
                 <Icon name="lock" size={22} color={Colors.beige[400]} />
                 <Text style={styles.lockTxt}>{t('c.sleep.lock')}</Text>

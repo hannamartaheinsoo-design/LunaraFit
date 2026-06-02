@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
 import { Icon } from '../../components/ui/Icon';
-import { storage } from '../../lib/storage';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { getCycleInfo } from '../../lib/cycle';
 import { Profile, Workout, CycleDay } from '../../types';
 import {
@@ -51,28 +52,15 @@ function ConfidenceBadge({ level }: { level: DetectedPattern['confidence'] }) {
 
 export default function InsightsScreen() {
   const { lang, t } = useTranslation();
-  const [profile,   setProfile]   = useState<Partial<Profile>>({});
-  const [workouts,  setWorkouts]  = useState<Workout[]>([]);
-  const [cycleDays, setCycleDays] = useState<CycleDay[]>([]);
-  const [openTip,   setOpenTip]   = useState<string | null>(null);
-
-  useFocusEffect(useCallback(() => {
-    (async () => {
-      const [p, ws, cd] = await Promise.all([
-        storage.getProfile(), storage.getWorkouts(), storage.getCycleDays(),
-      ]);
-      if (p) setProfile(p);
-      setWorkouts(ws);
-      setCycleDays(cd);
-    })();
-  }, []));
+  const profile   = useQuery(api.profiles.get);
+  const workouts  = useQuery(api.workouts.list) ?? [];
+  const cycleDays = useQuery(api.cycleDays.list) ?? [];
+  const [openTip, setOpenTip] = useState<string | null>(null);
 
   const ci = getCycleInfo(
-    profile.last_period_date ?? null,
-    profile.cycle_length ?? 28,
-    profile.period_length ?? 5,
-    undefined,
-    lang,
+    profile?.last_period_date ?? null,
+    profile?.cycle_length ?? 28,
+    profile?.period_length ?? 5,
   );
 
   const phaseKey = ci?.phaseKey ?? 'unknown';

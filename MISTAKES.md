@@ -55,3 +55,27 @@
 **Root cause:** zsh glob expansion interprets `(` and `)` in unquoted paths.
 **Fix applied:** Used `git add -A` to stage all changes at once.
 **Rule going forward:** When file paths contain parentheses (common with Expo's `(tabs)` and `(onboarding)` route groups), use `git add -A` or wrap paths in single quotes.
+
+### [2026-06-02] expo-secure-store not available on web
+**What happened:** `SecureStore.getItemAsync` threw "not a function" on the web platform, crashing the app at startup.
+**Root cause:** `expo-secure-store` is a native-only module with no web implementation.
+**Fix applied:** Gate the `secureStorage` adapter behind `Platform.OS !== 'web'`, passing `undefined` to `ConvexAuthProvider` on web (falls back to `localStorage`).
+**Rule going forward:** Always wrap `expo-secure-store` calls in a `Platform.OS !== 'web'` guard. Never use SecureStore without a web fallback.
+
+### [2026-06-02] Passkey provider incompatible with Convex edge runtime
+**What happened:** Adding `@auth/core/providers/passkey` to `convexAuth({ providers })` caused a bundle error — `@simplewebauthn/server` uses Node.js APIs unavailable in Convex's edge sandbox.
+**Root cause:** The Passkey provider requires a Node.js-specific library that cannot run in edge functions.
+**Fix applied:** Removed Passkey from server providers; implemented client-side `navigator.credentials.get()` WebAuthn fallback for the UI.
+**Rule going forward:** Before adding any `@auth/core` provider to Convex, verify its server-side deps are edge-safe. Test with `npx convex dev --once` immediately after adding.
+
+### [2026-06-02] Microsoft Azure AD provider crashes Convex bundle
+**What happened:** Both `microsoft-entra-id` and `azure-ad` providers from `@auth/core` threw `Cannot read properties of undefined (reading 'profilePhotoSize')` at Convex bundle time.
+**Root cause:** A bug in the provider's init code in the installed version of `@auth/core` — assumes a config object is always passed.
+**Fix applied:** Removed the provider from `convex/auth.ts`; UI button remains with a "coming soon" message.
+**Rule going forward:** Always test each `@auth/core` provider with `npx convex dev --once` in isolation before committing. On failure, fall back to a graceful UI placeholder rather than blocking the whole auth setup.
+
+### [2026-06-02] Stash + pull caused merge conflicts across all screen files
+**What happened:** Convex data-layer changes were stashed, upstream i18n changes were pulled, and `git stash pop` produced conflicts in all 9 screen files.
+**Root cause:** Two large parallel cross-cutting changes (data layer vs. i18n strings) edited the same lines in every file. Never stash across a pull when both branches have touched the same files.
+**Fix applied:** Manually resolved every conflict keeping Convex queries + i18n strings, dropping all `storage.*`/`AsyncStorage` calls.
+**Rule going forward:** Commit and push a large cross-cutting change immediately — never leave it stashed. If a conflict is inevitable, resolve it in a dedicated merge commit and communicate with collaborators first.

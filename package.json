@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@convex-dev/auth": "^0.0.92",
     "@expo-google-fonts/cormorant-garamond": "^0.4.1",
     "@expo-google-fonts/jost": "^0.4.2",
     "@react-native-async-storage/async-storage": "^2.2.0",
+    "@simplewebauthn/browser": "^9.0.1",
     "@supabase/supabase-js": "^2.106.2",
+    "convex": "^1.40.0",
     "expo": "~56.0.5",
     "expo-constants": "~17.0.0",
     "expo-font": "~13.0.0",
@@ -27,6 +30,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "puppeteer": "^25.1.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
