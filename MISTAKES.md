@@ -91,3 +91,15 @@
 **Root cause:** `Alert.alert` from React Native uses a native dialog on iOS/Android but is a no-op (silently ignored) on the web platform. The confirmation never appeared, so the delete flow never ran.
 **Fix applied:** Added `Platform.OS !== 'web'` guard: on native it still uses `Alert.alert`; on web it sets a `confirmDelete` state flag that renders an inline confirmation UI (title + body + Cancel/Delete buttons) directly in the component.
 **Rule going forward:** Never use `Alert.alert` for user-facing confirmations without a web fallback. On web, always render confirmation UI as React state. Check every `Alert.alert` call in the codebase when adding web support.
+
+### [2026-06-03] useNativeDriver: true crashes silently on Expo web, leaving animated panels blank
+**What happened:** The email sign-up/sign-in panel animated in with `Animated.timing(..., { useNativeDriver: true })`. On web the native animation module is missing, so the animation never ran — `slideAnim` stayed at `0`, the `Animated.View` had `opacity: 0`, and the card appeared completely blank with no error in the console.
+**Root cause:** `useNativeDriver: true` is only valid on native (iOS/Android). On web it silently falls back but the opacity interpolation starts at 0 and never completes, making content invisible.
+**Fix applied:** Changed both `Animated.timing` calls to `useNativeDriver: false`.
+**Rule going forward:** Always use `useNativeDriver: false` for any `Animated` values that drive `opacity` or `transform` on screens that must work on web. Only use `useNativeDriver: true` in native-only components.
+
+### [2026-06-03] Validation state gated behind blur event — felt broken to users
+**What happened:** Email format feedback (red border, ✕ icon, inline error) only appeared after the user blurred the field, not while typing. Users reported the validation "wasn't working".
+**Root cause:** An `emailTouched` state flag required a blur event before showing any feedback — fine UX theory, but confusing when the prototype was being tested and no blur occurred.
+**Fix applied:** Removed `emailTouched`. Feedback now shows live after 3+ characters are typed (avoids flashing red on the very first keypress). Border turns green with ✓ on valid input, red with ✕ and inline error on invalid.
+**Rule going forward:** For prototype/app validation, prefer live feedback triggered by input length threshold (e.g. 3+ chars) over blur-gated feedback. Blur-gating hides errors during testing and feels unresponsive.

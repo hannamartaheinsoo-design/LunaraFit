@@ -7,7 +7,8 @@ import {
 import { useAuthActions } from '@convex-dev/auth/react';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
 import { Icon } from '../../components/ui/Icon';
-import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
+import { useTranslation } from '../../lib/LangContext';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 
 // ─── Brand SVGs ──────────────────────────────────────────────────────────────
 
@@ -50,6 +51,37 @@ function PasskeyIcon({ size = 20, color = '#000' }: { size?: number; color?: str
   );
 }
 
+// ─── Validation helpers ───────────────────────────────────────────────────────
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function checkEmail(email: string): boolean {
+  return EMAIL_RE.test(email.trim());
+}
+
+interface PwChecks {
+  length: boolean;
+  upper: boolean;
+  lower: boolean;
+  number: boolean;
+  symbol: boolean;
+}
+
+function getPasswordChecks(pw: string): PwChecks {
+  return {
+    length: pw.length >= 8,
+    upper: /[A-Z]/.test(pw),
+    lower: /[a-z]/.test(pw),
+    number: /[0-9]/.test(pw),
+    symbol: /[^A-Za-z0-9]/.test(pw),
+  };
+}
+
+function passwordValid(pw: string): boolean {
+  const c = getPasswordChecks(pw);
+  return c.length && c.upper && c.lower && c.number && c.symbol;
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Step = 'choose' | 'email';
@@ -59,38 +91,57 @@ type Flow = 'signIn' | 'signUp';
 
 export default function LoginScreen() {
   const { signIn } = useAuthActions();
+  const { t } = useTranslation();
+
   const [step, setStep] = useState<Step>('choose');
   const [flow, setFlow] = useState<Flow>('signUp');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState<string | null>(null); // tracks which button
+  const [loading, setLoading] = useState<string | null>(null);
+
+  const pwChecks = getPasswordChecks(password);
+  const showPwChecks = flow === 'signUp' && password.length > 0;
 
   // Slide animation for the email panel
   const slideAnim = useRef(new Animated.Value(0)).current;
   const openEmail = (f: Flow) => {
     setFlow(f);
     setError('');
+    setEmail('');
+    setPassword('');
     setStep('email');
-    Animated.timing(slideAnim, { toValue: 1, duration: 320, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+    Animated.timing(slideAnim, { toValue: 1, duration: 320, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
   };
   const closeEmail = () => {
-    Animated.timing(slideAnim, { toValue: 0, duration: 260, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(() => setStep('choose'));
+    Animated.timing(slideAnim, { toValue: 0, duration: 260, easing: Easing.in(Easing.cubic), useNativeDriver: false }).start(() => setStep('choose'));
   };
 
   // ── Email submit ────────────────────────────────────────────────────────────
   async function submitEmail() {
-    if (!email.trim() || !password) { setError('Täida mõlemad väljad.'); return; }
+    if (!email.trim() || !password) {
+      setError(t('auth.err.fields'));
+      return;
+    }
+    if (!checkEmail(email)) {
+      setError(t('auth.err.email'));
+      return;
+    }
+    if (flow === 'signUp' && !passwordValid(password)) {
+      setError(t('auth.err.password'));
+      return;
+    }
     setError('');
     setLoading('email');
     try {
       const fd = new FormData();
-      fd.append('email', email.trim());
+      fd.append('email', email.trim().toLowerCase());
       fd.append('password', password);
       fd.append('flow', flow);
       await signIn('password', fd);
     } catch (e: any) {
-      setError(e?.message ?? 'Midagi läks valesti. Proovi uuesti.');
+      setError(e?.message ?? t('auth.err.generic'));
     } finally {
       setLoading(null);
     }
@@ -102,7 +153,7 @@ export default function LoginScreen() {
     try {
       await signIn(provider);
     } catch (e: any) {
-      setError(e?.message ?? `${provider} sisselogimine ebaõnnestus.`);
+      setError(e?.message ?? `${provider} ${t('auth.err.oauth')}`);
     } finally {
       setLoading(null);
     }
@@ -111,7 +162,7 @@ export default function LoginScreen() {
   // ── Passkey ─────────────────────────────────────────────────────────────────
   async function signInWithPasskey() {
     if (typeof window === 'undefined' || !window.PublicKeyCredential) {
-      setError('Sinu brauser ei toeta passkey-d.');
+      setError(t('auth.passkey.unsupported'));
       return;
     }
     setLoading('passkey');
@@ -125,17 +176,21 @@ export default function LoginScreen() {
         },
       } as CredentialRequestOptions);
       if (credential) {
-        // Passkey obtained — in production this would verify on the server
-        setError('Passkey sisselogimine vajab serveripoolset seadistust.');
+        setError(t('auth.passkey.needs.server'));
       }
     } catch (e: any) {
       if (e?.name !== 'NotAllowedError') {
-        setError(e?.message ?? 'Passkey sisselogimine ebaõnnestus.');
+        setError(e?.message ?? t('auth.passkey.failed'));
       }
     } finally {
       setLoading(null);
     }
   }
+
+  // Show live feedback once the user has typed at least 3 chars (avoids flashing red on first keypress)
+  const emailHasInput = email.length >= 3;
+  const emailInvalid = emailHasInput && !checkEmail(email);
+  const emailValid = emailHasInput && checkEmail(email);
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -148,48 +203,41 @@ export default function LoginScreen() {
         {/* ── Logo ── */}
         <View style={styles.logoWrap}>
           <Text style={styles.logo}><Text style={styles.logoAccent}>Lunara</Text>Fit</Text>
-          <Text style={styles.tagline}>Treening kohtub tsükliga.</Text>
+          <Text style={styles.tagline}>{t('auth.tagline')}</Text>
         </View>
 
-        {/* ── Social + Passkey buttons ── */}
+        {/* ── Card ── */}
         <View style={styles.card}>
           {step === 'choose' && (
             <>
-              <Text style={styles.sectionLabel}>Jätka rakendusega</Text>
+              <Text style={styles.sectionLabel}>{t('auth.continue')}</Text>
 
-              {/* Google */}
               <SocialButton
-                label="Jätka Google'iga"
+                label={t('auth.google')}
                 icon={<GoogleIcon size={20} />}
                 onPress={() => signInWith('google')}
                 loading={loading === 'google'}
                 style={styles.btnGoogle}
                 textStyle={styles.btnGoogleTxt}
               />
-
-              {/* Apple */}
               <SocialButton
-                label="Jätka Apple'iga"
+                label={t('auth.apple')}
                 icon={<AppleIcon size={20} color="#fff" />}
                 onPress={() => signInWith('apple')}
                 loading={loading === 'apple'}
                 style={styles.btnApple}
                 textStyle={styles.btnAppleTxt}
               />
-
-              {/* Microsoft */}
               <SocialButton
-                label="Jätka Microsoftiga"
+                label={t('auth.microsoft')}
                 icon={<MicrosoftIcon size={20} />}
-                onPress={() => setError('Microsoft sisselogimine on peagi saadaval.')}
+                onPress={() => setError(t('auth.microsoft.soon'))}
                 loading={loading === 'microsoft'}
                 style={styles.btnMicrosoft}
                 textStyle={styles.btnMicrosoftTxt}
               />
-
-              {/* Passkey */}
               <SocialButton
-                label="Kasuta passkey-d"
+                label={t('auth.passkey')}
                 icon={<PasskeyIcon size={20} color={Colors.blush[600]} />}
                 onPress={signInWithPasskey}
                 loading={loading === 'passkey'}
@@ -197,90 +245,118 @@ export default function LoginScreen() {
                 textStyle={styles.btnPasskeyTxt}
               />
 
-              {/* Divider */}
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerTxt}>või e-postiga</Text>
+                <Text style={styles.dividerTxt}>{t('auth.divider')}</Text>
                 <View style={styles.dividerLine} />
               </View>
 
-              {/* Email options */}
               <View style={styles.emailRow}>
                 <Pressable style={styles.emailBtn} onPress={() => openEmail('signUp')}>
-                  <Text style={styles.emailBtnTxt}>Loo konto</Text>
+                  <Text style={styles.emailBtnTxt}>{t('auth.create')}</Text>
                 </Pressable>
                 <Pressable style={[styles.emailBtn, styles.emailBtnSecondary]} onPress={() => openEmail('signIn')}>
-                  <Text style={[styles.emailBtnTxt, styles.emailBtnSecondaryTxt]}>Logi sisse</Text>
+                  <Text style={[styles.emailBtnTxt, styles.emailBtnSecondaryTxt]}>{t('auth.signin')}</Text>
                 </Pressable>
               </View>
             </>
           )}
 
-          {/* ── Email panel (slides in) ── */}
+          {/* ── Email panel ── */}
           {step === 'email' && (
             <Animated.View style={{ opacity: slideAnim, transform: [{ translateY: slideAnim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
               <Pressable style={styles.backBtn} onPress={closeEmail}>
                 <Icon name="arr-l" size={14} color={Colors.beige[400]} />
-                <Text style={styles.backTxt}>Tagasi</Text>
+                <Text style={styles.backTxt}>{t('auth.back')}</Text>
               </Pressable>
 
               <Text style={styles.emailHeading}>
-                {flow === 'signUp' ? 'Loo uus konto' : 'Tere tagasi'}
+                {flow === 'signUp' ? t('auth.heading.signup') : t('auth.heading.signin')}
               </Text>
 
+              {/* Email field */}
               <View style={styles.field}>
-                <Text style={styles.fieldLabel}>E-posti aadress</Text>
-                <View style={styles.inputRow}>
-                  <Icon name="person" size={16} color={Colors.beige[400]} />
+                <Text style={styles.fieldLabel}>{t('auth.email.lbl')}</Text>
+                <View style={[styles.inputRow, emailInvalid && styles.inputRowError, emailValid && styles.inputRowValid]}>
+                  <Icon name="person" size={16} color={emailInvalid ? Colors.error.text : emailValid ? '#16A34A' : Colors.beige[400]} />
                   <TextInput
                     style={styles.input}
                     value={email}
-                    onChangeText={setEmail}
-                    placeholder="sina@näide.ee"
+                    onChangeText={v => { setEmail(v); setError(''); }}
+                    placeholder={t('auth.email.ph')}
                     placeholderTextColor={Colors.beige[200]}
                     autoCapitalize="none"
                     keyboardType="email-address"
                     autoComplete="email"
                   />
+                  {emailHasInput && (
+                    <Text style={{ fontSize: 14, color: emailValid ? '#22C55E' : Colors.error.text }}>
+                      {emailValid ? '✓' : '✕'}
+                    </Text>
+                  )}
                 </View>
+                {emailInvalid && (
+                  <Text style={styles.inlineError}>{t('auth.err.email')}</Text>
+                )}
               </View>
 
+              {/* Password field */}
               <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Parool</Text>
+                <Text style={styles.fieldLabel}>{t('auth.password.lbl')}</Text>
                 <View style={styles.inputRow}>
                   <Icon name="lock" size={16} color={Colors.beige[400]} />
                   <TextInput
                     style={styles.input}
                     value={password}
-                    onChangeText={setPassword}
-                    placeholder="••••••••"
+                    onChangeText={v => { setPassword(v); setError(''); }}
+                    placeholder={t('auth.password.ph')}
                     placeholderTextColor={Colors.beige[200]}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                     autoComplete={flow === 'signUp' ? 'new-password' : 'current-password'}
                   />
+                  <Pressable onPress={() => setShowPassword(s => !s)} hitSlop={8}>
+                    <Text style={styles.eyeBtn}>{showPassword ? '🙈' : '👁'}</Text>
+                  </Pressable>
                 </View>
-                {flow === 'signUp' && (
-                  <Text style={styles.passHint}>Vähemalt 8 tähemärki. Parool salvestatakse passkey-na.</Text>
+
+                {/* Password requirements checklist (signUp only) */}
+                {flow === 'signUp' && showPwChecks && (
+                  <View style={styles.pwChecks}>
+                    <PwRequirement met={pwChecks.length} label={t('auth.pw.req.length')} />
+                    <PwRequirement met={pwChecks.upper}  label={t('auth.pw.req.upper')} />
+                    <PwRequirement met={pwChecks.lower}  label={t('auth.pw.req.lower')} />
+                    <PwRequirement met={pwChecks.number} label={t('auth.pw.req.number')} />
+                    <PwRequirement met={pwChecks.symbol} label={t('auth.pw.req.symbol')} />
+                  </View>
+                )}
+                {flow === 'signUp' && !showPwChecks && (
+                  <Text style={styles.passHint}>
+                    {t('auth.pw.req.length')} · {t('auth.pw.req.upper')} · {t('auth.pw.req.lower')} · {t('auth.pw.req.number')} · {t('auth.pw.req.symbol')}
+                  </Text>
                 )}
               </View>
 
               {error ? <View style={styles.errorBox}><Text style={styles.errorTxt}>{error}</Text></View> : null}
 
-              <Pressable style={[styles.submitBtn, loading === 'email' && styles.submitBtnLoading]} onPress={submitEmail} disabled={!!loading}>
+              <Pressable
+                style={[styles.submitBtn, loading === 'email' && styles.submitBtnLoading]}
+                onPress={submitEmail}
+                disabled={!!loading}
+              >
                 {loading === 'email'
                   ? <ActivityIndicator color={Colors.cream} size="small" />
-                  : <Text style={styles.submitBtnTxt}>{flow === 'signUp' ? 'Loo konto →' : 'Logi sisse →'}</Text>}
+                  : <Text style={styles.submitBtnTxt}>{flow === 'signUp' ? t('auth.submit.signup') : t('auth.submit.signin')}</Text>}
               </Pressable>
 
-              <Pressable onPress={() => { setFlow(f => f === 'signIn' ? 'signUp' : 'signIn'); setError(''); }}>
+              <Pressable onPress={() => { setFlow(f => f === 'signIn' ? 'signUp' : 'signIn'); setError(''); setPassword(''); }}>
                 <Text style={styles.toggleTxt}>
-                  {flow === 'signIn' ? 'Pole kontot? Loo uus →' : 'On juba konto? Logi sisse →'}
+                  {flow === 'signIn' ? t('auth.toggle.tosignup') : t('auth.toggle.tologin')}
                 </Text>
               </Pressable>
             </Animated.View>
           )}
 
-          {/* Error (choose step) */}
+          {/* Error on choose step */}
           {step === 'choose' && error ? (
             <View style={[styles.errorBox, { marginTop: 12 }]}>
               <Text style={styles.errorTxt}>{error}</Text>
@@ -288,24 +364,43 @@ export default function LoginScreen() {
           ) : null}
         </View>
 
-        {/* Privacy */}
-        <Text style={styles.privacy}>
-          🔒 Andmed krüpteeritud · Serveris turvaliselt talletatud
-        </Text>
+        <Text style={styles.privacy}>{t('auth.privacy')}</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
+// ─── Password requirement row ─────────────────────────────────────────────────
+
+function PwRequirement({ met, label }: { met: boolean; label: string }) {
+  return (
+    <View style={pwReqStyles.row}>
+      <View style={[pwReqStyles.dot, met && pwReqStyles.dotMet]}>
+        {met && <Text style={pwReqStyles.check}>✓</Text>}
+      </View>
+      <Text style={[pwReqStyles.label, met && pwReqStyles.labelMet]}>{label}</Text>
+    </View>
+  );
+}
+
+const pwReqStyles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5 },
+  dot: {
+    width: 16, height: 16, borderRadius: 8,
+    borderWidth: 1.5, borderColor: Colors.beige[200],
+    alignItems: 'center', justifyContent: 'center',
+  },
+  dotMet: { borderColor: '#22C55E', backgroundColor: '#22C55E' },
+  check: { fontSize: 9, color: '#fff', fontWeight: '700' },
+  label: { fontSize: 12, fontFamily: Fonts.sansLight, color: Colors.beige[400] },
+  labelMet: { color: '#16A34A' },
+});
+
 // ─── Social Button ────────────────────────────────────────────────────────────
 
 function SocialButton({ label, icon, onPress, loading, style, textStyle }: {
-  label: string;
-  icon: React.ReactNode;
-  onPress: () => void;
-  loading: boolean;
-  style: object;
-  textStyle: object;
+  label: string; icon: React.ReactNode; onPress: () => void;
+  loading: boolean; style: object; textStyle: object;
 }) {
   return (
     <Pressable style={[styles.socialBtn, style]} onPress={onPress} disabled={loading}>
@@ -323,24 +418,16 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.cream },
   scroll: { flexGrow: 1, justifyContent: 'center', padding: Spacing.xxl, paddingBottom: 48 },
 
-  // Logo
   logoWrap: { alignItems: 'center', marginBottom: 36 },
   logo: { fontSize: 48, fontFamily: Fonts.serifSemiBoldItalic, color: Colors.beige[600], lineHeight: 52 },
   logoAccent: { color: Colors.blush[400], fontFamily: Fonts.serifSemiBold },
   tagline: { fontSize: 14, fontFamily: Fonts.sansLight, color: Colors.beige[400], marginTop: 4, letterSpacing: 0.3 },
 
-  // Card
   card: {
-    backgroundColor: '#fff',
-    borderRadius: Radius.xl,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: Colors.beige[100],
-    shadowColor: '#C8A882',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.10,
-    shadowRadius: 24,
-    elevation: 4,
+    backgroundColor: '#fff', borderRadius: Radius.xl, padding: 24,
+    borderWidth: 1, borderColor: Colors.beige[100],
+    shadowColor: '#C8A882', shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.10, shadowRadius: 24, elevation: 4,
   },
   sectionLabel: {
     fontSize: 11, fontFamily: Fonts.sans, fontWeight: '600',
@@ -348,40 +435,30 @@ const styles = StyleSheet.create({
     textAlign: 'center', marginBottom: 16,
   },
 
-  // Social buttons
-  socialBtn: {
-    borderRadius: Radius.md, marginBottom: 10,
-    borderWidth: 1.5,
-  },
+  socialBtn: { borderRadius: Radius.md, marginBottom: 10, borderWidth: 1.5 },
   socialBtnInner: { flexDirection: 'row', alignItems: 'center', paddingVertical: 13, paddingHorizontal: 16 },
   socialBtnIcon: { width: 24, alignItems: 'center' },
   socialBtnTxt: { flex: 1, textAlign: 'center', fontSize: 15, fontFamily: Fonts.sans, fontWeight: '500', marginRight: 24 },
 
   btnGoogle: { borderColor: '#DADCE0', backgroundColor: '#fff' },
   btnGoogleTxt: { color: '#3C4043' },
-
   btnApple: { borderColor: '#000', backgroundColor: '#000' },
   btnAppleTxt: { color: '#fff' },
-
   btnMicrosoft: { borderColor: Colors.beige[200], backgroundColor: '#fff' },
   btnMicrosoftTxt: { color: Colors.beige[800] },
-
   btnPasskey: { borderColor: Colors.blush[200], backgroundColor: Colors.blush[50] },
   btnPasskeyTxt: { color: Colors.blush[700] },
 
-  // Divider
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 18 },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.beige[100] },
   dividerTxt: { marginHorizontal: 12, fontSize: 12, fontFamily: Fonts.sansLight, color: Colors.beige[400] },
 
-  // Email CTA
   emailRow: { flexDirection: 'row', gap: 10 },
   emailBtn: { flex: 1, backgroundColor: Colors.blush[400], borderRadius: Radius.md, paddingVertical: 14, alignItems: 'center' },
   emailBtnSecondary: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: Colors.beige[200] },
   emailBtnTxt: { fontSize: 14, fontFamily: Fonts.sans, fontWeight: '600', color: Colors.cream },
   emailBtnSecondaryTxt: { color: Colors.beige[600] },
 
-  // Email panel
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 20 },
   backTxt: { fontSize: 13, fontFamily: Fonts.sans, color: Colors.beige[400] },
   emailHeading: { fontSize: 24, fontFamily: Fonts.serifSemiBold, color: Colors.beige[800], marginBottom: 20 },
@@ -389,18 +466,21 @@ const styles = StyleSheet.create({
   field: { marginBottom: 14 },
   fieldLabel: { fontSize: 10, fontFamily: Fonts.sans, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', color: Colors.beige[600], marginBottom: 6 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderColor: Colors.beige[200], borderRadius: Radius.md, paddingHorizontal: 14, paddingVertical: 12, backgroundColor: Colors.cream },
+  inputRowError: { borderColor: Colors.error.text },
+  inputRowValid: { borderColor: '#22C55E' },
   input: { flex: 1, fontSize: 15, fontFamily: Fonts.sans, color: Colors.dark },
-  passHint: { fontSize: 11, fontFamily: Fonts.sansLight, color: Colors.beige[400], marginTop: 5 },
+  eyeBtn: { fontSize: 16, paddingHorizontal: 2 },
+  inlineError: { fontSize: 11, fontFamily: Fonts.sansLight, color: Colors.error.text, marginTop: 4 },
+  passHint: { fontSize: 11, fontFamily: Fonts.sansLight, color: Colors.beige[300], marginTop: 5, lineHeight: 15 },
+  pwChecks: { marginTop: 8, paddingLeft: 2 },
 
   submitBtn: { backgroundColor: Colors.blush[400], borderRadius: Radius.md, paddingVertical: 16, alignItems: 'center', marginTop: 4, marginBottom: 16 },
   submitBtnLoading: { opacity: 0.7 },
   submitBtnTxt: { color: Colors.cream, fontSize: 16, fontFamily: Fonts.sans, fontWeight: '600' },
   toggleTxt: { textAlign: 'center', color: Colors.blush[400], fontFamily: Fonts.sans, fontSize: 13 },
 
-  // Error
   errorBox: { backgroundColor: Colors.error.bg, borderRadius: Radius.sm, padding: 12, marginBottom: 12 },
   errorTxt: { fontSize: 13, fontFamily: Fonts.sans, color: Colors.error.text },
 
-  // Footer
   privacy: { textAlign: 'center', marginTop: 24, fontSize: 11, fontFamily: Fonts.sansLight, color: Colors.beige[400] },
 });
