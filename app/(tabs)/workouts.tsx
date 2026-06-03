@@ -550,6 +550,33 @@ export default function WorkoutsScreen() {
               <View key={`${re.exercise_id}-${i}`} style={styles.routineExCard}>
                 <View style={styles.routineExAccent} />
                 <View style={styles.routineExRow}>
+                  {/* Up / down reorder buttons */}
+                  <View style={styles.reorderCol}>
+                    <TouchableOpacity
+                      style={[styles.reorderBtn, i === 0 && styles.reorderBtnDisabled]}
+                      disabled={i === 0}
+                      onPress={() => setRoutineExercises(prev => {
+                        const next = [...prev];
+                        [next[i - 1], next[i]] = [next[i], next[i - 1]];
+                        return next;
+                      })}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Text style={styles.reorderArrow}>▲</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.reorderBtn, i === routineExercises.length - 1 && styles.reorderBtnDisabled]}
+                      disabled={i === routineExercises.length - 1}
+                      onPress={() => setRoutineExercises(prev => {
+                        const next = [...prev];
+                        [next[i], next[i + 1]] = [next[i + 1], next[i]];
+                        return next;
+                      })}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Text style={styles.reorderArrow}>▼</Text>
+                    </TouchableOpacity>
+                  </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.routineExName}>{re.name}</Text>
                     <Text style={styles.routineExCat}>{re.category ?? ''}</Text>
@@ -1105,9 +1132,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   routineExAccent: { height: 4, backgroundColor: Colors.berry[200], marginHorizontal: -14, marginBottom: 14 },
-  routineExRow:    { flexDirection: 'row', alignItems: 'center' },
+  routineExRow:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
   routineExName:   { fontFamily: Fonts.sansBold, fontSize: 14, color: Colors.beige[800] },
   routineExCat:    { fontFamily: Fonts.sansBold, fontSize: 9, color: Colors.beige[400], marginTop: 2, textTransform: 'uppercase', letterSpacing: 1.2 },
+  reorderCol:      { gap: 2 },
+  reorderBtn:      { padding: 3 },
+  reorderBtnDisabled: { opacity: 0.2 },
+  reorderArrow:    { fontFamily: Fonts.sansBold, fontSize: 11, color: Colors.beige[500] },
 
   // Past workout cards
   workoutCard: {
