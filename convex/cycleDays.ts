@@ -15,8 +15,10 @@ export const list = query({
   },
 });
 
+const contraV = v.optional(v.union(v.literal("none"), v.literal("taken"), v.literal("late")));
+
 export const upsert = mutation({
-  args: { date: v.string(), period: v.boolean(), spotting: v.optional(v.boolean()), mood: moodV, symptoms: v.array(v.string()) },
+  args: { date: v.string(), period: v.boolean(), spotting: v.optional(v.boolean()), contra: contraV, mood: moodV, symptoms: v.array(v.string()) },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");

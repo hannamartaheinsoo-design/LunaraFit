@@ -121,3 +121,9 @@
 **Root cause:** Copy-paste drift between where the keys were defined and where they were used.
 **Fix applied:** Updated the legend array in `cycle.tsx` to use the correct `c.legend.logged`, `c.legend.pred`, `c.legend.spotting`, `c.legend.ovulation`, `c.legend.fertile` keys.
 **Rule going forward:** When adding or changing i18n keys, search for all call sites with `grep` before shipping. Never guess a key name — verify it matches what is defined in `lib/i18n.ts`.
+
+### [2026-06-03] Theme color aliases made two markers visually identical
+**What happened:** The contraceptive calendar dot was given `Colors.sky[400]` as its color, which is the same hex value (`#7A9AB0`) as `Colors.green[400]` used for ovulation — making the two markers indistinguishable.
+**Root cause:** The theme defines `green` and `sky` with identical values (green was repurposed as sky blue). Relying on the semantic name without checking the actual hex led to a silent collision.
+**Fix applied:** Replaced the contraceptive color with a periwinkle (`#8FA8D8`) that is clearly in the blue family but visually distinct, and added a dark gray border to further differentiate the pill shape.
+**Rule going forward:** Before assigning a theme color to a new UI element, grep the existing usages of that color and check whether any current element already uses it. If two markers share a visual channel (color family), differentiate them by a second channel (shape, border, saturation).

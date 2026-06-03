@@ -96,6 +96,7 @@ export default function CycleScreen() {
     await upsertDay({
       date, period,
       spotting: spotting || undefined,
+      contra: contra ?? undefined,
       mood: (mood as Mood) ?? undefined,
       symptoms: allSymptoms,
     });
@@ -169,8 +170,9 @@ export default function CycleScreen() {
   const pl = profile?.period_length ?? 5;
   const dim   = new Date(displayYear, displayMonth + 1, 0).getDate();
   const blank = (new Date(displayYear, displayMonth, 1).getDay() + 6) % 7;
-  const loggedPeriodDates  = new Set(cycleDays.filter((d) => d.period).map((d) => d.date));
+  const loggedPeriodDates   = new Set(cycleDays.filter((d) => d.period).map((d) => d.date));
   const loggedSpottingDates = new Set(cycleDays.filter((d) => d.spotting && !d.period).map((d) => d.date));
+  const loggedContraDates   = new Set(cycleDays.filter((d) => d.contra && d.contra !== 'none').map((d) => d.date));
   const predPeriod = new Set<number>();
   const fertDays   = new Set<number>();
   const ovDays     = new Set<number>();
@@ -253,6 +255,7 @@ export default function CycleScreen() {
             const ds = `${displayYear}-${String(displayMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const isLogged   = loggedPeriodDates.has(ds);
             const isSpotting = loggedSpottingDates.has(ds);
+            const isContra   = loggedContraDates.has(ds);
             const isPred     = predPeriod.has(day);
             const isOv       = ovDays.has(day);
             const isFert     = fertDays.has(day);
@@ -278,6 +281,7 @@ export default function CycleScreen() {
                   ]}>{day}</Text>
                 </View>
                 {isSpotting && !isLogged && <View style={styles.spottingDot} />}
+                {isContra && <View style={styles.contraDot} />}
               </View>
             );
           })}
@@ -291,9 +295,13 @@ export default function CycleScreen() {
             { color: Colors.blush[200], label: t('c.legend.spotting'), border: Colors.blush[300] },
             { color: Colors.green[400], label: t('c.legend.ovulation') },
             { color: Colors.green[200], label: t('c.legend.fertile') },
+            { color: '#8FA8D8', label: t('c.legend.contra'), pill: true },
           ].map((l, i) => (
             <View key={i} style={styles.legItem}>
-              <View style={[styles.legDot, { backgroundColor: l.color, borderWidth: l.border ? 1 : 0, borderColor: l.border }]} />
+              <View style={[
+                (l as any).pill ? styles.legPill : styles.legDot,
+                { backgroundColor: l.color, borderWidth: l.border ? 1 : 0, borderColor: l.border },
+              ]} />
               <Text style={styles.legTxt}>{l.label}</Text>
             </View>
           ))}
@@ -483,6 +491,7 @@ const styles = StyleSheet.create({
   calPeriodPred:    { backgroundColor: Colors.blush[50], borderWidth: 1.5, borderColor: Colors.blush[200] },
   calSpotting:      { backgroundColor: Colors.blush[50], borderWidth: 1.5, borderColor: Colors.blush[300], borderStyle: 'dashed' },
   spottingDot:      { width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.blush[400], marginTop: 1 },
+  contraDot:        { width: 10, height: 4, borderRadius: 2, backgroundColor: '#8FA8D8', marginTop: 1, borderWidth: 1, borderColor: Colors.beige[600] },
   calOv:            { backgroundColor: Colors.green[400] },
   calFert:          { backgroundColor: Colors.green[50], borderWidth: 1.5, borderColor: Colors.green[200] },
   calToday:         { shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 4, elevation: 4 },
@@ -491,6 +500,7 @@ const styles = StyleSheet.create({
   legend:  { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: Spacing.xl, marginTop: 12, marginBottom: 4 },
   legItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legDot:  { width: 8, height: 8, borderRadius: 4 },
+  legPill: { width: 14, height: 6, borderRadius: 3, borderWidth: 1, borderColor: Colors.beige[600] },
   legTxt:  { fontFamily: Fonts.sans, fontSize: 10, color: Colors.beige[600] },
 
   // Section label

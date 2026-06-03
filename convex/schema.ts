@@ -63,6 +63,7 @@ export default defineSchema({
     date: v.string(),
     period: v.boolean(),
     spotting: v.optional(v.boolean()),
+    contra: v.optional(v.union(v.literal("none"), v.literal("taken"), v.literal("late"))),
     mood: v.optional(v.union(
       v.literal("bad"), v.literal("neutral"), v.literal("good"),
       v.literal("great"), v.literal("energized"),
