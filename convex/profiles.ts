@@ -15,6 +15,8 @@ export const upsert = mutation({
   args: {
     name: v.optional(v.string()),
     birth_year: v.optional(v.number()),
+    birth_month: v.optional(v.number()),
+    birth_day: v.optional(v.number()),
     cycle_length: v.optional(v.number()),
     period_length: v.optional(v.number()),
     last_period_date: v.optional(v.string()),

@@ -28,6 +28,8 @@ export default defineSchema({
     userId: v.id("users"),
     name: v.optional(v.string()),
     birth_year: v.optional(v.number()),
+    birth_month: v.optional(v.number()),
+    birth_day: v.optional(v.number()),
     cycle_length: v.number(),
     period_length: v.number(),
     last_period_date: v.optional(v.string()),

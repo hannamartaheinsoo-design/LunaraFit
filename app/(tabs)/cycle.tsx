@@ -6,6 +6,7 @@ import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { DatePicker } from '../../components/ui/DatePicker';
 import { Chip } from '../../components/ui/Chip';
 import { Icon } from '../../components/ui/Icon';
 import { useQuery, useMutation } from 'convex/react';
@@ -314,7 +315,8 @@ export default function CycleScreen() {
         </View>
 
         <Card>
-          <Input label={t('c.date.lbl')} value={date} onChangeText={setDate} placeholder={lang === 'en' ? 'yyyy-mm-dd' : 'aaaa-kk-pp'} />
+          <Text style={styles.fieldLabel}>{t('c.date.lbl')}</Text>
+          <DatePicker value={date} onChange={setDate} />
 
           <Text style={styles.fieldLabel}>{t('c.period.lbl')}</Text>
           <View style={styles.rowGap8}>

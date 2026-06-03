@@ -7,6 +7,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
 import { Icon } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
+import { DatePicker } from '../../components/ui/DatePicker';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
@@ -663,14 +664,9 @@ export default function WorkoutsScreen() {
                 ))}
               </View>
               {dateMode === 'custom' && (
-                <TextInput
-                  style={[styles.fieldInput, { marginTop: 8 }]}
-                  value={date}
-                  onChangeText={setDate}
-                  placeholder={lang === 'en' ? 'yyyy-mm-dd' : 'aaaa-kk-pp'}
-                  placeholderTextColor={Colors.beige[200]}
-                  autoFocus
-                />
+                <View style={{ marginTop: 8 }}>
+                  <DatePicker value={date} onChange={setDate} />
+                </View>
               )}
             </View>
 
