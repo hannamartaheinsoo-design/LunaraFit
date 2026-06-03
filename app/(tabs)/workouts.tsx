@@ -367,6 +367,7 @@ export default function WorkoutsScreen() {
   const [routineName, setRoutineName]             = useState('');
   const [routineExercises, setRoutineExercises]   = useState<RoutineExercise[]>([]);
   const [routineSaveMsg, setRoutineSaveMsg]       = useState<string | null>(null);
+  const [editingRoutineId, setEditingRoutineId]   = useState<Id<'routines'> | null>(null);
 
   const [activeTab, setActiveTab] = useState<'log' | 'routines' | 'progress'>('log');
 
@@ -375,7 +376,8 @@ export default function WorkoutsScreen() {
   const routines     = useQuery(api.routines.list) ?? [];
   const addWorkout   = useMutation(api.workouts.add);
   const removeWorkout = useMutation(api.workouts.remove);
-  const addRoutine   = useMutation(api.routines.add);
+  const addRoutine    = useMutation(api.routines.add);
+  const updateRoutine = useMutation(api.routines.update);
   const removeRoutine = useMutation(api.routines.remove);
 
   const yesterdayISO = () => {
@@ -392,7 +394,15 @@ export default function WorkoutsScreen() {
   };
 
   const resetRoutineBuilder = () => {
-    setRoutineName(''); setRoutineExercises([]); setRoutineSaveMsg(null);
+    setRoutineName(''); setRoutineExercises([]); setRoutineSaveMsg(null); setEditingRoutineId(null);
+  };
+
+  const openRoutineForEdit = (r: { _id: Id<'routines'>; name: string; exercises: RoutineExercise[] }) => {
+    setRoutineName(r.name);
+    setRoutineExercises(r.exercises);
+    setRoutineSaveMsg(null);
+    setEditingRoutineId(r._id);
+    setShowRoutineBuilder(true);
   };
 
   // Open workout builder, optionally pre-loaded from a routine
@@ -476,7 +486,11 @@ export default function WorkoutsScreen() {
   const handleSaveRoutine = async () => {
     if (!routineName.trim()) { setRoutineSaveMsg(t('w.routine.err.name')); return; }
     if (routineExercises.length === 0) { setRoutineSaveMsg(t('w.routine.err.noex')); return; }
-    await addRoutine({ name: routineName.trim(), exercises: routineExercises });
+    if (editingRoutineId) {
+      await updateRoutine({ id: editingRoutineId, name: routineName.trim(), exercises: routineExercises });
+    } else {
+      await addRoutine({ name: routineName.trim(), exercises: routineExercises });
+    }
     resetRoutineBuilder();
     setShowRoutineBuilder(false);
     setActiveTab('routines');
@@ -512,7 +526,7 @@ export default function WorkoutsScreen() {
           <TouchableOpacity onPress={() => { resetRoutineBuilder(); setShowRoutineBuilder(false); }} style={styles.backBtn}>
             <Icon name="arr-l" size={20} color={Colors.beige[600]} />
           </TouchableOpacity>
-          <Text style={styles.heading}>{t('w.routine.builder.title')}</Text>
+          <Text style={styles.heading}>{editingRoutineId ? t('w.routine.edit.title') : t('w.routine.builder.title')}</Text>
           <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSaveRoutine}>
             <Text style={styles.saveHeaderTxt}>{t('w.routine.save')}</Text>
           </TouchableOpacity>
@@ -903,6 +917,9 @@ export default function WorkoutsScreen() {
                         {r.exercises.length} {lang === 'en' ? 'exercises' : 'harjutust'}
                       </Text>
                     </View>
+                    <TouchableOpacity onPress={() => openRoutineForEdit(r)} style={[styles.deleteBtn, { marginRight: 4 }]}>
+                      <Icon name="edit" size={16} color={Colors.beige[400]} />
+                    </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleDeleteRoutine(r._id)} style={styles.deleteBtn}>
                       <Icon name="trash" size={16} color={Colors.error.text} />
                     </TouchableOpacity>

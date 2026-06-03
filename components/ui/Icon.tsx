@@ -9,7 +9,7 @@ type IconName =
   | 'card' | 'star' | 'smile-bad' | 'smile-neutral' | 'smile-good'
   | 'smile-great' | 'energized' | 'heart' | 'brain' | 'pain'
   | 'craving' | 'sleep' | 'digestion' | 'pill' | 'shield'
-  | 'search' | 'close' | 'arr-l' | 'arr-r' | 'chevr';
+  | 'search' | 'close' | 'arr-l' | 'arr-r' | 'chevr' | 'edit';
 
 interface Props {
   name: IconName;
@@ -208,6 +208,11 @@ export function Icon({ name, size = 20, color = 'currentColor', strokeWidth = 1.
       </Svg>;
     case 'chevr':
       return <Svg {...props}><Polyline points="10,6 18,14 10,22" {...s} /></Svg>;
+    case 'edit':
+      return <Svg {...props}>
+        <Path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" {...s} />
+        <Path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" {...s} />
+      </Svg>;
     default:
       return <Svg {...props}><Circle cx="14" cy="14" r="8" {...s} /></Svg>;
   }

@@ -27,6 +27,15 @@ export const add = mutation({
   },
 });
 
+export const update = mutation({
+  args: { id: v.id("routines"), name: v.string(), exercises: v.array(routineExerciseV) },
+  handler: async (ctx, { id, name, exercises }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    await ctx.db.patch(id, { name, exercises });
+  },
+});
+
 export const remove = mutation({
   args: { id: v.id("routines") },
   handler: async (ctx, { id }) => {
