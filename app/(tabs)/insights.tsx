@@ -35,6 +35,8 @@ function IntensityDot({ level }: { level: TrainingTip['intensity'] }) {
 }
 
 function ConfidenceBadge({ level }: { level: DetectedPattern['confidence'] }) {
+  const { lang } = useTranslation();
+  const labels = getConfidenceLabels(lang);
   const colors = {
     preliminary: { bg: Colors.beige[50],  txt: Colors.beige[600]  },
     emerging:    { bg: Colors.green[50],  txt: Colors.green[700]  },
@@ -44,7 +46,7 @@ function ConfidenceBadge({ level }: { level: DetectedPattern['confidence'] }) {
   return (
     <View style={[styles.confidenceBadge, { backgroundColor: c.bg }]}>
       <Text style={[styles.confidenceTxt, { color: c.txt }]}>
-        {CONFIDENCE_LABELS[level].toUpperCase()}
+        {labels[level].toUpperCase()}
       </Text>
     </View>
   );

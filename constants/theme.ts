@@ -1,34 +1,59 @@
 export const Colors = {
-  cream: '#FDFAF6',
+  cream: '#FAFAFA',    // Clean white base
   beige: {
-    50: '#F5F0EA',
-    100: '#E8DDD0',
-    200: '#CEC0AA',
-    400: '#A8926E',
-    600: '#7A6448',
-    800: '#3A2E1E',
+    50:  '#F5F5F5',    // Light card surfaces
+    100: '#E8E8E8',    // Borders, dividers
+    200: '#D0D0D0',
+    400: '#9A9A9A',    // Placeholder text, muted labels
+    600: '#555555',    // Secondary text
+    800: '#1F1F1F',    // Primary text, headings, dark buttons
   },
-  blush: {
-    50: '#FAEAE4',
-    100: '#F0C8BC',
-    200: '#E0A090',
-    400: '#C87060',
-    600: '#A04838',
-    800: '#581E14',
+  blush: {             // Soft rose — primary accent
+    50:  '#FDF1F2',
+    100: '#F5D4D6',
+    200: '#EDBABB',
+    400: '#D9898B',    // Lighter, softer rose
+    600: '#A85A5C',
+    800: '#6A2A2C',
   },
-  green: {
-    50: '#E6F2EC',
-    100: '#C0DEC8',
-    200: '#8EC4A0',
-    400: '#4A9E6A',
-    600: '#2E7048',
-    800: '#163824',
+  berry: {             // Berry — soft secondary, used sparingly
+    50:  '#FAF0F2',
+    100: '#F0D8DA',
+    200: '#E4B8BC',
+    400: '#D5A0A8',    // Berry
+    600: '#A06870',
+    800: '#6A3840',
+  },
+  sky: {               // Sky — subtle bg tints only, never loud
+    50:  '#F0F4F8',
+    100: '#D2DDE7',    // Sky
+    200: '#B0C4D4',
+    400: '#7A9AB0',
+    600: '#4A6A80',
+    800: '#1E3848',
+  },
+  green: {           // Sky blue — replaces green throughout the app
+    50:  '#F0F4F8',
+    100: '#D2DDE7',  // Sky
+    200: '#B0C4D4',
+    400: '#7A9AB0',
+    600: '#4A6A80',
+    700: '#3A5870',
+    800: '#1E3848',
+  },
+  coral: {             // Sunrise coral — warm highlight for gains & progress
+    50:  '#FEF3EC',
+    100: '#FCDDC4',
+    200: '#F9C4A0',
+    400: '#EE9F80',    // Sunrise
+    600: '#C87050',
+    800: '#884030',
   },
   error: {
-    bg: '#FAEAEA',
-    text: '#7A2020',
+    bg:   '#FFF0F0',
+    text: '#CC3333',
   },
-  dark: '#1A1612',
+  dark: '#1F1F1F',
 };
 
 export const Fonts = {

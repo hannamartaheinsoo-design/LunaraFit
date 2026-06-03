@@ -135,7 +135,7 @@ export default function HomeScreen() {
         {/* Quick actions */}
         <View style={styles.quickRow}>
           <Button variant="dark" size="sm" onPress={() => router.push('/(tabs)/workouts')}>{t('home.quick.workout')}</Button>
-          <Button variant="blush" size="sm" onPress={() => router.push('/(tabs)/cycle')}>{t('home.quick.cycle')}</Button>
+          <Button variant="berry" size="sm" onPress={() => router.push('/(tabs)/cycle')}>{t('home.quick.cycle')}</Button>
           <Button variant="green" size="sm" onPress={() => router.push('/(tabs)/insights')}>{t('home.quick.insights')}</Button>
         </View>
 

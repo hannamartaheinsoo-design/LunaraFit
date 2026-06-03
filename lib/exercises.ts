@@ -46,9 +46,10 @@ export function getCategoryLabel(dbCat: string): string {
   return dbCat;
 }
 
-const S: ExerciseField[] = ['sets', 'reps', 'weight'];
-const SR: ExerciseField[] = ['sets', 'reps'];
-const CD: ExerciseField[] = ['duration', 'distance'];
+const S:   ExerciseField[] = ['sets', 'reps', 'weight'];
+const SR:  ExerciseField[] = ['sets', 'reps'];
+const SRD: ExerciseField[] = ['sets', 'reps', 'duration']; // bodyweight/HIIT: reps + optional seconds
+const CD:  ExerciseField[] = ['duration', 'distance'];
 const DUR: ExerciseField[] = ['duration'];
 
 // ─── Exercise Database ─────────────────────────────────────────────────────────
@@ -171,7 +172,7 @@ export const EXERCISE_DB: ExerciseTemplate[] = [
   { id: 'crunch',               name: 'Crunch',                     category: 'core',      popularity: 9,  fields: SR  },
   { id: 'bicycle-crunch',       name: 'Bicycle Crunch',             category: 'core',      popularity: 8,  fields: SR  },
   { id: 'russian-twist',        name: 'Russian Twist',              category: 'core',      popularity: 8,  fields: S   },
-  { id: 'mountain-climber',     name: 'Mountain Climber',           category: 'core',      popularity: 8,  fields: SR  },
+  { id: 'mountain-climber',     name: 'Mountain Climber',           category: 'core',      popularity: 8,  fields: SRD },
   { id: 'hanging-leg-raise',    name: 'Hanging Leg Raise',          category: 'core',      popularity: 8,  fields: SR  },
   { id: 'ab-wheel',             name: 'Ab Wheel Rollout',           category: 'core',      popularity: 7,  fields: SR  },
   { id: 'dead-bug',             name: 'Dead Bug',                   category: 'core',      popularity: 7,  fields: SR  },
@@ -313,13 +314,13 @@ export const EXERCISE_DB: ExerciseTemplate[] = [
 
   // ── HIIT ──────────────────────────────────────────────────────────────────
   { id: 'jump-squat',           name: 'Jump Squat',                 category: 'hiit',      popularity: 8,  fields: SR  },
-  { id: 'high-knees',           name: 'High Knees',                 category: 'hiit',      popularity: 8,  fields: SR  },
-  { id: 'burpee-hiit',          name: 'Burpee (HIIT)',              category: 'hiit',      popularity: 9,  fields: SR  },
-  { id: 'push-up-row',          name: 'Push-Up to Row',             category: 'hiit',      popularity: 6,  fields: SR  },
-  { id: 'plank-jack',           name: 'Plank Jack',                 category: 'hiit',      popularity: 7,  fields: SR  },
-  { id: 'lateral-bound',        name: 'Lateral Bound',              category: 'hiit',      popularity: 6,  fields: SR  },
-  { id: 'jump-lunge',           name: 'Jump Lunge',                 category: 'hiit',      popularity: 7,  fields: SR  },
-  { id: 'spiderman-push-up',    name: 'Spiderman Push-Up',          category: 'hiit',      popularity: 6,  fields: SR  },
+  { id: 'high-knees',           name: 'High Knees',                 category: 'hiit',      popularity: 8,  fields: SRD },
+  { id: 'burpee-hiit',          name: 'Burpee (HIIT)',              category: 'hiit',      popularity: 9,  fields: SRD },
+  { id: 'push-up-row',          name: 'Push-Up to Row',             category: 'hiit',      popularity: 6,  fields: SRD },
+  { id: 'plank-jack',           name: 'Plank Jack',                 category: 'hiit',      popularity: 7,  fields: SRD },
+  { id: 'lateral-bound',        name: 'Lateral Bound',              category: 'hiit',      popularity: 6,  fields: SRD },
+  { id: 'jump-lunge',           name: 'Jump Lunge',                 category: 'hiit',      popularity: 7,  fields: SRD },
+  { id: 'spiderman-push-up',    name: 'Spiderman Push-Up',          category: 'hiit',      popularity: 6,  fields: SRD },
   { id: 'tabata-squat',         name: 'Tabata',                     category: 'hiit',      popularity: 7,  fields: DUR },
   { id: 'battle-ropes',         name: 'Battle Ropes',               category: 'hiit',      popularity: 7,  fields: DUR },
   { id: 'sprint-intervals',     name: 'Sprint Intervals',           category: 'hiit',      popularity: 7,  fields: CD  },

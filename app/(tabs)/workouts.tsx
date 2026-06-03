@@ -10,7 +10,7 @@ import { Button } from '../../components/ui/Button';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
-import { formatDate, todayISO, getPhaseKey } from '../../lib/cycle';
+import { formatDate, todayISO, getPhaseKey, getPhaseLabel } from '../../lib/cycle';
 import {
   CATEGORIES, getAllExercises,
   getRecentExerciseIds, recordRecentExercise,
@@ -211,6 +211,10 @@ function ExercisePicker({
 }
 
 // ─── Set Logger ───────────────────────────────────────────────────────────────
+// Raw string state per cell prevents parseFloat from swallowing zeros or
+// stripping decimal points while the user is still typing.
+type RawSets = Record<string, string>; // key = `${setIdx}_${field}`
+
 function SetLogger({
   exercise, sets, onChange, onRemove,
 }: {
@@ -220,12 +224,7 @@ function SetLogger({
   onRemove: () => void;
 }) {
   const { t } = useTranslation();
-  const addSet = () => onChange([...sets, {}]);
-  const removeSet = (i: number) => onChange(sets.filter((_, idx) => idx !== i));
-  const updateSet = (i: number, key: keyof ExerciseSet, val: string) => {
-    const n = parseFloat(val) || undefined;
-    onChange(sets.map((s, idx) => idx === i ? { ...s, [key]: n } : s));
-  };
+  const [raw, setRaw] = useState<RawSets>({});
 
   const showWeight   = exercise.fields.includes('weight');
   const showReps     = exercise.fields.includes('reps');
@@ -233,16 +232,51 @@ function SetLogger({
   const showDistance = exercise.fields.includes('distance');
   const isSets       = exercise.fields.includes('sets');
   const cat          = CATEGORIES.find(c => c.id === exercise.category);
+  // HIIT exercises show duration in seconds (user-friendly); pure cardio uses minutes
+  const durationInSec = showReps && showDuration;
+
+  const addSet = () => onChange([...sets, {}]);
+  const removeSet = (i: number) => {
+    const next: RawSets = {};
+    Object.entries(raw).forEach(([k, v]) => {
+      const [idx] = k.split('_');
+      if (Number(idx) !== i) next[k] = v;
+    });
+    setRaw(next);
+    onChange(sets.filter((_, idx) => idx !== i));
+  };
+
+  const handleChange = (setIdx: number, field: keyof ExerciseSet, text: string) => {
+    const key = `${setIdx}_${field}`;
+    setRaw(r => ({ ...r, [key]: text }));
+    const parsed = text === '' ? undefined : isNaN(parseFloat(text)) ? undefined : parseFloat(text);
+    // convert seconds → minutes before storing so duration_min is always in minutes
+    const stored = (field === 'duration_min' && durationInSec && parsed != null)
+      ? parsed / 60
+      : parsed;
+    onChange(sets.map((s, idx) => idx === setIdx ? { ...s, [field]: stored } : s));
+  };
+
+  const getRaw = (setIdx: number, field: keyof ExerciseSet): string => {
+    const key = `${setIdx}_${field}`;
+    if (key in raw) return raw[key];
+    const v = sets[setIdx]?.[field];
+    if (v == null) return '';
+    // convert stored minutes → seconds for display in HIIT mode
+    const display = (field === 'duration_min' && durationInSec) ? v * 60 : v;
+    return String(display);
+  };
 
   return (
     <View style={styles.setLogCard}>
-      {/* Exercise header */}
+      {/* Accent bar + header */}
+      <View style={styles.setLogAccent} />
       <View style={styles.setLogHeader}>
         <View style={{ flex: 1 }}>
           <Text style={styles.setLogName}>{exercise.name}</Text>
           <Text style={styles.setLogCat}>{cat?.label ?? exercise.category}</Text>
         </View>
-        <TouchableOpacity onPress={onRemove} style={styles.removeExBtn}>
+        <TouchableOpacity onPress={onRemove} style={styles.removeExBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Icon name="trash" size={16} color={Colors.error.text} />
         </TouchableOpacity>
       </View>
@@ -250,17 +284,17 @@ function SetLogger({
       {/* Column headers */}
       {sets.length > 0 && (
         <View style={styles.setColHeaders}>
-          {isSets && <Text style={styles.setColHdr}>{t('w.ex.sets.col')}</Text>}
+          {isSets && <View style={{ width: 36 }} />}
           {showReps     && <Text style={styles.setColHdr}>{t('w.ex.reps.col')}</Text>}
           {showWeight   && <Text style={styles.setColHdr}>kg</Text>}
-          {showDuration && <Text style={styles.setColHdr}>min</Text>}
+          {showDuration && <Text style={styles.setColHdr}>{durationInSec ? 'sek' : 'min'}</Text>}
           {showDistance && <Text style={styles.setColHdr}>km</Text>}
-          <View style={{ width: 24 }} />
+          <View style={{ width: 28 }} />
         </View>
       )}
 
       {/* Set rows */}
-      {sets.map((s, i) => (
+      {sets.map((_, i) => (
         <View key={i} style={styles.setRow}>
           {isSets && (
             <View style={styles.setNumWrap}>
@@ -270,52 +304,52 @@ function SetLogger({
           {showReps && (
             <TextInput
               style={styles.setInput}
-              placeholder="—"
+              placeholder="0"
               placeholderTextColor={Colors.beige[200]}
               keyboardType="numeric"
-              value={s.reps != null ? String(s.reps) : ''}
-              onChangeText={v => updateSet(i, 'reps', v)}
+              value={getRaw(i, 'reps')}
+              onChangeText={v => handleChange(i, 'reps', v)}
             />
           )}
           {showWeight && (
             <TextInput
               style={styles.setInput}
-              placeholder="—"
+              placeholder="0"
               placeholderTextColor={Colors.beige[200]}
               keyboardType="decimal-pad"
-              value={s.weight_kg != null ? String(s.weight_kg) : ''}
-              onChangeText={v => updateSet(i, 'weight_kg', v)}
+              value={getRaw(i, 'weight_kg')}
+              onChangeText={v => handleChange(i, 'weight_kg', v)}
             />
           )}
           {showDuration && (
             <TextInput
               style={styles.setInput}
-              placeholder="—"
+              placeholder="0"
               placeholderTextColor={Colors.beige[200]}
               keyboardType="decimal-pad"
-              value={s.duration_min != null ? String(s.duration_min) : ''}
-              onChangeText={v => updateSet(i, 'duration_min', v)}
+              value={getRaw(i, 'duration_min')}
+              onChangeText={v => handleChange(i, 'duration_min', v)}
             />
           )}
           {showDistance && (
             <TextInput
               style={styles.setInput}
-              placeholder="—"
+              placeholder="0"
               placeholderTextColor={Colors.beige[200]}
               keyboardType="decimal-pad"
-              value={s.distance_km != null ? String(s.distance_km) : ''}
-              onChangeText={v => updateSet(i, 'distance_km', v)}
+              value={getRaw(i, 'distance_km')}
+              onChangeText={v => handleChange(i, 'distance_km', v)}
             />
           )}
-          <TouchableOpacity onPress={() => removeSet(i)} style={styles.removeSetBtn}>
+          <TouchableOpacity onPress={() => removeSet(i)} style={styles.removeSetBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Icon name="close" size={12} color={Colors.beige[400]} />
           </TouchableOpacity>
         </View>
       ))}
 
       {/* Add set */}
-      <TouchableOpacity style={styles.addSetBtn} onPress={addSet}>
-        <Icon name="plus" size={12} color={Colors.beige[600]} />
+      <TouchableOpacity style={styles.addSetBtn} onPress={addSet} activeOpacity={0.7}>
+        <Icon name="plus" size={13} color={Colors.beige[800]} />
         <Text style={styles.addSetTxt}>{t('w.ex.addset')}</Text>
       </TouchableOpacity>
     </View>
@@ -340,13 +374,24 @@ export default function WorkoutsScreen() {
   const [feel, setFeel] = useState<Set<string>>(new Set());
   const [notes, setNotes] = useState('');
   const [activeTab, setActiveTab] = useState<'log' | 'progress'>('log');
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [dateMode, setDateMode] = useState<'today' | 'yesterday' | 'custom'>('today');
+
+  const yesterdayISO = () => {
+    const d = new Date(); d.setDate(d.getDate() - 1);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const effectiveDate = dateMode === 'today' ? todayISO() : dateMode === 'yesterday' ? yesterdayISO() : date;
 
   const resetBuilder = () => {
     setDate(todayISO());
+    setDateMode('today');
     setWorkoutName('');
     setLoggedExercises([]);
     setFeel(new Set());
     setNotes('');
+    setSaveMsg(null);
   };
 
   const handleAddExercise = (template: ExerciseTemplate) => {
@@ -354,13 +399,13 @@ export default function WorkoutsScreen() {
   };
 
   const handleSave = async () => {
-    if (!date) { Alert.alert('', t('w.err.date')); return; }
-    if (loggedExercises.length === 0) { Alert.alert('', t('w.err.noex')); return; }
+    if (!effectiveDate) { setSaveMsg(t('w.err.date')); return; }
+    if (loggedExercises.length === 0) { setSaveMsg(t('w.err.noex')); return; }
 
     const name = workoutName.trim() || loggedExercises[0].template.name;
 
     const phase = getPhaseKey(
-      date,
+      effectiveDate,
       profile?.last_period_date ?? null,
       profile?.cycle_length ?? 28,
       profile?.period_length ?? 5,
@@ -387,7 +432,7 @@ export default function WorkoutsScreen() {
     });
 
     const workoutId = await addWorkout({
-      date,
+      date: effectiveDate,
       name,
       exercises,
       feel: Array.from(feel),
@@ -399,21 +444,23 @@ export default function WorkoutsScreen() {
 
     // PR detection (workouts query updates reactively)
     const prs = detectNewPRs(workouts, workoutId as string);
-    if (prs.length > 0) {
+    if (prs.length > 0 && Platform.OS !== 'web') {
       const prLines = prs.map(pr =>
         `🏆 ${pr.exerciseName}: ${pr.value}${pr.unit} (+${pr.improvement}${pr.type === 'weight' || pr.type === 'distance' ? '%' : ''})`
       ).join('\n');
       Alert.alert(t('w.pr.title'), prLines);
-    } else {
-      Alert.alert('', t('w.saved'));
     }
   };
 
   const handleDelete = (id: Id<'workouts'>) => {
-    Alert.alert(t('w.delete.confirm'), '', [
-      { text: t('w.delete.cancel'), style: 'cancel' },
-      { text: t('w.delete.ok'), style: 'destructive', onPress: () => removeWorkout({ id }) },
-    ]);
+    if (Platform.OS !== 'web') {
+      Alert.alert(t('w.delete.confirm'), '', [
+        { text: t('w.delete.cancel'), style: 'cancel' },
+        { text: t('w.delete.ok'), style: 'destructive', onPress: () => removeWorkout({ id }) },
+      ]);
+    } else {
+      if (window.confirm(t('w.delete.confirm'))) removeWorkout({ id });
+    }
   };
 
   // ── Workout Builder ────────────────────────────────────────────────────────
@@ -433,29 +480,41 @@ export default function WorkoutsScreen() {
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-            {/* Date */}
+            {/* Date — quick select */}
             <View style={styles.builderSection}>
               <Text style={styles.fieldLbl}>{t('w.date.lbl')}</Text>
-              <TextInput
-                style={styles.fieldInput}
-                value={date}
-                onChangeText={setDate}
-                placeholder={lang === 'en' ? 'yyyy-mm-dd' : 'aaaa-kk-pp'}
-                placeholderTextColor={Colors.beige[200]}
-              />
+              <View style={styles.dateRow}>
+                {(['today', 'yesterday', 'custom'] as const).map(mode => (
+                  <TouchableOpacity
+                    key={mode}
+                    style={[styles.dateChip, dateMode === mode && styles.dateChipOn]}
+                    onPress={() => { setDateMode(mode); if (mode !== 'custom') setSaveMsg(null); }}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[styles.dateChipTxt, dateMode === mode && styles.dateChipTxtOn]}>
+                      {mode === 'today' ? t('w.date.today') : mode === 'yesterday' ? t('w.date.yesterday') : t('w.date.custom')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {dateMode === 'custom' && (
+                <TextInput
+                  style={[styles.fieldInput, { marginTop: 8 }]}
+                  value={date}
+                  onChangeText={setDate}
+                  placeholder={lang === 'en' ? 'yyyy-mm-dd' : 'aaaa-kk-pp'}
+                  placeholderTextColor={Colors.beige[200]}
+                  autoFocus
+                />
+              )}
             </View>
 
-            {/* Workout name */}
-            <View style={styles.builderSection}>
-              <Text style={styles.fieldLbl}>{t('w.builder.name.lbl')}</Text>
-              <TextInput
-                style={styles.fieldInput}
-                value={workoutName}
-                onChangeText={setWorkoutName}
-                placeholder={loggedExercises[0]?.template.name ?? t('w.builder.name.ph')}
-                placeholderTextColor={Colors.beige[200]}
-              />
-            </View>
+            {/* Save message (inline, web-safe) */}
+            {saveMsg && (
+              <View style={styles.saveMsgBox}>
+                <Text style={styles.saveMsgTxt}>{saveMsg}</Text>
+              </View>
+            )}
 
             {/* Exercises */}
             <View style={styles.sectionLblRow}>
@@ -476,7 +535,7 @@ export default function WorkoutsScreen() {
             <TouchableOpacity
               style={styles.addExerciseBtn}
               activeOpacity={0.8}
-              onPress={() => setShowPicker(true)}
+              onPress={() => { setSaveMsg(null); setShowPicker(true); }}
             >
               <Icon name="plus" size={16} color={Colors.beige[800]} />
               <Text style={styles.addExerciseTxt}>{t('w.ex.add')}</Text>
@@ -593,7 +652,7 @@ export default function WorkoutsScreen() {
                         <Text style={styles.monthLbl}>{t('w.progress.thismonth')}</Text>
                       </View>
                       <View style={styles.monthArrow}>
-                        <Text style={[styles.monthTrend, { color: stats.monthTrend >= 0 ? Colors.green[600] : Colors.blush[400] }]}>
+                        <Text style={[styles.monthTrend, { color: stats.monthTrend >= 0 ? Colors.coral[400] : Colors.blush[400] }]}>
                           {stats.monthTrend >= 0 ? '↑' : '↓'} {Math.abs(stats.monthTrend)}%
                         </Text>
                         <Text style={styles.monthSub}>{t('w.progress.vsmonth')}</Text>
@@ -622,7 +681,7 @@ export default function WorkoutsScreen() {
                           <View style={[
                             styles.chartBar,
                             { height: `${Math.max((w.totalKg / maxVol) * 100, w.totalKg > 0 ? 8 : 0)}%` as any,
-                              backgroundColor: i === weekly.length - 1 ? Colors.blush[400] : Colors.beige[200] }
+                              backgroundColor: i === weekly.length - 1 ? Colors.blush[400] : Colors.beige[100] }
                           ]} />
                         </View>
                         <Text style={styles.chartWeekLbl}>{w.weekLabel}</Text>
@@ -697,7 +756,7 @@ export default function WorkoutsScreen() {
                             <View key={i} style={styles.sparkBarWrap}>
                               <View style={[
                                 styles.sparkBar,
-                                { height: h, backgroundColor: isLast ? Colors.blush[400] : Colors.beige[200] }
+                                { height: h, backgroundColor: isLast ? Colors.coral[400] : Colors.sky[100] }
                               ]} />
                             </View>
                           );
@@ -788,19 +847,19 @@ const styles = StyleSheet.create({
   topBar:  {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
-    borderBottomWidth: 1, borderBottomColor: Colors.beige[50],
+    borderBottomWidth: 1, borderBottomColor: Colors.beige[100],
   },
-  heading:    { fontFamily: Fonts.serifSemiBold, fontSize: 26, color: Colors.beige[800] },
-  subheading: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 2 },
+  heading:    { fontFamily: Fonts.sansBold, fontSize: 26, color: Colors.beige[800], letterSpacing: -0.5 },
+  subheading: { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.beige[400], marginTop: 3, textTransform: 'uppercase', letterSpacing: 1.5 },
   scroll: { flex: 1 },
 
   // New workout CTA
   newWorkoutBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    margin: Spacing.xl, padding: 16, borderRadius: Radius.lg,
-    backgroundColor: Colors.beige[800],
+    margin: Spacing.xl, padding: 18, borderRadius: Radius.lg,
+    backgroundColor: Colors.blush[400],
   },
-  newWorkoutTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 14, color: Colors.cream },
+  newWorkoutTxt: { fontFamily: Fonts.sansBold, fontSize: 14, color: '#fff', letterSpacing: 0.3 },
 
   // Section label
   sectionLblRow: {
@@ -819,8 +878,8 @@ const styles = StyleSheet.create({
     padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
   },
   workoutHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 },
-  workoutName:   { fontFamily: Fonts.sansSemiBold, fontSize: 14, color: Colors.beige[800] },
-  workoutMeta:   { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 2 },
+  workoutName:   { fontFamily: Fonts.sansBold, fontSize: 15, color: Colors.beige[800] },
+  workoutMeta:   { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginTop: 3, textTransform: 'uppercase', letterSpacing: 0.5 },
   deleteBtn:     { padding: 4 },
   exLine:        { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
   exName:        { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[800] },
@@ -840,15 +899,15 @@ const styles = StyleSheet.create({
   tabBtnOn:    { backgroundColor: Colors.beige[800], borderColor: Colors.beige[800] },
   tabBtnTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[500] },
   tabBtnTxtOn: { color: Colors.cream },
-  prDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.blush[400] },
+  prDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.berry[400] },
 
   // Progress stats
   statsGrid: {
     flexDirection: 'row', gap: 8, paddingHorizontal: Spacing.xl, marginTop: 14, marginBottom: 8,
   },
   statCard: {
-    flex: 1, backgroundColor: Colors.beige[50], borderRadius: Radius.md,
-    padding: 12, alignItems: 'center', borderWidth: 1, borderColor: Colors.beige[100],
+    flex: 1, backgroundColor: Colors.sky[50], borderRadius: Radius.md,
+    padding: 12, alignItems: 'center', borderWidth: 1, borderColor: Colors.sky[100],
   },
   statVal: { fontFamily: Fonts.serifSemiBold, fontSize: 26, color: Colors.beige[800], lineHeight: 28 },
   statLbl: { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[400], marginTop: 3, textAlign: 'center' },
@@ -886,13 +945,13 @@ const styles = StyleSheet.create({
   progressNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   progressName:    { fontFamily: Fonts.sansSemiBold, fontSize: 14, color: Colors.beige[800] },
   progressMeta:    { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 2 },
-  prBadge:         { backgroundColor: Colors.blush[50], borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: Colors.blush[200] },
-  prBadgeTxt:      { fontFamily: Fonts.sansBold, fontSize: 9, color: Colors.blush[700] },
+  prBadge:         { backgroundColor: Colors.berry[50], borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: Colors.berry[100] },
+  prBadgeTxt:      { fontFamily: Fonts.sansBold, fontSize: 9, color: Colors.berry[600] },
   progressMetrics: { flexDirection: 'row', gap: 12, marginBottom: 10 },
   progressMetric:  { alignItems: 'center' },
   progressMetricVal: { fontFamily: Fonts.serifSemiBold, fontSize: 20, color: Colors.beige[800] },
   progressMetricLbl: { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[400], marginTop: 1 },
-  progressGain:    { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.green[600], marginTop: 2 },
+  progressGain:    { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.coral[400], marginTop: 2 },
 
   sparkline:      { flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginTop: 4, height: 40 },
   sparkBarWrap:   { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: 32 },
@@ -911,6 +970,15 @@ const styles = StyleSheet.create({
   },
   saveHeaderTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: '#fff' },
 
+  // Date quick-select
+  dateRow:       { flexDirection: 'row', gap: 8 },
+  dateChip:      { flex: 1, paddingVertical: 11, borderRadius: Radius.md, borderWidth: 1.5, borderColor: Colors.beige[100], backgroundColor: Colors.cream, alignItems: 'center' },
+  dateChipOn:    { backgroundColor: Colors.beige[800], borderColor: Colors.beige[800] },
+  dateChipTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[600] },
+  dateChipTxtOn: { color: Colors.cream },
+  saveMsgBox:    { marginHorizontal: Spacing.xl, marginBottom: 10, padding: 10, borderRadius: Radius.md, backgroundColor: Colors.blush[50], borderWidth: 1, borderColor: Colors.blush[200] },
+  saveMsgTxt:    { fontFamily: Fonts.sans, fontSize: 13, color: Colors.blush[700], textAlign: 'center' },
+
   builderSection: { paddingHorizontal: Spacing.xl, marginBottom: 14 },
   fieldLbl: {
     fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1,
@@ -923,42 +991,46 @@ const styles = StyleSheet.create({
   },
 
   addExerciseBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    marginHorizontal: Spacing.xl, marginBottom: 8, padding: 14,
-    borderRadius: Radius.md, borderWidth: 1.5,
-    borderColor: Colors.beige[200], borderStyle: 'dashed',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    marginHorizontal: Spacing.xl, marginBottom: 8, padding: 16,
+    borderRadius: Radius.md, borderWidth: 2,
+    borderColor: Colors.beige[100], borderStyle: 'dashed',
+    backgroundColor: Colors.beige[50],
   },
-  addExerciseTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[800] },
+  addExerciseTxt: { fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.beige[600], letterSpacing: 0.3 },
 
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, paddingHorizontal: Spacing.xl, marginBottom: 14 },
-  chip:     { paddingVertical: 7, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1.5, borderColor: Colors.beige[100], backgroundColor: Colors.cream },
-  chipOn:   { backgroundColor: Colors.blush[50], borderColor: Colors.blush[400] },
-  chipTxt:  { fontFamily: Fonts.sans, fontSize: 12, color: Colors.beige[600] },
-  chipTxtOn:{ fontFamily: Fonts.sansSemiBold, color: Colors.blush[800] },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: Spacing.xl, marginBottom: 14 },
+  chip:     { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1.5, borderColor: Colors.beige[200], backgroundColor: Colors.cream },
+  chipOn:   { backgroundColor: Colors.berry[50], borderColor: Colors.berry[400] },
+  chipTxt:  { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[600] },
+  chipTxtOn:{ fontFamily: Fonts.sansSemiBold, color: Colors.berry[600] },
 
   // ── Set Logger ──────────────────────────────────────────────────────────
   setLogCard: {
-    marginHorizontal: Spacing.xl, marginBottom: 10,
+    marginHorizontal: Spacing.xl, marginBottom: 12,
     backgroundColor: Colors.beige[50], borderRadius: Radius.lg,
-    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
+    paddingTop: 0, paddingBottom: 14, paddingHorizontal: 14,
+    borderWidth: 1, borderColor: Colors.beige[100],
+    overflow: 'hidden',
   },
+  setLogAccent:  { height: 4, backgroundColor: Colors.blush[400], marginHorizontal: -14, marginBottom: 14 },
   setLogHeader:  { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  setLogName:    { fontFamily: Fonts.sansSemiBold, fontSize: 14, color: Colors.beige[800] },
-  setLogCat:     { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 1 },
+  setLogName:    { fontFamily: Fonts.sansBold, fontSize: 15, color: Colors.beige[800], letterSpacing: 0.2 },
+  setLogCat:     { fontFamily: Fonts.sansBold, fontSize: 9, color: Colors.beige[400], marginTop: 2, textTransform: 'uppercase', letterSpacing: 1.2 },
   removeExBtn:   { padding: 4 },
-  setColHeaders: { flexDirection: 'row', marginBottom: 4, gap: 6 },
-  setColHdr:     { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.8, textTransform: 'uppercase', color: Colors.beige[400], flex: 1, textAlign: 'center' },
-  setRow:        { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-  setNumWrap:    { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.beige[200], alignItems: 'center', justifyContent: 'center' },
-  setNum:        { fontFamily: Fonts.sansBold, fontSize: 11, color: Colors.beige[600] },
+  setColHeaders: { flexDirection: 'row', marginBottom: 6, gap: 6, alignItems: 'center' },
+  setColHdr:     { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: Colors.beige[400], flex: 1, textAlign: 'center' },
+  setRow:        { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  setNumWrap:    { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.blush[400], alignItems: 'center', justifyContent: 'center' },
+  setNum:        { fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.cream },
   setInput:      {
-    flex: 1, borderWidth: 1.5, borderColor: Colors.beige[100], borderRadius: 9,
-    backgroundColor: Colors.cream, fontFamily: Fonts.sansSemiBold,
-    fontSize: 14, color: Colors.beige[800], paddingVertical: 8, textAlign: 'center',
+    flex: 1, borderWidth: 1.5, borderColor: Colors.beige[100], borderRadius: 10,
+    backgroundColor: Colors.cream, fontFamily: Fonts.sansBold,
+    fontSize: 18, color: Colors.beige[800], paddingVertical: 10, textAlign: 'center',
   },
   removeSetBtn:  { padding: 4 },
-  addSetBtn:     { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 6 },
-  addSetTxt:     { fontFamily: Fonts.sans, fontSize: 12, color: Colors.beige[600] },
+  addSetBtn:     { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 8, paddingLeft: 2 },
+  addSetTxt:     { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[400], letterSpacing: 0.4 },
 
   // ── Picker Modal ────────────────────────────────────────────────────────
   pickerSafe:    { flex: 1, backgroundColor: Colors.cream },

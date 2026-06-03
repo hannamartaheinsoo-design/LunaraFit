@@ -2,7 +2,7 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
 import { Colors, Fonts } from '../../constants/theme';
 
-type Variant = 'dark' | 'blush' | 'green' | 'outline' | 'ghost' | 'danger';
+type Variant = 'dark' | 'blush' | 'berry' | 'green' | 'outline' | 'ghost' | 'danger';
 type Size = 'sm' | 'md' | 'lg';
 
 interface Props {
@@ -62,6 +62,7 @@ const styles = StyleSheet.create({
 
   dark: { backgroundColor: Colors.beige[800] },
   blush: { backgroundColor: Colors.blush[400] },
+  berry: { backgroundColor: Colors.berry[400] },
   green: { backgroundColor: Colors.green[400] },
   outline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: Colors.beige[200] },
   ghost: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: Colors.beige[100] },
@@ -74,6 +75,7 @@ const styles = StyleSheet.create({
   text: { fontFamily: Fonts.sansBold, letterSpacing: 0.9, textTransform: 'uppercase' },
   text_dark: { color: Colors.cream },
   text_blush: { color: '#fff' },
+  text_berry: { color: '#fff' },
   text_green: { color: '#fff' },
   text_outline: { color: Colors.beige[600] },
   text_ghost: { color: Colors.beige[400] },
