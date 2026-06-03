@@ -103,3 +103,9 @@
 **Root cause:** An `emailTouched` state flag required a blur event before showing any feedback — fine UX theory, but confusing when the prototype was being tested and no blur occurred.
 **Fix applied:** Removed `emailTouched`. Feedback now shows live after 3+ characters are typed (avoids flashing red on the very first keypress). Border turns green with ✓ on valid input, red with ✕ and inline error on invalid.
 **Rule going forward:** For prototype/app validation, prefer live feedback triggered by input length threshold (e.g. 3+ chars) over blur-gated feedback. Blur-gating hides errors during testing and feels unresponsive.
+
+### [2026-06-03] "Delete all data" did not delete the auth account — email remained taken
+**What happened:** After a user deleted all their data, attempting to register again with the same email showed "account already exists". The account was not fully removed.
+**Root cause:** `clearAll` in `convex/userData.ts` only deleted app data (workouts, cycle days, profile). It never touched the Convex Auth tables: `authAccounts`, `authSessions`, `authRefreshTokens`, `authVerificationCodes`, or the `users` row.
+**Fix applied:** Extended `clearAll` to also delete all auth records for the user (sessions → refresh tokens, accounts → verification codes, then sessions, accounts, and the `users` row itself) in the same mutation.
+**Rule going forward:** Any "delete account" or "delete all data" flow must also delete all rows in the Convex Auth tables (`authAccounts`, `authSessions`, `authRefreshTokens`, `authVerificationCodes`) and the `users` row. App data deletion alone is never sufficient for full account removal.
