@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert,
   TextInput, Modal, FlatList, KeyboardAvoidingView, Platform,
@@ -28,6 +28,13 @@ import { useTranslation } from '../../lib/LangContext';
 interface LoggedExercise {
   template: ExerciseTemplate;
   sets: ExerciseSet[];
+}
+
+interface RoutineExercise {
+  exercise_id: string;
+  name: string;
+  category?: string;
+  fields: string[];
 }
 
 // ─── Exercise Picker Modal ────────────────────────────────────────────────────
@@ -84,15 +91,12 @@ function ExercisePicker({
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={styles.pickerSafe}>
         <SafeAreaView edges={['top']} style={{ backgroundColor: Colors.cream }}>
-          {/* Header */}
           <View style={styles.pickerHeader}>
             <Text style={styles.pickerTitle}>{t('w.picker.title')}</Text>
             <TouchableOpacity onPress={onClose} style={styles.pickerClose}>
               <Icon name="close" size={20} color={Colors.beige[600]} />
             </TouchableOpacity>
           </View>
-
-          {/* Search bar */}
           <View style={styles.searchBar}>
             <Icon name="search" size={16} color={Colors.beige[400]} />
             <TextInput
@@ -110,8 +114,6 @@ function ExercisePicker({
               </TouchableOpacity>
             ) : null}
           </View>
-
-          {/* Category filter — fixed height, no overlap */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -134,7 +136,6 @@ function ExercisePicker({
           </ScrollView>
         </SafeAreaView>
 
-        {/* Results list — flex:1 so it doesn't overflow */}
         <FlatList
           data={results}
           keyExtractor={item => item.id}
@@ -183,7 +184,6 @@ function ExercisePicker({
           ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
 
-        {/* Always-visible custom name bar at bottom */}
         <View style={[styles.pickerFooter, { paddingBottom: insets.bottom + 8 }]}>
           <Text style={styles.customNameLbl}>{t('w.picker.custom.lbl')}</Text>
           <View style={styles.createRow}>
@@ -211,9 +211,7 @@ function ExercisePicker({
 }
 
 // ─── Set Logger ───────────────────────────────────────────────────────────────
-// Raw string state per cell prevents parseFloat from swallowing zeros or
-// stripping decimal points while the user is still typing.
-type RawSets = Record<string, string>; // key = `${setIdx}_${field}`
+type RawSets = Record<string, string>;
 
 function SetLogger({
   exercise, sets, onChange, onRemove,
@@ -232,7 +230,6 @@ function SetLogger({
   const showDistance = exercise.fields.includes('distance');
   const isSets       = exercise.fields.includes('sets');
   const cat          = CATEGORIES.find(c => c.id === exercise.category);
-  // HIIT exercises show duration in seconds (user-friendly); pure cardio uses minutes
   const durationInSec = showReps && showDuration;
 
   const addSet = () => onChange([...sets, {}]);
@@ -250,10 +247,7 @@ function SetLogger({
     const key = `${setIdx}_${field}`;
     setRaw(r => ({ ...r, [key]: text }));
     const parsed = text === '' ? undefined : isNaN(parseFloat(text)) ? undefined : parseFloat(text);
-    // convert seconds → minutes before storing so duration_min is always in minutes
-    const stored = (field === 'duration_min' && durationInSec && parsed != null)
-      ? parsed / 60
-      : parsed;
+    const stored = (field === 'duration_min' && durationInSec && parsed != null) ? parsed / 60 : parsed;
     onChange(sets.map((s, idx) => idx === setIdx ? { ...s, [field]: stored } : s));
   };
 
@@ -262,14 +256,12 @@ function SetLogger({
     if (key in raw) return raw[key];
     const v = sets[setIdx]?.[field];
     if (v == null) return '';
-    // convert stored minutes → seconds for display in HIIT mode
     const display = (field === 'duration_min' && durationInSec) ? v * 60 : v;
     return String(display);
   };
 
   return (
     <View style={styles.setLogCard}>
-      {/* Accent bar + header */}
       <View style={styles.setLogAccent} />
       <View style={styles.setLogHeader}>
         <View style={{ flex: 1 }}>
@@ -281,7 +273,6 @@ function SetLogger({
         </TouchableOpacity>
       </View>
 
-      {/* Column headers */}
       {sets.length > 0 && (
         <View style={styles.setColHeaders}>
           {isSets && <View style={{ width: 36 }} />}
@@ -293,7 +284,6 @@ function SetLogger({
         </View>
       )}
 
-      {/* Set rows */}
       {sets.map((_, i) => (
         <View key={i} style={styles.setRow}>
           {isSets && (
@@ -347,7 +337,6 @@ function SetLogger({
         </View>
       ))}
 
-      {/* Add set */}
       <TouchableOpacity style={styles.addSetBtn} onPress={addSet} activeOpacity={0.7}>
         <Icon name="plus" size={13} color={Colors.beige[800]} />
         <Text style={styles.addSetTxt}>{t('w.ex.addset')}</Text>
@@ -359,23 +348,35 @@ function SetLogger({
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function WorkoutsScreen() {
   const { lang, t } = useTranslation();
-  const [showBuilder, setShowBuilder] = useState(false);
-  const [showPicker, setShowPicker] = useState(false);
+  const [showBuilder, setShowBuilder]             = useState(false);
+  const [showRoutineBuilder, setShowRoutineBuilder] = useState(false);
+  const [showPicker, setShowPicker]               = useState(false);
+  // 'workout' picker adds to workout builder; 'routine' picker adds to routine builder
+  const [pickerTarget, setPickerTarget]           = useState<'workout' | 'routine'>('workout');
 
-  // Builder state
-  const [date, setDate] = useState(todayISO());
-  const workouts = useQuery(api.workouts.list) ?? [];
-  const profile = useQuery(api.profiles.get);
-  const addWorkout = useMutation(api.workouts.add);
+  // Workout builder state
+  const [date, setDate]                           = useState(todayISO());
+  const [dateMode, setDateMode]                   = useState<'today' | 'yesterday' | 'custom'>('today');
+  const [workoutName, setWorkoutName]             = useState('');
+  const [loggedExercises, setLoggedExercises]     = useState<LoggedExercise[]>([]);
+  const [feel, setFeel]                           = useState<Set<string>>(new Set());
+  const [notes, setNotes]                         = useState('');
+  const [saveMsg, setSaveMsg]                     = useState<string | null>(null);
+
+  // Routine builder state
+  const [routineName, setRoutineName]             = useState('');
+  const [routineExercises, setRoutineExercises]   = useState<RoutineExercise[]>([]);
+  const [routineSaveMsg, setRoutineSaveMsg]       = useState<string | null>(null);
+
+  const [activeTab, setActiveTab] = useState<'log' | 'routines' | 'progress'>('log');
+
+  const workouts     = useQuery(api.workouts.list) ?? [];
+  const profile      = useQuery(api.profiles.get);
+  const routines     = useQuery(api.routines.list) ?? [];
+  const addWorkout   = useMutation(api.workouts.add);
   const removeWorkout = useMutation(api.workouts.remove);
-
-  const [workoutName, setWorkoutName] = useState('');
-  const [loggedExercises, setLoggedExercises] = useState<LoggedExercise[]>([]);
-  const [feel, setFeel] = useState<Set<string>>(new Set());
-  const [notes, setNotes] = useState('');
-  const [activeTab, setActiveTab] = useState<'log' | 'progress'>('log');
-  const [saveMsg, setSaveMsg] = useState<string | null>(null);
-  const [dateMode, setDateMode] = useState<'today' | 'yesterday' | 'custom'>('today');
+  const addRoutine   = useMutation(api.routines.add);
+  const removeRoutine = useMutation(api.routines.remove);
 
   const yesterdayISO = () => {
     const d = new Date(); d.setDate(d.getDate() - 1);
@@ -385,17 +386,43 @@ export default function WorkoutsScreen() {
   const effectiveDate = dateMode === 'today' ? todayISO() : dateMode === 'yesterday' ? yesterdayISO() : date;
 
   const resetBuilder = () => {
-    setDate(todayISO());
-    setDateMode('today');
-    setWorkoutName('');
-    setLoggedExercises([]);
-    setFeel(new Set());
-    setNotes('');
-    setSaveMsg(null);
+    setDate(todayISO()); setDateMode('today');
+    setWorkoutName(''); setLoggedExercises([]);
+    setFeel(new Set()); setNotes(''); setSaveMsg(null);
   };
 
-  const handleAddExercise = (template: ExerciseTemplate) => {
-    setLoggedExercises(prev => [...prev, { template, sets: [{}] }]);
+  const resetRoutineBuilder = () => {
+    setRoutineName(''); setRoutineExercises([]); setRoutineSaveMsg(null);
+  };
+
+  // Open workout builder, optionally pre-loaded from a routine
+  const openBuilderFromRoutine = (routine: { name: string; exercises: RoutineExercise[] }) => {
+    resetBuilder();
+    setWorkoutName(routine.name);
+    setLoggedExercises(routine.exercises.map(re => ({
+      template: {
+        id: re.exercise_id,
+        name: re.name,
+        category: (re.category ?? 'fullbody') as any,
+        fields: re.fields as ExerciseField[],
+        popularity: 0,
+      },
+      sets: [{}],
+    })));
+    setShowBuilder(true);
+  };
+
+  const handlePickerSelect = (ex: ExerciseTemplate) => {
+    if (pickerTarget === 'routine') {
+      setRoutineExercises(prev => [...prev, {
+        exercise_id: ex.id,
+        name: ex.name,
+        category: ex.category,
+        fields: ex.fields,
+      }]);
+    } else {
+      setLoggedExercises(prev => [...prev, { template: ex, sets: [{}] }]);
+    }
   };
 
   const handleSave = async () => {
@@ -403,7 +430,6 @@ export default function WorkoutsScreen() {
     if (loggedExercises.length === 0) { setSaveMsg(t('w.err.noex')); return; }
 
     const name = workoutName.trim() || loggedExercises[0].template.name;
-
     const phase = getPhaseKey(
       effectiveDate,
       profile?.last_period_date ?? null,
@@ -432,17 +458,12 @@ export default function WorkoutsScreen() {
     });
 
     const workoutId = await addWorkout({
-      date: effectiveDate,
-      name,
-      exercises,
-      feel: Array.from(feel),
-      notes: notes.trim(),
-      phase,
+      date: effectiveDate, name, exercises,
+      feel: Array.from(feel), notes: notes.trim(), phase,
     });
     resetBuilder();
     setShowBuilder(false);
 
-    // PR detection (workouts query updates reactively)
     const prs = detectNewPRs(workouts, workoutId as string);
     if (prs.length > 0 && Platform.OS !== 'web') {
       const prLines = prs.map(pr =>
@@ -452,7 +473,16 @@ export default function WorkoutsScreen() {
     }
   };
 
-  const handleDelete = (id: Id<'workouts'>) => {
+  const handleSaveRoutine = async () => {
+    if (!routineName.trim()) { setRoutineSaveMsg(t('w.routine.err.name')); return; }
+    if (routineExercises.length === 0) { setRoutineSaveMsg(t('w.routine.err.noex')); return; }
+    await addRoutine({ name: routineName.trim(), exercises: routineExercises });
+    resetRoutineBuilder();
+    setShowRoutineBuilder(false);
+    setActiveTab('routines');
+  };
+
+  const handleDeleteWorkout = (id: Id<'workouts'>) => {
     if (Platform.OS !== 'web') {
       Alert.alert(t('w.delete.confirm'), '', [
         { text: t('w.delete.cancel'), style: 'cancel' },
@@ -462,6 +492,100 @@ export default function WorkoutsScreen() {
       if (window.confirm(t('w.delete.confirm'))) removeWorkout({ id });
     }
   };
+
+  const handleDeleteRoutine = (id: Id<'routines'>) => {
+    if (Platform.OS !== 'web') {
+      Alert.alert(t('w.routine.delete'), '', [
+        { text: t('w.delete.cancel'), style: 'cancel' },
+        { text: t('w.delete.ok'), style: 'destructive', onPress: () => removeRoutine({ id }) },
+      ]);
+    } else {
+      if (window.confirm(t('w.routine.delete'))) removeRoutine({ id });
+    }
+  };
+
+  // ── Routine Builder ────────────────────────────────────────────────────────
+  if (showRoutineBuilder) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => { resetRoutineBuilder(); setShowRoutineBuilder(false); }} style={styles.backBtn}>
+            <Icon name="arr-l" size={20} color={Colors.beige[600]} />
+          </TouchableOpacity>
+          <Text style={styles.heading}>{t('w.routine.builder.title')}</Text>
+          <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSaveRoutine}>
+            <Text style={styles.saveHeaderTxt}>{t('w.routine.save')}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+
+            {/* Routine name */}
+            <View style={styles.builderSection}>
+              <Text style={styles.fieldLbl}>{t('w.routine.name.lbl')}</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={routineName}
+                onChangeText={v => { setRoutineName(v); setRoutineSaveMsg(null); }}
+                placeholder={t('w.routine.name.ph')}
+                placeholderTextColor={Colors.beige[200]}
+                autoFocus
+              />
+            </View>
+
+            {routineSaveMsg && (
+              <View style={styles.saveMsgBox}>
+                <Text style={styles.saveMsgTxt}>{routineSaveMsg}</Text>
+              </View>
+            )}
+
+            {/* Exercise list */}
+            <View style={styles.sectionLblRow}>
+              <Icon name="barbell" size={12} color={Colors.beige[400]} />
+              <Text style={styles.sectionLbl}>{t('w.routine.ex.lbl')}</Text>
+            </View>
+
+            {routineExercises.map((re, i) => (
+              <View key={`${re.exercise_id}-${i}`} style={styles.routineExCard}>
+                <View style={styles.routineExAccent} />
+                <View style={styles.routineExRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.routineExName}>{re.name}</Text>
+                    <Text style={styles.routineExCat}>{re.category ?? ''}</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setRoutineExercises(prev => prev.filter((_, j) => j !== i))}
+                    style={styles.removeExBtn}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Icon name="trash" size={16} color={Colors.error.text} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+            <TouchableOpacity
+              style={styles.addExerciseBtn}
+              activeOpacity={0.8}
+              onPress={() => { setPickerTarget('routine'); setRoutineSaveMsg(null); setShowPicker(true); }}
+            >
+              <Icon name="plus" size={16} color={Colors.beige[800]} />
+              <Text style={styles.addExerciseTxt}>{t('w.ex.add')}</Text>
+            </TouchableOpacity>
+
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </KeyboardAvoidingView>
+
+        <ExercisePicker
+          visible={showPicker}
+          onSelect={handlePickerSelect}
+          onClose={() => setShowPicker(false)}
+        />
+      </SafeAreaView>
+    );
+  }
 
   // ── Workout Builder ────────────────────────────────────────────────────────
   if (showBuilder) {
@@ -480,7 +604,7 @@ export default function WorkoutsScreen() {
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-            {/* Date — quick select */}
+            {/* Date quick select */}
             <View style={styles.builderSection}>
               <Text style={styles.fieldLbl}>{t('w.date.lbl')}</Text>
               <View style={styles.dateRow}>
@@ -509,7 +633,18 @@ export default function WorkoutsScreen() {
               )}
             </View>
 
-            {/* Save message (inline, web-safe) */}
+            {/* Workout name (pre-filled if from routine) */}
+            <View style={styles.builderSection}>
+              <Text style={styles.fieldLbl}>{t('w.builder.name.lbl')}</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={workoutName}
+                onChangeText={setWorkoutName}
+                placeholder={t('w.builder.name.ph')}
+                placeholderTextColor={Colors.beige[200]}
+              />
+            </View>
+
             {saveMsg && (
               <View style={styles.saveMsgBox}>
                 <Text style={styles.saveMsgTxt}>{saveMsg}</Text>
@@ -535,13 +670,13 @@ export default function WorkoutsScreen() {
             <TouchableOpacity
               style={styles.addExerciseBtn}
               activeOpacity={0.8}
-              onPress={() => { setSaveMsg(null); setShowPicker(true); }}
+              onPress={() => { setPickerTarget('workout'); setSaveMsg(null); setShowPicker(true); }}
             >
               <Icon name="plus" size={16} color={Colors.beige[800]} />
               <Text style={styles.addExerciseTxt}>{t('w.ex.add')}</Text>
             </TouchableOpacity>
 
-            {/* How did it feel */}
+            {/* Feel */}
             <View style={[styles.sectionLblRow, { marginTop: 8 }]}>
               <Icon name="smile-good" size={12} color={Colors.beige[400]} />
               <Text style={styles.sectionLbl}>{t('w.feel.lbl')}</Text>
@@ -578,7 +713,7 @@ export default function WorkoutsScreen() {
 
         <ExercisePicker
           visible={showPicker}
-          onSelect={handleAddExercise}
+          onSelect={handlePickerSelect}
           onClose={() => setShowPicker(false)}
         />
       </SafeAreaView>
@@ -602,23 +737,172 @@ export default function WorkoutsScreen() {
 
       {/* Tab switcher */}
       <View style={styles.tabRow}>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'log' && styles.tabBtnOn]}
-          onPress={() => setActiveTab('log')} activeOpacity={0.8}
-        >
-          <Text style={[styles.tabBtnTxt, activeTab === 'log' && styles.tabBtnTxtOn]}>{t('w.tab.log')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'progress' && styles.tabBtnOn]}
-          onPress={() => setActiveTab('progress')} activeOpacity={0.8}
-        >
-          <Text style={[styles.tabBtnTxt, activeTab === 'progress' && styles.tabBtnTxtOn]}>{t('w.tab.progress')}</Text>
-          {progress.some(p => p.isNew) && <View style={styles.prDot} />}
-        </TouchableOpacity>
+        {(['log', 'routines', 'progress'] as const).map(tab => (
+          <TouchableOpacity
+            key={tab}
+            style={[styles.tabBtn, activeTab === tab && styles.tabBtnOn]}
+            onPress={() => setActiveTab(tab)}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabBtnTxt, activeTab === tab && styles.tabBtnTxtOn]}>
+              {t(`w.tab.${tab}` as any)}
+            </Text>
+            {tab === 'progress' && progress.some(p => p.isNew) && <View style={styles.prDot} />}
+          </TouchableOpacity>
+        ))}
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-        {activeTab === 'progress' ? (
+
+        {/* ── LOG TAB ── */}
+        {activeTab === 'log' && (
+          <>
+            {/* Log exercises CTA */}
+            <TouchableOpacity
+              style={styles.newWorkoutBtn}
+              activeOpacity={0.85}
+              onPress={() => { resetBuilder(); setShowBuilder(true); }}
+            >
+              <Icon name="plus" size={18} color={Colors.cream} />
+              <Text style={styles.newWorkoutTxt}>{t('w.add.btn')}</Text>
+            </TouchableOpacity>
+
+            {/* Routines quick-log section */}
+            {routines.length > 0 && (
+              <>
+                <View style={styles.sectionLblRow}>
+                  <Icon name="folder" size={12} color={Colors.beige[400]} />
+                  <Text style={styles.sectionLbl}>{t('w.routine.lbl')}</Text>
+                </View>
+                {routines.map(r => (
+                  <TouchableOpacity
+                    key={r._id}
+                    style={styles.routineLogCard}
+                    activeOpacity={0.8}
+                    onPress={() => openBuilderFromRoutine(r)}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.routineLogName}>{r.name}</Text>
+                      <Text style={styles.routineLogEx} numberOfLines={1}>
+                        {r.exercises.map(e => e.name).join(' · ')}
+                      </Text>
+                    </View>
+                    <View style={styles.routineLogBtn}>
+                      <Text style={styles.routineLogBtnTxt}>{t('w.routine.log')}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
+
+            {/* History */}
+            <View style={styles.sectionLblRow}>
+              <Icon name="eye" size={12} color={Colors.beige[400]} />
+              <Text style={styles.sectionLbl}>{t('w.log.lbl')}</Text>
+            </View>
+
+            {workouts.length === 0 ? (
+              <View style={styles.empty}>
+                <Text style={styles.emptyTxt}>{t('w.empty')}</Text>
+                <Text style={styles.emptyHint}>{t('w.empty.hint')}</Text>
+              </View>
+            ) : (
+              workouts.slice(0, 30).map(w => (
+                <View key={w._id} style={styles.workoutCard}>
+                  <View style={styles.workoutHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.workoutName}>{w.name}</Text>
+                      <Text style={styles.workoutMeta}>
+                        {formatDate(w.date)} · {getPhaseLabel(w.phase, lang)}
+                      </Text>
+                    </View>
+                    <TouchableOpacity onPress={() => handleDeleteWorkout(w._id)} style={styles.deleteBtn}>
+                      <Icon name="trash" size={16} color={Colors.error.text} />
+                    </TouchableOpacity>
+                  </View>
+                  {w.exercises.map((e, i) => (
+                    <View key={i} style={styles.exLine}>
+                      <Text style={styles.exName}>{e.name}</Text>
+                      <Text style={styles.exStats}>
+                        {e.logged_sets?.length ? (
+                          e.logged_sets.map(s => {
+                            const parts = [];
+                            if (s.reps)         parts.push(`${s.reps}×`);
+                            if (s.weight_kg)    parts.push(`${s.weight_kg}kg`);
+                            if (s.duration_min) parts.push(`${s.duration_min}min`);
+                            if (s.distance_km)  parts.push(`${s.distance_km}km`);
+                            return parts.join(' ');
+                          }).filter(Boolean).join(' / ')
+                        ) : (
+                          `${e.sets}×${e.reps}${e.weight_kg ? ` · ${e.weight_kg}kg` : ''}`
+                        )}
+                      </Text>
+                    </View>
+                  ))}
+                  {w.feel.length > 0 && (
+                    <Text style={styles.workoutFeel}>{w.feel.join(' · ')}</Text>
+                  )}
+                </View>
+              ))
+            )}
+            <View style={{ height: 24 }} />
+          </>
+        )}
+
+        {/* ── ROUTINES TAB ── */}
+        {activeTab === 'routines' && (
+          <>
+            <TouchableOpacity
+              style={styles.newWorkoutBtn}
+              activeOpacity={0.85}
+              onPress={() => { resetRoutineBuilder(); setShowRoutineBuilder(true); }}
+            >
+              <Icon name="plus" size={18} color={Colors.cream} />
+              <Text style={styles.newWorkoutTxt}>{t('w.routine.create')}</Text>
+            </TouchableOpacity>
+
+            {routines.length === 0 ? (
+              <View style={styles.empty}>
+                <Text style={styles.emptyTxt}>{t('w.routine.empty')}</Text>
+                <Text style={styles.emptyHint}>{t('w.routine.empty.hint')}</Text>
+              </View>
+            ) : (
+              routines.map(r => (
+                <View key={r._id} style={styles.workoutCard}>
+                  <View style={styles.workoutHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.workoutName}>{r.name}</Text>
+                      <Text style={styles.workoutMeta}>
+                        {r.exercises.length} {lang === 'en' ? 'exercises' : 'harjutust'}
+                      </Text>
+                    </View>
+                    <TouchableOpacity onPress={() => handleDeleteRoutine(r._id)} style={styles.deleteBtn}>
+                      <Icon name="trash" size={16} color={Colors.error.text} />
+                    </TouchableOpacity>
+                  </View>
+                  {r.exercises.map((e, i) => (
+                    <View key={i} style={styles.exLine}>
+                      <Text style={styles.exName}>{e.name}</Text>
+                      <Text style={styles.exStats}>{e.category ?? ''}</Text>
+                    </View>
+                  ))}
+                  <TouchableOpacity
+                    style={styles.logRoutineInlineBtn}
+                    activeOpacity={0.8}
+                    onPress={() => openBuilderFromRoutine(r)}
+                  >
+                    <Icon name="plus" size={13} color={Colors.blush[600]} />
+                    <Text style={styles.logRoutineInlineTxt}>{t('w.routine.log')}</Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+            <View style={{ height: 24 }} />
+          </>
+        )}
+
+        {/* ── PROGRESS TAB ── */}
+        {activeTab === 'progress' && (
           <>
             {workouts.length === 0 ? (
               <View style={styles.empty}>
@@ -627,7 +911,6 @@ export default function WorkoutsScreen() {
               </View>
             ) : (
               <>
-                {/* Stats overview */}
                 <View style={styles.statsGrid}>
                   <View style={styles.statCard}>
                     <Text style={styles.statVal}>{stats.totalWorkouts}</Text>
@@ -643,7 +926,6 @@ export default function WorkoutsScreen() {
                   </View>
                 </View>
 
-                {/* Monthly comparison */}
                 {(stats.totalThisMonth > 0 || stats.totalLastMonth > 0) && (
                   <View style={styles.monthCard}>
                     <View style={styles.monthRow}>
@@ -665,7 +947,6 @@ export default function WorkoutsScreen() {
                   </View>
                 )}
 
-                {/* Weekly volume chart */}
                 <View style={styles.sectionLblRow}>
                   <Icon name="wave" size={12} color={Colors.beige[400]} />
                   <Text style={styles.sectionLbl}>{t('w.progress.weekly')}</Text>
@@ -690,7 +971,6 @@ export default function WorkoutsScreen() {
                   </View>
                 </View>
 
-                {/* Exercise progress */}
                 <View style={styles.sectionLblRow}>
                   <Icon name="spark" size={12} color={Colors.beige[400]} />
                   <Text style={styles.sectionLbl}>{t('w.progress.exheader')}</Text>
@@ -713,8 +993,6 @@ export default function WorkoutsScreen() {
                         </Text>
                       </View>
                     </View>
-
-                    {/* Metrics */}
                     <View style={styles.progressMetrics}>
                       {p.bestWeight > 0 && (
                         <View style={styles.progressMetric}>
@@ -744,8 +1022,6 @@ export default function WorkoutsScreen() {
                         </View>
                       )}
                     </View>
-
-                    {/* Mini sparkline */}
                     {p.sessions.length >= 2 && p.bestWeight > 0 && (
                       <View style={styles.sparkline}>
                         {p.sessions.slice(-8).map((s, i, arr) => {
@@ -754,10 +1030,7 @@ export default function WorkoutsScreen() {
                           const isLast = i === arr.length - 1;
                           return (
                             <View key={i} style={styles.sparkBarWrap}>
-                              <View style={[
-                                styles.sparkBar,
-                                { height: h, backgroundColor: isLast ? Colors.coral[400] : Colors.sky[100] }
-                              ]} />
+                              <View style={[styles.sparkBar, { height: h, backgroundColor: isLast ? Colors.coral[400] : Colors.sky[100] }]} />
                             </View>
                           );
                         })}
@@ -768,72 +1041,6 @@ export default function WorkoutsScreen() {
                 ))}
               </>
             )}
-            <View style={{ height: 24 }} />
-          </>
-        ) : null}
-
-        {activeTab === 'log' && (
-          <>
-        {/* CTA */}
-        <TouchableOpacity
-          style={styles.newWorkoutBtn}
-          activeOpacity={0.85}
-          onPress={() => setShowBuilder(true)}
-        >
-          <Icon name="plus" size={18} color={Colors.cream} />
-          <Text style={styles.newWorkoutTxt}>{t('w.add.btn')}</Text>
-        </TouchableOpacity>
-
-        {/* History */}
-        <View style={styles.sectionLblRow}>
-          <Icon name="eye" size={12} color={Colors.beige[400]} />
-          <Text style={styles.sectionLbl}>{t('w.log.lbl')}</Text>
-        </View>
-
-        {workouts.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyTxt}>{t('w.empty')}</Text>
-            <Text style={styles.emptyHint}>{t('w.empty.hint')}</Text>
-          </View>
-        ) : (
-          workouts.slice(0, 30).map(w => (
-            <View key={w._id} style={styles.workoutCard}>
-              <View style={styles.workoutHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.workoutName}>{w.name}</Text>
-                  <Text style={styles.workoutMeta}>
-                    {formatDate(w.date)} · {getPhaseLabel(w.phase, lang)}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => handleDelete(w._id)} style={styles.deleteBtn}>
-                  <Icon name="trash" size={16} color={Colors.error.text} />
-                </TouchableOpacity>
-              </View>
-              {w.exercises.map((e, i) => (
-                <View key={i} style={styles.exLine}>
-                  <Text style={styles.exName}>{e.name}</Text>
-                  <Text style={styles.exStats}>
-                    {e.logged_sets?.length ? (
-                      e.logged_sets.map(s => {
-                        const parts = [];
-                        if (s.reps)        parts.push(`${s.reps}×`);
-                        if (s.weight_kg)   parts.push(`${s.weight_kg}kg`);
-                        if (s.duration_min)parts.push(`${s.duration_min}min`);
-                        if (s.distance_km) parts.push(`${s.distance_km}km`);
-                        return parts.join(' ');
-                      }).filter(Boolean).join(' / ')
-                    ) : (
-                      `${e.sets}×${e.reps}${e.weight_kg ? ` · ${e.weight_kg}kg` : ''}`
-                    )}
-                  </Text>
-                </View>
-              ))}
-              {w.feel.length > 0 && (
-                <Text style={styles.workoutFeel}>{w.feel.join(' · ')}</Text>
-              )}
-            </View>
-          ))
-        )}
             <View style={{ height: 24 }} />
           </>
         )}
@@ -853,7 +1060,6 @@ const styles = StyleSheet.create({
   subheading: { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.beige[400], marginTop: 3, textTransform: 'uppercase', letterSpacing: 1.5 },
   scroll: { flex: 1 },
 
-  // New workout CTA
   newWorkoutBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
     margin: Spacing.xl, padding: 18, borderRadius: Radius.lg,
@@ -861,7 +1067,6 @@ const styles = StyleSheet.create({
   },
   newWorkoutTxt: { fontFamily: Fonts.sansBold, fontSize: 14, color: '#fff', letterSpacing: 0.3 },
 
-  // Section label
   sectionLblRow: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: Spacing.xl, marginBottom: 10, marginTop: 4,
@@ -870,6 +1075,39 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.2,
     textTransform: 'uppercase', color: Colors.beige[400],
   },
+
+  // Routine quick-log cards (on Log tab)
+  routineLogCard: {
+    flexDirection: 'row', alignItems: 'center',
+    marginHorizontal: Spacing.xl, marginBottom: 8,
+    backgroundColor: Colors.blush[50], borderRadius: Radius.lg,
+    padding: 14, borderWidth: 1, borderColor: Colors.blush[100],
+  },
+  routineLogName:   { fontFamily: Fonts.sansBold, fontSize: 14, color: Colors.beige[800] },
+  routineLogEx:     { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 2 },
+  routineLogBtn:    { backgroundColor: Colors.blush[400], borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 },
+  routineLogBtnTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.cream },
+
+  // "Log routine" inline button (on Routines tab inside cards)
+  logRoutineInlineBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    marginTop: 10, paddingTop: 10,
+    borderTopWidth: 1, borderTopColor: Colors.beige[50],
+  },
+  logRoutineInlineTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.blush[600] },
+
+  // Routine exercise card (in routine builder)
+  routineExCard: {
+    marginHorizontal: Spacing.xl, marginBottom: 10,
+    backgroundColor: Colors.beige[50], borderRadius: Radius.lg,
+    paddingTop: 0, paddingBottom: 14, paddingHorizontal: 14,
+    borderWidth: 1, borderColor: Colors.beige[100],
+    overflow: 'hidden',
+  },
+  routineExAccent: { height: 4, backgroundColor: Colors.berry[200], marginHorizontal: -14, marginBottom: 14 },
+  routineExRow:    { flexDirection: 'row', alignItems: 'center' },
+  routineExName:   { fontFamily: Fonts.sansBold, fontSize: 14, color: Colors.beige[800] },
+  routineExCat:    { fontFamily: Fonts.sansBold, fontSize: 9, color: Colors.beige[400], marginTop: 2, textTransform: 'uppercase', letterSpacing: 1.2 },
 
   // Past workout cards
   workoutCard: {
@@ -893,7 +1131,7 @@ const styles = StyleSheet.create({
   },
   tabBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 16, paddingVertical: 7, borderRadius: 20,
+    paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
     borderWidth: 1.5, borderColor: Colors.beige[100],
   },
   tabBtnOn:    { backgroundColor: Colors.beige[800], borderColor: Colors.beige[800] },
@@ -953,10 +1191,10 @@ const styles = StyleSheet.create({
   progressMetricLbl: { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[400], marginTop: 1 },
   progressGain:    { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.coral[400], marginTop: 2 },
 
-  sparkline:      { flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginTop: 4, height: 40 },
-  sparkBarWrap:   { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: 32 },
-  sparkBar:       { width: '80%', borderRadius: 3 },
-  sparkLbl:       { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[300], position: 'absolute', bottom: -14, right: 0 },
+  sparkline:    { flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginTop: 4, height: 40 },
+  sparkBarWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: 32 },
+  sparkBar:     { width: '80%', borderRadius: 3 },
+  sparkLbl:     { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[300], position: 'absolute', bottom: -14, right: 0 },
 
   empty:    { alignItems: 'center', paddingVertical: 40 },
   emptyTxt: { fontFamily: Fonts.sansLight, fontSize: 14, color: Colors.beige[400] },
@@ -970,7 +1208,6 @@ const styles = StyleSheet.create({
   },
   saveHeaderTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: '#fff' },
 
-  // Date quick-select
   dateRow:       { flexDirection: 'row', gap: 8 },
   dateChip:      { flex: 1, paddingVertical: 11, borderRadius: Radius.md, borderWidth: 1.5, borderColor: Colors.beige[100], backgroundColor: Colors.cream, alignItems: 'center' },
   dateChipOn:    { backgroundColor: Colors.beige[800], borderColor: Colors.beige[800] },
@@ -1052,7 +1289,6 @@ const styles = StyleSheet.create({
     flex: 1, fontFamily: Fonts.sans, fontSize: 14,
     color: Colors.beige[800], padding: 0,
   },
-  // Fixed-height category row — no overlap
   catScroll:        { height: 50, flexGrow: 0 },
   catScrollContent: { paddingHorizontal: Spacing.xl, gap: 8, alignItems: 'center', paddingVertical: 6 },
   catChip: {
@@ -1081,15 +1317,12 @@ const styles = StyleSheet.create({
   noResults:    { paddingHorizontal: Spacing.xl, paddingVertical: 24, alignItems: 'center' },
   noResultsTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[400], textAlign: 'center' },
 
-  // Always-visible custom name footer
   pickerFooter: {
     paddingHorizontal: Spacing.xl, paddingTop: 12,
     borderTopWidth: 1, borderTopColor: Colors.beige[100],
     backgroundColor: Colors.cream,
   },
-  customNameLbl: {
-    fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginBottom: 8,
-  },
+  customNameLbl: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginBottom: 8 },
   createRow:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
   createInput: {
     flex: 1, borderWidth: 1.5, borderColor: Colors.beige[100], borderRadius: Radius.md,

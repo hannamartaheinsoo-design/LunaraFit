@@ -47,6 +47,17 @@ export default defineSchema({
     phase: v.string(),
   }).index("by_user_date", ["userId", "date"]),
 
+  routines: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    exercises: v.array(v.object({
+      exercise_id: v.string(),
+      name: v.string(),
+      category: v.optional(v.string()),
+      fields: v.array(v.string()),
+    })),
+  }).index("by_user", ["userId"]),
+
   cycle_days: defineTable({
     userId: v.id("users"),
     date: v.string(),
