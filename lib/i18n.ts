@@ -236,6 +236,7 @@ const STRINGS = {
     'prof.clear.cancel': 'Tühista',
     'prof.clear.confirm': 'Kustuta',
     'prof.local': 'Sinu andmed on salvestatud ainult selles seadmes.',
+    'prof.signout': 'Logi välja',
     'prof.lang.lbl': 'Keel',
     // Auth – login / sign-up
     'auth.tagline': 'Treening kohtub tsükliga.',
@@ -571,6 +572,7 @@ const STRINGS = {
     'prof.clear.cancel': 'Cancel',
     'prof.clear.confirm': 'Delete',
     'prof.local': 'Your data is stored only on this device.',
+    'prof.signout': 'Log out',
     'prof.lang.lbl': 'Language',
     // Auth – login / sign-up
     'auth.tagline': 'Training meets your cycle.',

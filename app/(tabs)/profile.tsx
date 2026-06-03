@@ -212,6 +212,14 @@ export default function ProfileScreen() {
           })
         )}
 
+        {/* Account */}
+        <View style={[styles.sectionLblRow, { marginTop: 20 }]}><Icon name="person" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.signout')}</Text></View>
+        <Card>
+          <Button variant="outline" fullWidth onPress={async () => { await signOut(); router.replace('/(auth)/login' as any); }}>
+            {t('prof.signout')}
+          </Button>
+        </Card>
+
         {/* Data */}
         <View style={[styles.sectionLblRow, { marginTop: 20 }]}><Icon name="download" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.data.lbl2')}</Text></View>
         <Card>
