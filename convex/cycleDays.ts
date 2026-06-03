@@ -16,7 +16,7 @@ export const list = query({
 });
 
 export const upsert = mutation({
-  args: { date: v.string(), period: v.boolean(), mood: moodV, symptoms: v.array(v.string()) },
+  args: { date: v.string(), period: v.boolean(), spotting: v.optional(v.boolean()), mood: moodV, symptoms: v.array(v.string()) },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
@@ -27,6 +27,25 @@ export const upsert = mutation({
       await ctx.db.patch(existing._id, args);
     } else {
       await ctx.db.insert("cycle_days", { userId, ...args });
+    }
+  },
+});
+
+// Auto-fills gap days between two period days as period days (no mood/symptoms).
+export const fillPeriodGap = mutation({
+  args: { dates: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    for (const date of args.dates) {
+      const existing = await ctx.db.query("cycle_days")
+        .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", date))
+        .unique();
+      if (!existing) {
+        await ctx.db.insert("cycle_days", { userId, date, period: true, symptoms: [] });
+      } else if (!existing.period) {
+        await ctx.db.patch(existing._id, { period: true });
+      }
     }
   },
 });

@@ -46,10 +46,12 @@ export default function CycleScreen() {
   const { lang, t, tArr } = useTranslation();
   const profile    = useQuery(api.profiles.get);
   const cycleDays  = useQuery(api.cycleDays.list) ?? [];
-  const upsertDay  = useMutation(api.cycleDays.upsert);
-  const upsertProf = useMutation(api.profiles.upsert);
+  const upsertDay    = useMutation(api.cycleDays.upsert);
+  const upsertProf   = useMutation(api.profiles.upsert);
+  const fillGap      = useMutation(api.cycleDays.fillPeriodGap);
   const [date,       setDate]       = useState(todayISO());
   const [period,     setPeriod]     = useState(false);
+  const [spotting,   setSpotting]   = useState(false);
   const [mood,       setMood]       = useState<MoodKey | null>(null);
   const [energy,     setEnergy]     = useState<EnergyKey | null>(null);
   const [contra,     setContra]     = useState<ContraKey | null>(null);
@@ -93,17 +95,69 @@ export default function CycleScreen() {
     ];
     await upsertDay({
       date, period,
+      spotting: spotting || undefined,
       mood: (mood as Mood) ?? undefined,
       symptoms: allSymptoms,
     });
 
+    // Auto-fill gap days between this period day and the nearest other period day.
+    // Only runs for actual period days (not spotting-only).
     if (period) {
-      const currentLast = profile?.last_period_date;
-      if (!currentLast || date >= currentLast) {
-        await upsertProf({ last_period_date: date });
+      const otherPeriodDates = cycleDays
+        .filter((d) => d.period && d.date !== date)
+        .map((d) => d.date)
+        .sort();
+
+      const dateMs = new Date(date).getTime();
+      const GAP_LIMIT = 6; // only fill gaps of up to 6 days
+
+      for (const other of otherPeriodDates) {
+        const otherMs = new Date(other).getTime();
+        const diffDays = Math.abs((dateMs - otherMs) / 86400000);
+        if (diffDays > 1 && diffDays <= GAP_LIMIT) {
+          const start = date < other ? date : other;
+          const end   = date < other ? other : date;
+          const gapDates: string[] = [];
+          let cur = new Date(new Date(start).getTime() + 86400000);
+          const endD = new Date(end);
+          while (cur < endD) {
+            gapDates.push(cur.toISOString().slice(0, 10));
+            cur = new Date(cur.getTime() + 86400000);
+          }
+          if (gapDates.length > 0) await fillGap({ dates: gapDates });
+        }
       }
     }
-    setPeriod(false); setMood(null); setEnergy(null); setContra(null);
+
+    // Only recalculate cycle predictions when the period phase ends.
+    // Logging period=true just marks the day; predictions don't shift until
+    // the user logs their first no-period day after a streak.
+    if (!period) {
+      // Find all period days strictly before this date, sorted newest-first
+      const prevPeriodDays = cycleDays
+        .filter((d) => d.period && d.date < date)
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+      if (prevPeriodDays.length > 0) {
+        // Walk the sorted list to find where the consecutive streak starts
+        let streakStart = prevPeriodDays[0].date;
+        for (let i = 1; i < prevPeriodDays.length; i++) {
+          const newer = new Date(prevPeriodDays[i - 1].date).getTime();
+          const older = new Date(prevPeriodDays[i].date).getTime();
+          if ((newer - older) / 86400000 <= 1) {
+            streakStart = prevPeriodDays[i].date;
+          } else {
+            break;
+          }
+        }
+        const currentLast = profile?.last_period_date;
+        if (!currentLast || streakStart >= currentLast) {
+          await upsertProf({ last_period_date: streakStart });
+        }
+      }
+    }
+
+    setPeriod(false); setSpotting(false); setMood(null); setEnergy(null); setContra(null);
     setFeelings(new Set()); setMind(new Set()); setPain(new Set());
     setCravings(new Set()); setSleepChips(new Set()); setDigestion(new Set());
     setSleepHours('');
@@ -115,7 +169,8 @@ export default function CycleScreen() {
   const pl = profile?.period_length ?? 5;
   const dim   = new Date(displayYear, displayMonth + 1, 0).getDate();
   const blank = (new Date(displayYear, displayMonth, 1).getDay() + 6) % 7;
-  const loggedPeriodDates = new Set(cycleDays.filter((d) => d.period).map((d) => d.date));
+  const loggedPeriodDates  = new Set(cycleDays.filter((d) => d.period).map((d) => d.date));
+  const loggedSpottingDates = new Set(cycleDays.filter((d) => d.spotting && !d.period).map((d) => d.date));
   const predPeriod = new Set<number>();
   const fertDays   = new Set<number>();
   const ovDays     = new Set<number>();
@@ -196,29 +251,33 @@ export default function CycleScreen() {
           {Array.from({ length: dim }, (_, i) => {
             const day = i + 1;
             const ds = `${displayYear}-${String(displayMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const isLogged = loggedPeriodDates.has(ds);
-            const isPred   = predPeriod.has(day);
-            const isOv     = ovDays.has(day);
-            const isFert   = fertDays.has(day);
-            const isToday  = day === now.getDate() && displayMonth === now.getMonth() && displayYear === now.getFullYear();
+            const isLogged   = loggedPeriodDates.has(ds);
+            const isSpotting = loggedSpottingDates.has(ds);
+            const isPred     = predPeriod.has(day);
+            const isOv       = ovDays.has(day);
+            const isFert     = fertDays.has(day);
+            const isToday    = day === now.getDate() && displayMonth === now.getMonth() && displayYear === now.getFullYear();
             return (
               <View key={day} style={styles.calCol}>
                 <View style={[
                   styles.calCircle,
-                  isLogged && styles.calPeriodLogged,
-                  !isLogged && isPred && styles.calPeriodPred,
-                  isOv && styles.calOv,
-                  isFert && !isOv && styles.calFert,
+                  isLogged    && styles.calPeriodLogged,
+                  isSpotting  && !isLogged && styles.calSpotting,
+                  !isLogged && !isSpotting && isPred && styles.calPeriodPred,
+                  isOv && !isLogged && !isSpotting && styles.calOv,
+                  isFert && !isOv && !isLogged && !isSpotting && styles.calFert,
                   isToday && styles.calToday,
                 ]}>
                   <Text style={[
                     styles.calDayTxt,
-                    isLogged && { color: '#fff' },
-                    isOv     && { color: '#fff' },
-                    isPred && !isLogged && { color: Colors.blush[600] },
-                    isFert && !isOv    && { color: Colors.green[800] },
+                    isLogged   && { color: '#fff' },
+                    isSpotting && !isLogged && { color: Colors.blush[800] },
+                    isOv       && !isLogged && !isSpotting && { color: '#fff' },
+                    isPred     && !isLogged && !isSpotting && { color: Colors.blush[600] },
+                    isFert     && !isOv && !isLogged && !isSpotting && { color: Colors.green[800] },
                   ]}>{day}</Text>
                 </View>
+                {isSpotting && !isLogged && <View style={styles.spottingDot} />}
               </View>
             );
           })}
@@ -227,10 +286,11 @@ export default function CycleScreen() {
         {/* Legend */}
         <View style={styles.legend}>
           {[
-            { color: Colors.blush[600], label: t('c.period.logged') },
-            { color: Colors.blush[50],  label: t('c.period.pred'), border: Colors.blush[200] },
-            { color: Colors.green[400], label: t('c.ovulation') },
-            { color: Colors.green[200], label: t('c.fertile') },
+            { color: Colors.blush[600], label: t('c.legend.logged') },
+            { color: Colors.blush[50],  label: t('c.legend.pred'), border: Colors.blush[200] },
+            { color: Colors.blush[200], label: t('c.legend.spotting'), border: Colors.blush[300] },
+            { color: Colors.green[400], label: t('c.legend.ovulation') },
+            { color: Colors.green[200], label: t('c.legend.fertile') },
           ].map((l, i) => (
             <View key={i} style={styles.legItem}>
               <View style={[styles.legDot, { backgroundColor: l.color, borderWidth: l.border ? 1 : 0, borderColor: l.border }]} />
@@ -250,8 +310,14 @@ export default function CycleScreen() {
 
           <Text style={styles.fieldLabel}>{t('c.period.lbl')}</Text>
           <View style={styles.rowGap8}>
-            <Button variant={period ? 'blush' : 'outline'} size="sm" onPress={() => setPeriod(true)}>{t('c.period.yes')}</Button>
+            <Button variant={period ? 'blush' : 'outline'} size="sm" onPress={() => { setPeriod(true); setSpotting(false); }}>{t('c.period.yes')}</Button>
             <Button variant={!period ? 'dark' : 'outline'} size="sm" onPress={() => setPeriod(false)}>{t('c.period.no')}</Button>
+          </View>
+
+          <Text style={styles.fieldLabel}>{t('c.spotting.lbl')}</Text>
+          <View style={styles.rowGap8}>
+            <Button variant={spotting ? 'blush' : 'outline'} size="sm" onPress={() => { setSpotting(true); setPeriod(false); }}>{t('c.spotting.yes')}</Button>
+            <Button variant={!spotting ? 'dark' : 'outline'} size="sm" onPress={() => setSpotting(false)}>{t('c.spotting.no')}</Button>
           </View>
 
           {/* Mood */}
@@ -280,32 +346,32 @@ export default function CycleScreen() {
           {/* Feelings */}
           <CatHeader icon="heart" label={t('c.feelings.lbl')} />
           <View style={styles.chipGrid}>
-            {FEELINGS.map((f) => (
-              <Chip key={f} label={f} selected={feelings.has(f)} onPress={() => toggle(feelings, setFeelings, f)} />
+            {FEELINGS.map((f, i) => (
+              <Chip key={`${f}-${i}`} label={f} selected={feelings.has(f)} onPress={() => toggle(feelings, setFeelings, f)} />
             ))}
           </View>
 
           {/* Mind */}
           <CatHeader icon="brain" label={t('c.mind.lbl')} />
           <View style={styles.chipGrid}>
-            {MIND.map((f) => (
-              <Chip key={f} label={f} selected={mind.has(f)} onPress={() => toggle(mind, setMind, f)} />
+            {MIND.map((f, i) => (
+              <Chip key={`${f}-${i}`} label={f} selected={mind.has(f)} onPress={() => toggle(mind, setMind, f)} />
             ))}
           </View>
 
           {/* Pain */}
           <CatHeader icon="pain" label={t('c.pain.lbl')} />
           <View style={styles.chipGrid}>
-            {PAIN.map((f) => (
-              <Chip key={f} label={f} selected={pain.has(f)} onPress={() => toggle(pain, setPain, f)} />
+            {PAIN.map((f, i) => (
+              <Chip key={`${f}-${i}`} label={f} selected={pain.has(f)} onPress={() => toggle(pain, setPain, f)} />
             ))}
           </View>
 
           {/* Cravings */}
           <CatHeader icon="craving" label={t('c.cravings.lbl')} />
           <View style={styles.chipGrid}>
-            {CRAVINGS.map((f) => (
-              <Chip key={f} label={f} selected={cravings.has(f)} onPress={() => toggle(cravings, setCravings, f)} />
+            {CRAVINGS.map((f, i) => (
+              <Chip key={`${f}-${i}`} label={f} selected={cravings.has(f)} onPress={() => toggle(cravings, setCravings, f)} />
             ))}
           </View>
 
@@ -314,8 +380,8 @@ export default function CycleScreen() {
           <View style={styles.sleepSection}>
             <View style={profile?.plan === 'free' || !profile?.plan ? styles.lockedContent : undefined}>
               <View style={styles.chipGrid}>
-                {SLEEP_CHIPS.map((f) => (
-                  <Chip key={f} label={f} selected={sleepChips.has(f)} onPress={() => toggle(sleepChips, setSleepChips, f)} />
+                {SLEEP_CHIPS.map((f, i) => (
+                  <Chip key={`${f}-${i}`} label={f} selected={sleepChips.has(f)} onPress={() => toggle(sleepChips, setSleepChips, f)} />
                 ))}
               </View>
               <View style={styles.sleepHrsRow}>
@@ -342,8 +408,8 @@ export default function CycleScreen() {
           {/* Digestion */}
           <CatHeader icon="digestion" label={t('c.digestion.lbl')} />
           <View style={styles.chipGrid}>
-            {DIGESTION.map((f) => (
-              <Chip key={f} label={f} selected={digestion.has(f)} onPress={() => toggle(digestion, setDigestion, f)} />
+            {DIGESTION.map((f, i) => (
+              <Chip key={`${f}-${i}`} label={f} selected={digestion.has(f)} onPress={() => toggle(digestion, setDigestion, f)} />
             ))}
           </View>
 
@@ -413,8 +479,10 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   calDayTxt:        { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[400] },
-  calPeriodLogged:  { backgroundColor: Colors.blush[600] },   // deep red — clearly logged
-  calPeriodPred:    { backgroundColor: Colors.blush[50], borderWidth: 1.5, borderColor: Colors.blush[200] },  // light pink — predicted
+  calPeriodLogged:  { backgroundColor: Colors.blush[600] },
+  calPeriodPred:    { backgroundColor: Colors.blush[50], borderWidth: 1.5, borderColor: Colors.blush[200] },
+  calSpotting:      { backgroundColor: Colors.blush[50], borderWidth: 1.5, borderColor: Colors.blush[300], borderStyle: 'dashed' },
+  spottingDot:      { width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.blush[400], marginTop: 1 },
   calOv:            { backgroundColor: Colors.green[400] },
   calFert:          { backgroundColor: Colors.green[50], borderWidth: 1.5, borderColor: Colors.green[200] },
   calToday:         { shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 4, elevation: 4 },

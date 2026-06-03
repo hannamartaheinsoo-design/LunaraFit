@@ -26,10 +26,11 @@ This project uses **Convex** as the backend and **`@convex-dev/auth`** for authe
 - Convex URL is in `.env.local` as `EXPO_PUBLIC_CONVEX_URL`
 - Auth providers: email/password (works), Google + Apple (need `AUTH_GOOGLE_ID/SECRET`, `AUTH_APPLE_ID/SECRET` env vars)
 - Backend files: `convex/schema.ts`, `convex/auth.ts`, `convex/profiles.ts`, `convex/workouts.ts`, `convex/cycleDays.ts`, `convex/userData.ts`
+- `cycle_days` table has: `period` (bool), `spotting` (optional bool), `mood`, `symptoms[]`
 
 **Data access — always use Convex, never `storage.*`:**
 - Read: `useQuery(api.profiles.get)`, `useQuery(api.workouts.list)`, `useQuery(api.cycleDays.list)` — reactive, no `useEffect` needed
-- Write: `useMutation(api.profiles.upsert)`, `useMutation(api.workouts.add)`, `useMutation(api.workouts.remove)`, `useMutation(api.cycleDays.upsert)`, `useMutation(api.userData.clearAll)`
+- Write: `useMutation(api.profiles.upsert)`, `useMutation(api.workouts.add)`, `useMutation(api.workouts.remove)`, `useMutation(api.cycleDays.upsert)`, `useMutation(api.cycleDays.fillPeriodGap)`, `useMutation(api.userData.clearAll)`
 - Auth state: `useAuth()` from `lib/authContext` (wraps `useConvexAuth()` + `api.profiles.get`)
 
 **Platform guards:**

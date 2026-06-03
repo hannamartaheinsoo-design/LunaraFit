@@ -109,3 +109,15 @@
 **Root cause:** `clearAll` in `convex/userData.ts` only deleted app data (workouts, cycle days, profile). It never touched the Convex Auth tables: `authAccounts`, `authSessions`, `authRefreshTokens`, `authVerificationCodes`, or the `users` row.
 **Fix applied:** Extended `clearAll` to also delete all auth records for the user (sessions → refresh tokens, accounts → verification codes, then sessions, accounts, and the `users` row itself) in the same mutation.
 **Rule going forward:** Any "delete account" or "delete all data" flow must also delete all rows in the Convex Auth tables (`authAccounts`, `authSessions`, `authRefreshTokens`, `authVerificationCodes`) and the `users` row. App data deletion alone is never sufficient for full account removal.
+
+### [2026-06-03] Logging period day 1 immediately shifted all cycle predictions
+**What happened:** When a user logged their first period day, `last_period_date` on the profile was updated immediately, causing ovulation and fertile-window predictions to shift for the whole calendar before the period was even over.
+**Root cause:** `handleSave` in `cycle.tsx` called `upsertProf({ last_period_date: date })` whenever `period === true`, regardless of whether the period phase was complete.
+**Fix applied:** Moved the `last_period_date` update to the `period === false` branch. When the user logs their first no-period day after a streak, the code finds the streak start and only then updates the profile — so predictions recalculate once the period is confirmed finished.
+**Rule going forward:** Never update `last_period_date` on a period=true log. Only update it when the period ends (first period=false day after a consecutive streak of period=true days). The calendar's logged dots and the profile's prediction anchor are separate concerns.
+
+### [2026-06-03] Legend keys referenced wrong i18n keys (c.period.logged vs c.legend.logged)
+**What happened:** The cycle calendar legend used `t('c.period.logged')` and `t('c.ovulation')` etc., but the actual i18n keys are under `c.legend.*`. This caused missing/undefined legend labels.
+**Root cause:** Copy-paste drift between where the keys were defined and where they were used.
+**Fix applied:** Updated the legend array in `cycle.tsx` to use the correct `c.legend.logged`, `c.legend.pred`, `c.legend.spotting`, `c.legend.ovulation`, `c.legend.fertile` keys.
+**Rule going forward:** When adding or changing i18n keys, search for all call sites with `grep` before shipping. Never guess a key name — verify it matches what is defined in `lib/i18n.ts`.
