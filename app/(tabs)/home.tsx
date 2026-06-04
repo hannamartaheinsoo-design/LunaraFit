@@ -197,6 +197,14 @@ export default function HomeScreen() {
 
   const daysUntilPeriod = ci ? ci.cycleLength - ci.day + 1 : null;
 
+  // consecutive days with a workout ending today (or from most recent workout day)
+  const workoutDates = new Set(workouts.map((w: any) => w.date));
+  let streak = 0;
+  for (let i = 0; ; i++) {
+    const ds = new Date(now.getTime() - i * 86400000).toISOString().slice(0, 10);
+    if (workoutDates.has(ds)) { streak++; } else if (i === 0) { break; } else { break; }
+  }
+
   const pd = phaseDiff(workouts);
 
   const DAYS = tArr('home.days');
@@ -261,11 +269,9 @@ export default function HomeScreen() {
             <Text style={[styles.statSub, { color: Colors.blush[400] }]}>{daysUntilPeriod != null ? t('home.stat.period.sub') : t('home.stat.period.none')}</Text>
           </TouchableOpacity>
           <View style={[styles.statTile, { backgroundColor: T.surface2, borderColor: T.border }]}>
-            <View style={styles.statLblRow}><Icon name="wave" size={10} color={T.textMuted} /><Text style={[styles.statLbl, { color: T.textMuted }]}>{t('home.stat.phase')}</Text></View>
-            <Text style={[styles.statVal, { color: T.text, fontSize: 18 }, pd != null ? { color: pd >= 0 ? Colors.green[T.dark ? 200 : 600] : Colors.blush[400] } : {}]}>
-              {pd != null ? `${pd >= 0 ? '+' : ''}${pd.toFixed(1)}%` : '—'}
-            </Text>
-            <Text style={[styles.statSub, { color: T.textSec }]}>{t('home.stat.phase.sub')}</Text>
+            <View style={styles.statLblRow}><Icon name="spark" size={10} color={T.textMuted} /><Text style={[styles.statLbl, { color: T.textMuted }]}>{t('home.stat.streak')}</Text></View>
+            <Text style={[styles.statVal, { color: streak > 0 ? Colors.green[T.dark ? 200 : 600] : T.text }]}>{streak > 0 ? streak : '—'}</Text>
+            <Text style={[styles.statSub, { color: T.textSec }]}>{t('home.stat.streak.sub')}</Text>
           </View>
         </View>
 
@@ -293,8 +299,6 @@ export default function HomeScreen() {
           )}
         </Card>
 
-        {/* Pattern analysis card */}
-        <PatternCard workouts={workouts} lang={lang} T={T} t={t} pd={pd} ci={ci} now={now} />
 
         <View style={{ height: 20 }} />
       </ScrollView>
