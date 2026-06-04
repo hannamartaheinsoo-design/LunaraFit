@@ -102,51 +102,30 @@ function PatternCard({ workouts, lang, T, t, pd, ci, now }: any) {
             </View>
           )}
 
-          {/* Phase line chart */}
+          {/* Phase horizontal comparison */}
           <Text style={[styles.sectionMini, { color: T.textMuted }]}>
             {lang === 'en' ? 'AVG VOLUME BY PHASE' : 'MAHT FAASI JÄRGI'}
           </Text>
-          {(() => {
-            const PAD_L = 20, PAD_R = 20, VW = 300, VH = 72;
-            const chartH = 52;
-            const xOf = (i: number) => PAD_L + (i / (phaseVolumes.length - 1)) * (VW - PAD_L - PAD_R);
-            const yOf = (vol: number) => 4 + (1 - vol / maxVol) * chartH;
-            // build line segments skipping zero-volume phases
-            const segments: { x: number; y: number }[][] = [];
-            let seg: { x: number; y: number }[] = [];
-            phaseVolumes.forEach(({ vol }, i) => {
-              if (vol > 0) { seg.push({ x: xOf(i), y: yOf(vol) }); }
-              else { if (seg.length) { segments.push(seg); seg = []; } }
-            });
-            if (seg.length) segments.push(seg);
-            return (
-              <View>
-                <Svg width="100%" height={VH} viewBox={`0 0 ${VW} ${VH}`}>
-                  <Line x1={PAD_L} y1={chartH + 6} x2={VW - PAD_R} y2={chartH + 6} stroke={T.border} strokeWidth={1} />
-                  {segments.map((s, si) =>
-                    s.length > 1 ? (
-                      <Polyline key={si} points={s.map(p => `${p.x},${p.y}`).join(' ')}
-                        fill="none" stroke={Colors.blush[300]} strokeWidth={2}
-                        strokeLinejoin="round" strokeLinecap="round" />
-                    ) : null
-                  )}
-                  {phaseVolumes.map(({ phase, vol }, i) =>
-                    vol > 0 ? (
-                      <Circle key={phase} cx={xOf(i)} cy={yOf(vol)} r={5}
-                        fill={PHASE_COLORS[phase]} stroke="white" strokeWidth={1.5} />
-                    ) : null
-                  )}
-                </Svg>
-                <View style={styles.phaseLineLabels}>
-                  {phaseVolumes.map(({ phase, vol }, i) => (
-                    <Text key={phase} style={[styles.phaseBarLbl, { color: vol > 0 ? PHASE_COLORS[phase] : T.textMuted, opacity: vol > 0 ? 1 : 0.4 }]} numberOfLines={1}>
-                      {phaseLabel(phase).slice(0, 4).toUpperCase()}
-                    </Text>
-                  ))}
+          <View style={styles.phaseRows}>
+            {phaseVolumes.map(({ phase, vol }, i) => {
+              const pct = maxVol > 0 ? (vol / maxVol) * 100 : 0;
+              return (
+                <View key={phase} style={styles.phaseRow}>
+                  <Text style={[styles.phaseRowLbl, { color: vol > 0 ? PHASE_COLORS[phase] : T.textMuted }]} numberOfLines={1}>
+                    {phaseLabel(phase).slice(0, 4).toUpperCase()}
+                  </Text>
+                  <View style={[styles.phaseRowTrack, { backgroundColor: T.border }]}>
+                    {vol > 0 && (
+                      <View style={[styles.phaseRowFill, { width: `${pct}%` as any, backgroundColor: PHASE_COLORS[phase] }]} />
+                    )}
+                  </View>
+                  <Text style={[styles.phaseRowCount, { color: vol > 0 ? T.textSec : T.textMuted }]}>
+                    {phaseCounts[i]}
+                  </Text>
                 </View>
-              </View>
-            );
-          })()}
+              );
+            })}
+          </View>
 
           {/* Best phase callout */}
           {bestPhase.vol > 0 && (
@@ -301,41 +280,13 @@ export default function HomeScreen() {
         <Card style={styles.chartCard}>
           <View style={styles.cardLblRow}><Icon name="wave" size={12} color={T.textMuted} /><Text style={[styles.cardLbl, { color: T.textMuted }]}>{t('home.chart.lbl')}</Text></View>
           {workouts.length ? (
-            <View>
-              {(() => {
-                const VW = 280, yActive = 12, yBase = 62;
-                const xOf = (i: number) => i * (VW / 6);
-                const segs: { x: number; y: number }[][] = [];
-                let seg: { x: number; y: number }[] = [];
-                weekBars.forEach((bar, i) => {
-                  if (bar.has) { seg.push({ x: xOf(i), y: yActive }); }
-                  else { if (seg.length) { segs.push(seg); seg = []; } }
-                });
-                if (seg.length) segs.push(seg);
-                return (
-                  <Svg width="100%" height={80} viewBox={`0 0 ${VW} 80`}>
-                    <Line x1={0} y1={yBase} x2={VW} y2={yBase} stroke={T.border} strokeWidth={1} />
-                    {segs.map((s, si) =>
-                      s.length > 1 ? (
-                        <Polyline key={si} points={s.map(p => `${p.x},${p.y}`).join(' ')}
-                          fill="none" stroke={Colors.blush[300]} strokeWidth={1.5}
-                          strokeLinejoin="round" strokeLinecap="round" />
-                      ) : null
-                    )}
-                    {weekBars.map((bar, i) =>
-                      bar.has ? (
-                        <Circle key={i} cx={xOf(i)} cy={yActive} r={5}
-                          fill={Colors.blush[400]} stroke={Colors.blush[200]} strokeWidth={2} />
-                      ) : null
-                    )}
-                  </Svg>
-                );
-              })()}
-              <View style={styles.lineLabels}>
-                {weekBars.map((bar, i) => (
-                  <Text key={i} style={[styles.barLbl, { color: T.textMuted }]}>{bar.label}</Text>
-                ))}
-              </View>
+            <View style={styles.chartWrap}>
+              {weekBars.map((bar, i) => (
+                <View key={i} style={styles.barCol}>
+                  <View style={[styles.barFill, { height: bar.has ? '82%' : '10%', backgroundColor: bar.has ? Colors.blush[400] : T.border }]} />
+                  <Text style={[styles.barLbl, { color: T.textMuted }]}>{bar.label}</Text>
+                </View>
+              ))}
             </View>
           ) : (
             <Text style={[styles.empty, { color: T.textMuted }]}>{t('home.chart.empty')}</Text>
@@ -399,7 +350,9 @@ const styles = StyleSheet.create({
   chartCard: {},
   cardLblRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
   cardLbl: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.1, textTransform: 'uppercase', color: Colors.beige[400] },
-  lineLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+  chartWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 96 },
+  barCol: { flex: 1, alignItems: 'center', gap: 5, height: '100%', justifyContent: 'flex-end' },
+  barFill: { width: '100%', borderRadius: 5 },
   barLbl: { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.beige[400], textAlign: 'center' },
   empty: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], textAlign: 'center', paddingVertical: 8 },
   insightPreview: { marginTop: 0 },
@@ -418,8 +371,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase', color: Colors.beige[400], marginBottom: 8,
   },
 
-  phaseLineLabels: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 2, marginBottom: 10 },
-  phaseBarLbl: { fontFamily: Fonts.sansBold, fontSize: 8, letterSpacing: 0.5 },
+  phaseRows: { gap: 7, marginBottom: 10 },
+  phaseRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  phaseRowLbl: { fontFamily: Fonts.sansBold, fontSize: 8, letterSpacing: 0.6, width: 30, textAlign: 'right' },
+  phaseRowTrack: { flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' },
+  phaseRowFill: { height: '100%', borderRadius: 4 },
+  phaseRowCount: { fontFamily: Fonts.sansBold, fontSize: 9, width: 14, textAlign: 'right' },
 
   bestPhaseRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
