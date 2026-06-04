@@ -256,22 +256,22 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     daysRange: 'Approximately days 1–5',
     tagline: 'Rest is part of strength.',
     overview:
-      'The cycle begins with menstruation, when estrogen and progesterone are at their lowest. ' +
-      'Many women notice energy and mood changes during this time — this is completely normal. ' +
-      'Moderate movement is generally safe and may even help relieve discomfort.',
+      'The cycle begins with menstruation, when estrogen and progesterone are at their **lowest point**. ' +
+      'Many women notice energy and mood changes during this time — **this is completely normal.** ' +
+      'Moderate movement is **generally safe** and may even help relieve discomfort.',
     hormoneContext:
       '**Estrogen** and **progesterone** are at their lowest right now. ' +
       '**FSH** (follicle-stimulating hormone — the hormone that kick-starts your next cycle) begins to rise quietly in the background. ' +
       'The hormonal dip is what causes cramps, fatigue and mood shifts — **it\'s not in your head, it\'s biology.**',
     energyPattern:
-      'Energy is often lower, especially in the first days. This is individual — some women train normally, ' +
-      'others need more rest. Listen to your body.',
+      '**Energy is often lower**, especially in the first days. This is individual — some women train normally, ' +
+      'others need more rest. **Listen to your body.**',
     trainingFocus: [
       {
         title: 'Light cardio',
         detail:
           'Walking, gentle swimming or yoga. Research (ACSM) shows moderate movement may help ' +
-          'relieve menstrual cramps through endorphin release.',
+          'relieve menstrual cramps through **endorphin release.**',
         intensity: 'kerge',
       },
       {
@@ -282,8 +282,8 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       {
         title: 'Strength training (if energy allows)',
         detail:
-          'If you feel up to it, moderate strength training is perfectly fine. Don\'t force it — ' +
-          'intensity can always be increased next week.',
+          'If you feel up to it, **moderate strength training is perfectly fine.** Don\'t force it — ' +
+          'intensity can always be **increased next week.**',
         intensity: 'mõõdukas',
       },
     ],
@@ -307,20 +307,20 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     tagline: 'Energy is rising — use it.',
     overview:
       'In the follicular phase, estrogen rises gradually as the ovary prepares a dominant follicle. ' +
-      'Many women notice improved energy, motivation and performance during this time. ' +
-      'Research suggests this may be an optimal time for more intense training.',
+      'Many women notice **improved energy, motivation and performance** during this time. ' +
+      'Research suggests this may be an **optimal time for more intense training.**',
     hormoneContext:
       '**Estrogen** is climbing steadily — this is the hormone that tends to make you feel good, sharp and strong. ' +
       'Research suggests it may even have a mild **muscle-building effect**. ' +
       '**Cortisol** (your stress hormone) is also relatively low, which means your body **recovers better** between sessions.',
     energyPattern:
-      'Energy tends to be higher. Motivation to train may increase. Neuromuscular performance may improve ' +
-      'with rising estrogen — though this varies significantly between individuals.',
+      '**Energy tends to be higher.** Motivation to train may increase. Neuromuscular performance may improve ' +
+      'with rising estrogen — though **this varies significantly between individuals.**',
     trainingFocus: [
       {
         title: 'Strength training',
         detail:
-          'According to NSCA and PubMed studies, the follicular phase may be a favorable time for heavier strength work.',
+          'According to NSCA and PubMed studies, the follicular phase may be a favorable time for **heavier strength work.**',
         intensity: 'kõrge',
       },
       {
@@ -336,7 +336,7 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       },
     ],
     recoveryNote:
-      'Recovery is often faster in the follicular phase. Harder sessions are less likely to result in prolonged soreness.',
+      '**Recovery is often faster** in the follicular phase. Harder sessions are **less likely to result in prolonged soreness.**',
     wellnessTips: [
       '**Set new goals** — this is one of the best times in your cycle for motivation and drive.',
       '**Protein** — increase your intake to support muscle adaptations from harder training.',
@@ -354,20 +354,20 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     daysRange: 'Approximately days 12–16',
     tagline: 'Energy peak — new records await.',
     overview:
-      'During ovulation, estrogen reaches its highest point in the cycle. Many women experience ' +
-      'their greatest energy, confidence and physical performance right in this phase.',
+      'During ovulation, estrogen reaches its **highest point in the cycle.** Many women experience ' +
+      'their **greatest energy, confidence and physical performance** right in this phase.',
     hormoneContext:
       '**Estrogen** peaks and your **LH** (luteinizing hormone — the hormone that triggers ovulation) surges. ' +
       '**Testosterone** may also rise slightly, which can boost confidence and drive. ' +
       'One thing to keep in mind: research suggests that high estrogen may make **ligaments slightly looser** — ' +
       'so good technique and a proper warm-up **matter more than ever** right now.',
     energyPattern:
-      'Energy is at its peak. Many women feel greater confidence, clearer thinking and better physical output.',
+      '**Energy is at its peak.** Many women feel greater confidence, **clearer thinking** and **better physical output.**',
     trainingFocus: [
       {
         title: 'Personal records',
         detail:
-          'Energy and hormonal conditions are optimal. Try your heaviest sets or longest distances — but keep good form.',
+          '**Energy and hormonal conditions are optimal.** Try your **heaviest sets** or **longest distances** — but always keep good form.',
         intensity: 'kõrge',
       },
       {
@@ -379,12 +379,12 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       },
       {
         title: 'Cardio & endurance',
-        detail: 'VO₂max may be at its highest — a great time for longer runs or intense cardio sessions.',
+        detail: '**VO₂max may be at its highest** — a great time for **longer runs** or **intense cardio sessions.**',
         intensity: 'kõrge',
       },
     ],
     recoveryNote:
-      'Recovery is good. Even with high energy, don\'t neglect recovery. Excessive fatigue now can lead to overload in the next phase.',
+      '**Recovery is good** right now. Even with high energy, **don\'t neglect recovery** — excessive fatigue now can lead to **overload in the next phase.**',
     wellnessTips: [
       '**Warm up properly** — ligament sensitivity is higher right now, so never skip it.',
       '**Social activities & team sports** — your energy and confidence are at their peak.',
@@ -403,34 +403,34 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     tagline: 'Listen to your body — recovery is progress too.',
     overview:
       'In the luteal phase, progesterone rises to prepare the body for a possible pregnancy. ' +
-      'As the cycle nears its end, both estrogen and progesterone drop, which can cause various symptoms. ' +
-      'This phase is long — about 14 days — and conditions shift considerably throughout it.',
+      'As the cycle nears its end, both estrogen and progesterone drop — **this is what drives PMS symptoms.** ' +
+      'This phase is long — **about 14 days** — and how you feel can shift considerably throughout it.',
     hormoneContext:
       '**Progesterone** is now the dominant hormone. It raises your resting body temperature slightly (**~0.2–0.5°C**), ' +
       'speeds up your metabolism and can make breathing feel a little harder during cardio. ' +
       'Toward the end of the phase, both **estrogen** and **progesterone** drop — this hormonal fall is what drives ' +
       'PMS symptoms like mood dips, bloating and cravings. **Completely normal, and temporary.**',
     energyPattern:
-      'Energy varies. Early in the luteal phase energy may still be good, but in the late luteal phase ' +
-      'many women experience fatigue and slower recovery. Cardiovascular performance may be lower due to higher body temperature.',
+      '**Energy varies** across this phase. Early on it may still feel good, but in the **late luteal phase** ' +
+      'many women experience **fatigue and slower recovery.** Cardiovascular performance may also be lower due to higher body temperature.',
     trainingFocus: [
       {
         title: 'Moderate strength training',
         detail:
-          'Early in the luteal phase, strength training is perfectly fine. Later on, it may be smart to ' +
-          'reduce volume and intensity — this is strategic, not weakness.',
+          'Early in the luteal phase, **strength training is perfectly fine.** Later on, it may be smart to ' +
+          '**reduce volume and intensity** — this is **strategic, not weakness.**',
         intensity: 'mõõdukas',
       },
       {
         title: 'Endurance training',
         detail:
-          'Higher body temperature may reduce endurance performance — hydration is especially important.',
+          '**Higher body temperature** may reduce endurance performance — **hydration is especially important.**',
         intensity: 'mõõdukas',
       },
       {
         title: 'Yoga, stretching & restorative training',
         detail:
-          'Especially in the late luteal phase, restorative training is valuable. Listen to signals from your body.',
+          'Especially in the **late luteal phase**, restorative training is valuable. **Listen to signals from your body.**',
         intensity: 'kerge',
       },
     ],
