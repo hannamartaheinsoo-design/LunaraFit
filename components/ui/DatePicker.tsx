@@ -56,7 +56,8 @@ export function DatePicker({ value, onChange }: Props) {
       value={month}
       maxLength={2}
       onChangeText={(v) => {
-        const clean = pad2(v);
+        let clean = pad2(v);
+        if (clean.length === 2 && parseInt(clean) > 12) clean = '12';
         rebuild(year, clean, day);
         if (clean.length === 2) {
           if (isET) thirdRef.current?.focus();
