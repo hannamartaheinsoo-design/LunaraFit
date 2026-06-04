@@ -24,6 +24,12 @@ import {
   getWorkoutStats, ExerciseProgress, PersonalRecord, WeeklyVolume, WorkoutStats,
 } from '../../lib/workoutAnalysis';
 import { useTranslation } from '../../lib/LangContext';
+import {
+  getHyroxTemplate, formatSimTime, formatPace, calcHyroxTotalTime,
+  getHyroxInsights, extractStationResults, TRAINING_PLANS,
+  generatePersonalizedPlan, HYROX_DIVISIONS,
+  HYROX_STATIONS, DIVISION_WEIGHTS, getStationWeight,
+} from '../../lib/hyrox';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface LoggedExercise {
@@ -103,7 +109,7 @@ function ExercisePicker({
             <TextInput
               style={styles.searchInput}
               placeholder={t('w.picker.search')}
-              placeholderTextColor={Colors.beige[300]}
+              placeholderTextColor={Colors.beige[200]}
               value={query}
               onChangeText={setQuery}
               autoFocus={false}
@@ -178,7 +184,7 @@ function ExercisePicker({
                   </View>
                   <Text style={styles.exerciseCat}>{catLabel}</Text>
                 </View>
-                <Icon name="chevr" size={16} color={Colors.beige[300]} />
+                <Icon name="chevr" size={16} color={Colors.beige[200]} />
               </TouchableOpacity>
             );
           }}
@@ -372,14 +378,28 @@ export default function WorkoutsScreen() {
 
   const [activeTab, setActiveTab] = useState<'log' | 'routines' | 'progress'>('log');
 
+  // HYROX modal + goal form
+  const [showHyroxModal, setShowHyroxModal] = useState(false);
+  const [showHyroxGoalForm, setShowHyroxGoalForm] = useState(false);
+  const [hxName,  setHxName]  = useState('');
+  const [hxDate,  setHxDate]  = useState('');
+  const [hxDiv,   setHxDiv]   = useState('Women');
+  const [hxHours, setHxHours] = useState('1');
+  const [hxMins,  setHxMins]  = useState('30');
+  const [hxPace,  setHxPace]  = useState('');
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+
   const workouts     = useQuery(api.workouts.list) ?? [];
   const profile      = useQuery(api.profiles.get);
   const routines     = useQuery(api.routines.list) ?? [];
+  const hyroxGoal    = useQuery(api.hyrox.get);
   const addWorkout   = useMutation(api.workouts.add);
   const removeWorkout = useMutation(api.workouts.remove);
   const addRoutine    = useMutation(api.routines.add);
   const updateRoutine = useMutation(api.routines.update);
   const removeRoutine = useMutation(api.routines.remove);
+  const upsertHyroxGoal = useMutation(api.hyrox.upsert);
+  const removeHyroxGoal = useMutation(api.hyrox.remove);
 
   const yesterdayISO = () => {
     const d = new Date(); d.setDate(d.getDate() - 1);
@@ -475,7 +495,7 @@ export default function WorkoutsScreen() {
     resetBuilder();
     setShowBuilder(false);
 
-    const prs = detectNewPRs(workouts, workoutId as string);
+    const prs = detectNewPRs(workouts as any, workoutId as string);
     if (prs.length > 0 && Platform.OS !== 'web') {
       const prLines = prs.map(pr =>
         `🏆 ${pr.exerciseName}: ${pr.value}${pr.unit} (+${pr.improvement}${pr.type === 'weight' || pr.type === 'distance' ? '%' : ''})`
@@ -758,9 +778,64 @@ export default function WorkoutsScreen() {
   }
 
   // ── Main list view ─────────────────────────────────────────────────────────
-  const stats    = getWorkoutStats(workouts);
-  const progress = getExerciseProgress(workouts);
-  const weekly   = getWeeklyVolume(workouts, 6);
+  const stats    = getWorkoutStats(workouts as any);
+  const progress = getExerciseProgress(workouts as any);
+  const weekly   = getWeeklyVolume(workouts as any, 6);
+
+  // HYROX computed
+  const hyroxWorkouts = workouts.filter(w =>
+    w.name.startsWith('HYROX') || w.exercises.some((e: any) => e.category === 'hyrox')
+  );
+  const hyroxTimes = hyroxWorkouts
+    .map(w => ({ date: w.date, total: calcHyroxTotalTime(w.exercises as any) }))
+    .filter(x => x.total > 0)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const bestSimTime = hyroxTimes.length ? Math.min(...hyroxTimes.map(x => x.total)) : 0;
+  const lastSimTime = hyroxTimes[0]?.total ?? 0;
+  const goalTotalMinutes = hyroxGoal?.goal_minutes ?? 0;
+  const gapMinutes = lastSimTime && goalTotalMinutes ? lastSimTime - goalTotalMinutes : 0;
+
+  const hyroxInsights = React.useMemo(
+    () => getHyroxInsights(hyroxWorkouts.map(w => ({
+      name: w.name, date: w.date, phase: w.phase, exercises: w.exercises as any,
+    })), lang as any),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hyroxWorkouts.length, lang]
+  );
+  const personalizedPlan = React.useMemo(
+    () => generatePersonalizedPlan(
+      hyroxGoal?.competition_date, hyroxGoal?.goal_minutes,
+      lastSimTime || undefined, hyroxGoal?.weakest_stations, lang as any,
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hyroxGoal?.goal_minutes, hyroxGoal?.competition_date, lastSimTime, lang]
+  );
+
+  const openHyroxGoalForm = () => {
+    if (hyroxGoal) {
+      const total = hyroxGoal.goal_minutes ?? 0;
+      setHxName(hyroxGoal.competition_name ?? '');
+      setHxDate(hyroxGoal.competition_date ?? '');
+      setHxDiv(hyroxGoal.division ?? 'Women');
+      setHxHours(String(Math.floor(total / 60)));
+      setHxMins(String(total % 60));
+      setHxPace(String(hyroxGoal.target_run_pace_min_per_km ?? ''));
+    }
+    setShowHyroxGoalForm(true);
+  };
+
+  const saveHyroxGoal = async () => {
+    const h = parseInt(hxHours) || 0;
+    const m = parseInt(hxMins) || 0;
+    await upsertHyroxGoal({
+      competition_name: hxName || undefined,
+      competition_date: hxDate || undefined,
+      division: hxDiv || undefined,
+      goal_minutes: h * 60 + m || undefined,
+      target_run_pace_min_per_km: parseFloat(hxPace) || undefined,
+    });
+    setShowHyroxGoalForm(false);
+  };
   const maxVol   = Math.max(...weekly.map(w => w.totalKg), 1);
 
   return (
@@ -850,7 +925,7 @@ export default function WorkoutsScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.workoutName}>{w.name}</Text>
                       <Text style={styles.workoutMeta}>
-                        {formatDate(w.date)} · {getPhaseLabel(w.phase, lang)}
+                        {formatDate(w.date)} · {getPhaseLabel(w.phase as any, lang)}
                       </Text>
                     </View>
                     <TouchableOpacity onPress={() => handleDeleteWorkout(w._id)} style={styles.deleteBtn}>
@@ -889,6 +964,37 @@ export default function WorkoutsScreen() {
         {/* ── ROUTINES TAB ── */}
         {activeTab === 'routines' && (
           <>
+            {/* ── Training Programmes ── */}
+            <View style={styles.sectionLblRow}>
+              <Icon name="spark" size={12} color={Colors.beige[400]} />
+              <Text style={styles.sectionLbl}>{lang === 'en' ? 'Training Programmes' : 'Treeningprogrammid'}</Text>
+            </View>
+            <TouchableOpacity style={styles.hyroxProgramCard} activeOpacity={0.88} onPress={() => setShowHyroxModal(true)}>
+              <View style={styles.hyroxProgramIcon}><Icon name="wave" size={22} color={Colors.cream} /></View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.hyroxProgramTitle}>HYROX</Text>
+                <Text style={styles.hyroxProgramDesc}>
+                  {lang === 'en'
+                    ? '8 km run + 8 stations · set goal, get a plan, simulate & analyse'
+                    : '8 km jooks + 8 jaama · sea eesmärk, saa plaan, simuleeri ja analüüsi'}
+                </Text>
+                {hyroxGoal?.goal_minutes ? (
+                  <Text style={styles.hyroxProgramStatus}>
+                    {hyroxGoal.competition_name ? `${hyroxGoal.competition_name}  ·  ` : ''}
+                    {lang === 'en' ? 'Goal: ' : 'Eesmärk: '}{formatSimTime(hyroxGoal.goal_minutes)}
+                    {lastSimTime > 0 ? `  ·  ${lang === 'en' ? 'Best sim: ' : 'Parim: '}${formatSimTime(bestSimTime)}` : ''}
+                  </Text>
+                ) : (
+                  <Text style={styles.hyroxProgramStatus}>{lang === 'en' ? 'Tap to set up →' : 'Vajuta seadistamiseks →'}</Text>
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* ── My Routines ── */}
+            <View style={[styles.sectionLblRow, { marginTop: 6 }]}>
+              <Icon name="barbell" size={12} color={Colors.beige[400]} />
+              <Text style={styles.sectionLbl}>{lang === 'en' ? 'My Routines' : 'Minu kavad'}</Text>
+            </View>
             <TouchableOpacity
               style={styles.newWorkoutBtn}
               activeOpacity={0.85}
@@ -1085,6 +1191,283 @@ export default function WorkoutsScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* ── HYROX Programme Modal ───────────────────────────────────────── */}
+      <Modal visible={showHyroxModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowHyroxModal(false)}>
+        <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: Colors.cream }}>
+          <View style={[styles.topBar, { paddingVertical: Spacing.md }]}>
+            <View>
+              <Text style={styles.heading}>HYROX</Text>
+              <Text style={styles.subheading}>{lang === 'en' ? 'Competition Preparation' : 'Võistluseks ettevalmistus'}</Text>
+            </View>
+            <TouchableOpacity onPress={() => setShowHyroxModal(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Icon name="close" size={20} color={Colors.beige[600]} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false}>
+
+            {/* Goal card */}
+            <View style={styles.hyroxGoalCard}>
+              <View style={styles.hyroxGoalCardHeader}>
+                <Text style={styles.hyroxGoalCardTitle}>{lang === 'en' ? 'Competition Goal' : 'Võistluseesmärk'}</Text>
+                <TouchableOpacity onPress={openHyroxGoalForm} style={styles.hyroxGoalEditBtn}>
+                  <Text style={styles.hyroxGoalEditTxt}>{hyroxGoal ? (lang === 'en' ? 'Edit' : 'Muuda') : (lang === 'en' ? 'Set goal' : 'Seadista')}</Text>
+                </TouchableOpacity>
+              </View>
+              {hyroxGoal && hyroxGoal.goal_minutes ? (
+                <View>
+                  {hyroxGoal.competition_name && <Text style={styles.hyroxGoalCompName}>{hyroxGoal.competition_name}</Text>}
+                  <View style={styles.hyroxGoalRow}>
+                    {hyroxGoal.competition_date && (
+                      <View style={styles.hyroxGoalItem}>
+                        <Text style={styles.hyroxGoalItemLbl}>{lang === 'en' ? 'Date' : 'Kuupäev'}</Text>
+                        <Text style={styles.hyroxGoalItemVal}>{hyroxGoal.competition_date}</Text>
+                      </View>
+                    )}
+                    {hyroxGoal.division && (
+                      <View style={styles.hyroxGoalItem}>
+                        <Text style={styles.hyroxGoalItemLbl}>{lang === 'en' ? 'Division' : 'Kategooria'}</Text>
+                        <Text style={styles.hyroxGoalItemVal}>{hyroxGoal.division}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.hyroxTimeRow}>
+                    <View style={styles.hyroxTimeBlock}>
+                      <Text style={styles.hyroxTimeLbl}>{lang === 'en' ? 'Target time' : 'Eesmärkaeg'}</Text>
+                      <Text style={styles.hyroxTimeVal}>{formatSimTime(hyroxGoal.goal_minutes)}</Text>
+                    </View>
+                    {lastSimTime > 0 && <>
+                      <View style={styles.hyroxTimeSep}><Text style={styles.hyroxTimeSepTxt}>→</Text></View>
+                      <View style={styles.hyroxTimeBlock}>
+                        <Text style={styles.hyroxTimeLbl}>{lang === 'en' ? 'Current sim' : 'Praegune sim'}</Text>
+                        <Text style={[styles.hyroxTimeVal, { color: gapMinutes > 0 ? Colors.coral[600] : Colors.sky[600] }]}>{formatSimTime(lastSimTime)}</Text>
+                      </View>
+                    </>}
+                  </View>
+                  {gapMinutes > 0 && (
+                    <View style={styles.hyroxGapRow}>
+                      <Text style={styles.hyroxGapTxt}>
+                        {lang === 'en' ? 'Need to improve: ' : 'Vaja parandada: '}
+                        <Text style={{ color: Colors.coral[600], fontFamily: Fonts.sansBold }}>{Math.round(gapMinutes)} min</Text>
+                      </Text>
+                    </View>
+                  )}
+                  {gapMinutes < 0 && (
+                    <View style={[styles.hyroxGapRow, { backgroundColor: Colors.sky[50] }]}>
+                      <Text style={[styles.hyroxGapTxt, { color: Colors.sky[600] }]}>
+                        🎯 {lang === 'en' ? `${Math.round(Math.abs(gapMinutes))} min under goal!` : `Eesmärgist ${Math.round(Math.abs(gapMinutes))} min kiirem!`}
+                      </Text>
+                    </View>
+                  )}
+                  {hyroxGoal.target_run_pace_min_per_km && (
+                    <Text style={styles.hyroxPaceTxt}>{lang === 'en' ? 'Run pace: ' : 'Jooksutempo: '}{formatPace(hyroxGoal.target_run_pace_min_per_km)}</Text>
+                  )}
+                </View>
+              ) : (
+                <View style={styles.hyroxGoalEmpty}>
+                  <Text style={styles.hyroxChallengeTitle}>{lang === 'en' ? 'Set your competition goal' : 'Seadista võistluseesmärk'}</Text>
+                  <Text style={styles.hyroxChallengeDesc}>{lang === 'en' ? 'Add your race date, division and target time — we\'ll build a personalised training plan.' : 'Lisa võistluse kuupäev, kategooria ja eesmärkaeg — koostame sulle isikliku treeningplaani.'}</Text>
+                  <TouchableOpacity style={styles.hyroxChallengeBtn} onPress={openHyroxGoalForm} activeOpacity={0.85}>
+                    <Text style={styles.hyroxChallengeBtnTxt}>{lang === 'en' ? 'Set goal →' : 'Seadista eesmärk →'}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            {/* Personalised plan */}
+            {personalizedPlan && (
+              <View style={styles.personalPlanCard}>
+                <View style={styles.personalPlanHeader}>
+                  <View>
+                    <Text style={styles.personalPlanCountdown}>{lang === 'en' ? personalizedPlan.countdownLabel.en : personalizedPlan.countdownLabel.et}</Text>
+                    <Text style={styles.personalPlanName}>{lang === 'en' ? personalizedPlan.planStartLabel.en : personalizedPlan.planStartLabel.et}</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setSelectedPlan(personalizedPlan.plan)} style={styles.personalPlanViewBtn}>
+                    <Text style={styles.personalPlanViewTxt}>{lang === 'en' ? 'Full plan' : 'Täisplaan'}</Text>
+                  </TouchableOpacity>
+                </View>
+                {personalizedPlan.focusAreas.length > 0 && (
+                  <View style={styles.personalPlanFocus}>
+                    <Text style={styles.personalPlanFocusLbl}>⚡ {lang === 'en' ? 'Focus this block:' : 'Fookus sel plokil:'}</Text>
+                    <Text style={styles.personalPlanFocusVal}>{personalizedPlan.focusAreas.join('  ·  ')}</Text>
+                  </View>
+                )}
+                <Text style={styles.personalPlanWeekTitle}>
+                  {lang === 'en' ? `Week ${personalizedPlan.currentWeekIndex + 1}: ${personalizedPlan.thisWeek.theme.en}` : `Nädal ${personalizedPlan.currentWeekIndex + 1}: ${personalizedPlan.thisWeek.theme.et}`}
+                </Text>
+                {personalizedPlan.thisWeek.sessions.map((sess: any, si: number) => {
+                  const ic: Record<string,string> = { recovery: Colors.sky[200], base: Colors.beige[200], moderate: Colors.coral[200], hard: Colors.coral[400], race: Colors.blush[400] };
+                  return (
+                    <View key={si} style={styles.personalPlanSession}>
+                      <View style={[styles.personalPlanDot, { backgroundColor: ic[sess.intensity] ?? Colors.beige[200] }]} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.personalPlanSessionDay}>{sess.day} — <Text style={{ fontFamily: Fonts.sansBold }}>{sess.type}</Text></Text>
+                        <Text style={styles.personalPlanSessionDesc}>{lang === 'en' ? sess.description.en : sess.description.et}</Text>
+                      </View>
+                      <Text style={styles.personalPlanSessionDur}>{sess.duration_min} min</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
+            {/* Start simulation */}
+            <View style={styles.hyroxSimSection}>
+              <View style={styles.hyroxSimHeader}>
+                <Text style={styles.hyroxSimTitle}>{lang === 'en' ? 'HYROX Simulation' : 'HYROX Simulatsioon'}</Text>
+                {bestSimTime > 0 && (
+                  <Text style={styles.hyroxSimBest}>
+                    {lang === 'en' ? 'Best: ' : 'Parim: '}{formatSimTime(bestSimTime)}
+                    {lastSimTime !== bestSimTime ? `  ·  ${lang === 'en' ? 'Last: ' : 'Viimane: '}${formatSimTime(lastSimTime)}` : ''}
+                  </Text>
+                )}
+              </View>
+              <TouchableOpacity
+                style={styles.hyroxSimBtn}
+                activeOpacity={0.85}
+                onPress={() => {
+                  setShowHyroxModal(false);
+                  setTimeout(() => {
+                    setWorkoutName('HYROX Simulation');
+                    setLoggedExercises(getHyroxTemplate(hyroxGoal?.division ?? 'Women') as any);
+                    setShowBuilder(true);
+                  }, 300);
+                }}
+              >
+                <Text style={styles.hyroxSimBtnTxt}>{lang === 'en' ? 'Start simulation →' : 'Alusta simulatsiooni →'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Simulation history */}
+            {hyroxWorkouts.length > 0 && (
+              <>
+                <View style={styles.sectionLblRow}>
+                  <Icon name="eye" size={12} color={Colors.beige[400]} />
+                  <Text style={styles.sectionLbl}>{lang === 'en' ? 'Simulation history' : 'Simulatsioonide ajalugu'}</Text>
+                </View>
+                {hyroxWorkouts.slice(0, 3).map((w: any) => {
+                  const total = calcHyroxTotalTime(w.exercises);
+                  const stations = extractStationResults(w.exercises);
+                  return (
+                    <View key={w._id} style={styles.hyroxSimCard}>
+                      <View style={styles.hyroxSimCardHeader}>
+                        <Text style={styles.hyroxSimCardDate}>{formatDate(w.date)}</Text>
+                        {total > 0 && <View style={styles.hyroxSimCardTimeBadge}><Text style={styles.hyroxSimCardTime}>{formatSimTime(total)}</Text></View>}
+                      </View>
+                      {stations.length > 0 && (
+                        <View style={styles.hyroxStationsGrid}>
+                          {stations.map((s: any) => (
+                            <View key={s.id} style={styles.hyroxStationChip}>
+                              <Text style={styles.hyroxStationName} numberOfLines={1}>{s.name}</Text>
+                              {s.duration_min > 0 && <Text style={styles.hyroxStationTime}>{s.duration_min.toFixed(1)} min</Text>}
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
+              </>
+            )}
+
+            {/* Insights */}
+            {hyroxInsights.length > 0 && (
+              <>
+                <View style={styles.sectionLblRow}>
+                  <Icon name="spark" size={12} color={Colors.beige[400]} />
+                  <Text style={styles.sectionLbl}>{lang === 'en' ? 'Smart insights' : 'Nutikad tähelepanekud'}</Text>
+                </View>
+                <View style={styles.insightsCard}>
+                  {hyroxInsights.map((insight: string, i: number) => (
+                    <View key={i} style={[styles.insightRow, i > 0 && styles.insightRowBorder]}>
+                      <Text style={styles.insightDot}>·</Text>
+                      <Text style={styles.insightTxt}>{insight}</Text>
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
+
+            {/* Training plans */}
+            <View style={styles.sectionLblRow}>
+              <Icon name="barbell" size={12} color={Colors.beige[400]} />
+              <Text style={styles.sectionLbl}>{lang === 'en' ? 'Training Plans' : 'Treeningplaanid'}</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingBottom: 8, gap: 12 }}>
+              {TRAINING_PLANS.map((plan: any) => (
+                <View key={plan.id} style={styles.planCard}>
+                  <Text style={styles.planCardWeeks}>{plan.weeks}</Text>
+                  <Text style={styles.planCardWeeksLbl}>{lang === 'en' ? 'weeks' : 'nädalat'}</Text>
+                  <Text style={styles.planCardName}>{lang === 'en' ? plan.name.en : plan.name.et}</Text>
+                  <Text style={styles.planCardFocus} numberOfLines={2}>{lang === 'en' ? plan.focus.en : plan.focus.et}</Text>
+                  <Text style={styles.planCardSessions}>{plan.sessionsPerWeek} {lang === 'en' ? 'sessions/week' : 'seanss/nädal'}</Text>
+                  <TouchableOpacity style={styles.planCardBtn} onPress={() => setSelectedPlan(plan)} activeOpacity={0.8}>
+                    <Text style={styles.planCardBtnTxt}>{lang === 'en' ? 'View plan' : 'Vaata plaani'}</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* ── HYROX Goal Form Modal ── */}
+      <Modal visible={showHyroxGoalForm} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowHyroxGoalForm(false)}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: Colors.cream }}>
+            <View style={styles.pickerHeader}>
+              <Text style={styles.pickerTitle}>{lang === 'en' ? 'Set HYROX Goal' : 'Seadista HYROX eesmärk'}</Text>
+              <TouchableOpacity onPress={() => setShowHyroxGoalForm(false)} style={styles.pickerClose}>
+                <Icon name="close" size={20} color={Colors.beige[600]} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView contentContainerStyle={{ padding: Spacing.xl }} keyboardShouldPersistTaps="handled">
+              <Text style={styles.fieldLbl}>{lang === 'en' ? 'Competition name' : 'Võistluse nimi'}</Text>
+              <TextInput style={[styles.fieldInput, { marginBottom: 14 }]} placeholder={lang === 'en' ? 'e.g. HYROX London 2025' : 'nt HYROX Tallinn 2025'} placeholderTextColor={Colors.beige[200]} value={hxName} onChangeText={setHxName} />
+
+              <Text style={styles.fieldLbl}>{lang === 'en' ? 'Competition date (yyyy-mm-dd)' : 'Kuupäev (aaaa-kk-pp)'}</Text>
+              <TextInput style={[styles.fieldInput, { marginBottom: 14 }]} placeholder="2025-10-15" placeholderTextColor={Colors.beige[200]} value={hxDate} onChangeText={setHxDate} />
+
+              <Text style={styles.fieldLbl}>{lang === 'en' ? 'Division' : 'Kategooria'}</Text>
+              <View style={[styles.chips, { marginBottom: 14, paddingHorizontal: 0 }]}>
+                {HYROX_DIVISIONS.map((d: string) => (
+                  <TouchableOpacity key={d} style={[styles.chip, hxDiv === d && styles.chipOn]} onPress={() => setHxDiv(d)} activeOpacity={0.7}>
+                    <Text style={[styles.chipTxt, hxDiv === d && styles.chipTxtOn]}>{d}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.fieldLbl}>{lang === 'en' ? 'Target finish time' : 'Eesmärkaeg'}</Text>
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.inputSubLbl}>{lang === 'en' ? 'Hours' : 'Tunnid'}</Text>
+                  <TextInput style={styles.fieldInput} placeholder="1" placeholderTextColor={Colors.beige[200]} keyboardType="numeric" value={hxHours} onChangeText={setHxHours} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.inputSubLbl}>{lang === 'en' ? 'Minutes' : 'Minutid'}</Text>
+                  <TextInput style={styles.fieldInput} placeholder="30" placeholderTextColor={Colors.beige[200]} keyboardType="numeric" value={hxMins} onChangeText={setHxMins} />
+                </View>
+              </View>
+
+              <Text style={styles.fieldLbl}>{lang === 'en' ? 'Target run pace (min/km)' : 'Jooksutempo eesmärk (min/km)'}</Text>
+              <TextInput style={[styles.fieldInput, { marginBottom: 24 }]} placeholder="6.0" placeholderTextColor={Colors.beige[200]} keyboardType="decimal-pad" value={hxPace} onChangeText={setHxPace} />
+
+              <TouchableOpacity style={styles.newWorkoutBtn} onPress={saveHyroxGoal} activeOpacity={0.85}>
+                <Text style={styles.newWorkoutTxt}>{lang === 'en' ? 'Save goal' : 'Salvesta eesmärk'}</Text>
+              </TouchableOpacity>
+              {hyroxGoal && (
+                <TouchableOpacity style={[styles.hyroxRemoveBtn, { marginTop: 16 }]} onPress={() => { removeHyroxGoal(); setShowHyroxGoalForm(false); setShowHyroxModal(false); }}>
+                  <Text style={styles.hyroxRemoveTxt}>{lang === 'en' ? 'Remove HYROX section' : 'Eemalda HYROX jaotis'}</Text>
+                </TouchableOpacity>
+              )}
+            </ScrollView>
+          </SafeAreaView>
+        </KeyboardAvoidingView>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -1151,7 +1534,7 @@ const styles = StyleSheet.create({
   reorderCol:      { gap: 2 },
   reorderBtn:      { padding: 3 },
   reorderBtnDisabled: { opacity: 0.2 },
-  reorderArrow:    { fontFamily: Fonts.sansBold, fontSize: 11, color: Colors.beige[500] },
+  reorderArrow:    { fontFamily: Fonts.sansBold, fontSize: 11, color: Colors.beige[400] },
 
   // Past workout cards
   workoutCard: {
@@ -1179,7 +1562,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: Colors.beige[100],
   },
   tabBtnOn:    { backgroundColor: Colors.beige[800], borderColor: Colors.beige[800] },
-  tabBtnTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[500] },
+  tabBtnTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[400] },
   tabBtnTxtOn: { color: Colors.cream },
   prDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.berry[400] },
 
@@ -1238,11 +1621,11 @@ const styles = StyleSheet.create({
   sparkline:    { flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginTop: 4, height: 40 },
   sparkBarWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: 32 },
   sparkBar:     { width: '80%', borderRadius: 3 },
-  sparkLbl:     { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[300], position: 'absolute', bottom: -14, right: 0 },
+  sparkLbl:     { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[200], position: 'absolute', bottom: -14, right: 0 },
 
   empty:    { alignItems: 'center', paddingVertical: 40 },
   emptyTxt: { fontFamily: Fonts.sansLight, fontSize: 14, color: Colors.beige[400] },
-  emptyHint:{ fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[300], marginTop: 6 },
+  emptyHint:{ fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[200], marginTop: 6 },
 
   // ── Builder ──────────────────────────────────────────────────────────────
   backBtn: { padding: 4, marginRight: 8 },
@@ -1258,7 +1641,7 @@ const styles = StyleSheet.create({
   dateChipTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[600] },
   dateChipTxtOn: { color: Colors.cream },
   saveMsgBox:    { marginHorizontal: Spacing.xl, marginBottom: 10, padding: 10, borderRadius: Radius.md, backgroundColor: Colors.blush[50], borderWidth: 1, borderColor: Colors.blush[200] },
-  saveMsgTxt:    { fontFamily: Fonts.sans, fontSize: 13, color: Colors.blush[700], textAlign: 'center' },
+  saveMsgTxt:    { fontFamily: Fonts.sans, fontSize: 13, color: Colors.blush[600], textAlign: 'center' },
 
   builderSection: { paddingHorizontal: Spacing.xl, marginBottom: 14 },
   fieldLbl: {
@@ -1378,4 +1761,118 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 10,
   },
   createBtnTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.cream },
+
+  // ── HYROX programme card ─────────────────────────────────────────────────
+  hyroxProgramCard: {
+    marginHorizontal: Spacing.xl, marginBottom: 16,
+    backgroundColor: Colors.beige[800], borderRadius: Radius.lg,
+    padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14,
+  },
+  hyroxProgramIcon:   { width: 46, height: 46, borderRadius: 23, backgroundColor: Colors.coral[400], alignItems: 'center', justifyContent: 'center' },
+  hyroxProgramTitle:  { fontFamily: Fonts.sansBold, fontSize: 18, color: Colors.cream, letterSpacing: -0.3, marginBottom: 3 },
+  hyroxProgramDesc:   { fontFamily: Fonts.sansLight, fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 17 },
+  hyroxProgramStatus: { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.coral[200], marginTop: 5 },
+
+  // ── HYROX goal card ──────────────────────────────────────────────────────
+  hyroxGoalCard: {
+    marginHorizontal: Spacing.xl, marginTop: 16, marginBottom: 12,
+    backgroundColor: Colors.cream, borderRadius: Radius.lg,
+    padding: 16, borderWidth: 1.5, borderColor: Colors.coral[200],
+  },
+  hyroxGoalCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  hyroxGoalCardTitle:  { fontFamily: Fonts.sansBold, fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', color: Colors.coral[600] },
+  hyroxGoalEditBtn:    { backgroundColor: Colors.coral[50], borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1, borderColor: Colors.coral[200] },
+  hyroxGoalEditTxt:    { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.coral[600] },
+  hyroxGoalCompName:   { fontFamily: Fonts.serifSemiBold, fontSize: 20, color: Colors.beige[800], marginBottom: 10 },
+  hyroxGoalRow:        { flexDirection: 'row', gap: 16, marginBottom: 12 },
+  hyroxGoalItem:       {},
+  hyroxGoalItemLbl:    { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginBottom: 2 },
+  hyroxGoalItemVal:    { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[800] },
+  hyroxTimeRow:        { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  hyroxTimeBlock:      { flex: 1 },
+  hyroxTimeLbl:        { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginBottom: 2 },
+  hyroxTimeVal:        { fontFamily: Fonts.serifSemiBold, fontSize: 28, color: Colors.beige[800] },
+  hyroxTimeSep:        { paddingHorizontal: 8 },
+  hyroxTimeSepTxt:     { fontFamily: Fonts.sansSemiBold, fontSize: 20, color: Colors.beige[200] },
+  hyroxGapRow:         { backgroundColor: Colors.coral[50], borderRadius: 8, padding: 10, marginBottom: 8 },
+  hyroxGapTxt:         { fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[800] },
+  hyroxPaceTxt:        { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 4 },
+  hyroxGoalEmpty:      { paddingVertical: 6 },
+  hyroxChallengeTitle: { fontFamily: Fonts.serifSemiBold, fontSize: 18, color: Colors.beige[800], marginBottom: 8, lineHeight: 24 },
+  hyroxChallengeDesc:  { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[600], lineHeight: 19, marginBottom: 16 },
+  hyroxChallengeBtn:   { backgroundColor: Colors.coral[400], borderRadius: Radius.md, paddingVertical: 13, paddingHorizontal: 18, alignSelf: 'flex-start' },
+  hyroxChallengeBtnTxt:{ fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.cream, letterSpacing: 0.2 },
+
+  // ── Personalised plan ────────────────────────────────────────────────────
+  personalPlanCard: {
+    marginHorizontal: Spacing.xl, marginBottom: 12,
+    backgroundColor: Colors.cream, borderRadius: Radius.lg,
+    borderWidth: 1.5, borderColor: Colors.sky[200], overflow: 'hidden',
+  },
+  personalPlanHeader:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: Colors.sky[100] },
+  personalPlanCountdown: { fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.sky[600] },
+  personalPlanName:      { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 3 },
+  personalPlanViewBtn:   { backgroundColor: Colors.sky[50], borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1, borderColor: Colors.sky[200] },
+  personalPlanViewTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.sky[600] },
+  personalPlanFocus:     { backgroundColor: Colors.coral[50], paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.coral[100] },
+  personalPlanFocusLbl:  { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 0.5, color: Colors.coral[600], marginBottom: 3 },
+  personalPlanFocusVal:  { fontFamily: Fonts.sans, fontSize: 12, color: Colors.beige[800] },
+  personalPlanWeekTitle: { fontFamily: Fonts.sansBold, fontSize: 12, color: Colors.beige[600], paddingHorizontal: 14, paddingTop: 12, paddingBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+  personalPlanSession:   { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: 1, borderTopColor: Colors.beige[50] },
+  personalPlanDot:       { width: 8, height: 8, borderRadius: 4, marginTop: 4 },
+  personalPlanSessionDay:  { fontFamily: Fonts.sans, fontSize: 12, color: Colors.beige[600] },
+  personalPlanSessionDesc: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 2, lineHeight: 15 },
+  personalPlanSessionDur:  { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], minWidth: 36, textAlign: 'right', marginTop: 2 },
+
+  // ── HYROX simulation ─────────────────────────────────────────────────────
+  hyroxSimSection: {
+    marginHorizontal: Spacing.xl, marginBottom: 16,
+    backgroundColor: Colors.beige[800], borderRadius: Radius.lg, padding: 18,
+  },
+  hyroxSimHeader:  { marginBottom: 14 },
+  hyroxSimTitle:   { fontFamily: Fonts.sansBold, fontSize: 18, color: Colors.cream, letterSpacing: -0.3 },
+  hyroxSimBest:    { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[200], marginTop: 4 },
+  hyroxSimBtn:     { backgroundColor: Colors.coral[400], borderRadius: Radius.md, padding: 14, alignItems: 'center' },
+  hyroxSimBtnTxt:  { fontFamily: Fonts.sansBold, fontSize: 15, color: Colors.cream, letterSpacing: 0.3 },
+  hyroxSimCard:    {
+    marginHorizontal: Spacing.xl, marginBottom: 10,
+    backgroundColor: Colors.cream, borderRadius: Radius.lg,
+    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
+  },
+  hyroxSimCardHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  hyroxSimCardDate:      { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[600] },
+  hyroxSimCardTimeBadge: { backgroundColor: Colors.coral[50], borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: Colors.coral[200] },
+  hyroxSimCardTime:      { fontFamily: Fonts.sansBold, fontSize: 15, color: Colors.coral[600] },
+  hyroxStationsGrid:     { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  hyroxStationChip:      { backgroundColor: Colors.beige[50], borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, borderWidth: 1, borderColor: Colors.beige[100], minWidth: 80 },
+  hyroxStationName:      { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.beige[600] },
+  hyroxStationTime:      { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.coral[600], marginTop: 2 },
+
+  // ── Insights ─────────────────────────────────────────────────────────────
+  insightsCard:     { marginHorizontal: Spacing.xl, marginBottom: 12, backgroundColor: Colors.sky[50], borderRadius: Radius.lg, padding: 14, borderWidth: 1, borderColor: Colors.sky[100] },
+  insightRow:       { flexDirection: 'row', gap: 10, paddingVertical: 6 },
+  insightRowBorder: { borderTopWidth: 1, borderTopColor: Colors.sky[100] },
+  insightDot:       { fontFamily: Fonts.sansBold, fontSize: 16, color: Colors.sky[400] },
+  insightTxt:       { flex: 1, fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[600], lineHeight: 19 },
+
+  // ── Training plan cards ──────────────────────────────────────────────────
+  planCard: {
+    width: 160, backgroundColor: Colors.cream,
+    borderRadius: Radius.lg, padding: 16,
+    borderWidth: 1, borderColor: Colors.beige[100],
+  },
+  planCardWeeks:    { fontFamily: Fonts.serifSemiBold, fontSize: 40, color: Colors.beige[800], lineHeight: 42 },
+  planCardWeeksLbl: { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginBottom: 6 },
+  planCardName:     { fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.beige[800], marginBottom: 4 },
+  planCardFocus:    { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginBottom: 6, lineHeight: 15 },
+  planCardSessions: { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginBottom: 12 },
+  planCardBtn:      { backgroundColor: Colors.beige[800], borderRadius: Radius.md, paddingVertical: 8, alignItems: 'center' },
+  planCardBtnTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.cream },
+
+  // ── HYROX remove ────────────────────────────────────────────────────────
+  hyroxRemoveBtn: { alignSelf: 'center', padding: 10 },
+  hyroxRemoveTxt: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], textDecorationLine: 'underline' },
+
+  // ── inputSubLbl ──────────────────────────────────────────────────────────
+  inputSubLbl: { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginBottom: 4 },
 });
