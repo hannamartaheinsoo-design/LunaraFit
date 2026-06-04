@@ -1770,13 +1770,14 @@ const styles = StyleSheet.create({
   // ── HYROX programme card ─────────────────────────────────────────────────
   hyroxProgramCard: {
     marginHorizontal: Spacing.xl, marginBottom: 16,
-    backgroundColor: Colors.beige[800], borderRadius: Radius.lg,
+    backgroundColor: Colors.coral[50], borderRadius: Radius.lg,
     padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14,
+    borderWidth: 1.5, borderColor: Colors.coral[100],
   },
   hyroxProgramIcon:   { width: 46, height: 46, borderRadius: 23, backgroundColor: Colors.coral[400], alignItems: 'center', justifyContent: 'center' },
-  hyroxProgramTitle:  { fontFamily: Fonts.sansBold, fontSize: 18, color: Colors.cream, letterSpacing: -0.3, marginBottom: 3 },
-  hyroxProgramDesc:   { fontFamily: Fonts.sansLight, fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 17 },
-  hyroxProgramStatus: { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.coral[200], marginTop: 5 },
+  hyroxProgramTitle:  { fontFamily: Fonts.sansBold, fontSize: 18, color: Colors.beige[800], letterSpacing: -0.3, marginBottom: 3 },
+  hyroxProgramDesc:   { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[500], lineHeight: 17 },
+  hyroxProgramStatus: { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.coral[600], marginTop: 5 },
 
   // ── HYROX goal card ──────────────────────────────────────────────────────
   hyroxGoalCard: {

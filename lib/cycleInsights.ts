@@ -254,13 +254,13 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     phase: 'Menstrual phase',
     phaseKey: 'menstruation',
     daysRange: 'Approximately days 1–5',
-    tagline: 'Rest is part of the strength.',
+    tagline: 'Rest is part of strength.',
     overview:
-      'The cycle begins with menstruation, when oestrogen and progesterone are at their lowest. ' +
+      'The cycle begins with menstruation, when estrogen and progesterone are at their lowest. ' +
       'Many women notice energy and mood changes during this time — this is completely normal. ' +
       'Moderate movement is generally safe and may even help relieve discomfort.',
     hormoneContext:
-      'Both oestrogen and progesterone are low. FSH begins to rise slowly, preparing the body for the next phase. ' +
+      'Both estrogen and progesterone are low. FSH begins to rise slowly, preparing the body for the next phase. ' +
       'Mayo Clinic notes that hormonal fluctuations can affect pain perception and energy levels.',
     energyPattern:
       'Energy is often lower, especially in the first days. This is individual — some women train normally, ' +
@@ -305,26 +305,26 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     daysRange: 'Approximately days 6–13',
     tagline: 'Energy is rising — use it.',
     overview:
-      'In the follicular phase, oestrogen rises gradually as the ovary prepares a dominant follicle. ' +
+      'In the follicular phase, estrogen rises gradually as the ovary prepares a dominant follicle. ' +
       'Many women notice improved energy, motivation and performance during this time. ' +
       'Research suggests this may be an optimal time for more intense training.',
     hormoneContext:
-      'Oestrogen rises progressively. PubMed studies (Sung et al., 2014) suggest oestrogen may have an anabolic effect. ' +
+      'Estrogen rises progressively. PubMed studies (Sung et al., 2014) suggest estrogen may have an anabolic effect. ' +
       'Cortisol is relatively low, which may support better recovery.',
     energyPattern:
       'Energy tends to be higher. Motivation to train may increase. Neuromuscular performance may improve ' +
-      'with rising oestrogen — though this varies significantly between individuals.',
+      'with rising estrogen — though this varies significantly between individuals.',
     trainingFocus: [
       {
         title: 'Strength training',
         detail:
-          'According to NSCA and PubMed studies, the follicular phase may be a favourable time for heavier strength work.',
+          'According to NSCA and PubMed studies, the follicular phase may be a favorable time for heavier strength work.',
         intensity: 'kõrge',
       },
       {
         title: 'Learning new movements',
         detail:
-          'Cognitive flexibility and coordination may improve with rising oestrogen — a good time to try new exercises.',
+          'Cognitive flexibility and coordination may improve with rising estrogen — a good time to try new exercises.',
         intensity: 'mõõdukas',
       },
       {
@@ -352,11 +352,11 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     daysRange: 'Approximately days 12–16',
     tagline: 'Energy peak — new records await.',
     overview:
-      'During ovulation, oestrogen reaches its highest point in the cycle. Many women experience ' +
+      'During ovulation, estrogen reaches its highest point in the cycle. Many women experience ' +
       'their greatest energy, confidence and physical performance right in this phase.',
     hormoneContext:
-      'Oestrogen peak and LH surge. Testosterone may also rise slightly. Important note: research ' +
-      '(Hewett et al.) suggests high oestrogen may affect ligament laxity — pay attention to technique.',
+      'Estrogen peak and LH surge. Testosterone may also rise slightly. Important note: research ' +
+      '(Hewett et al.) suggests high estrogen may affect ligament laxity — pay attention to technique.',
     energyPattern:
       'Energy is at its peak. Many women feel greater confidence, clearer thinking and better physical output.',
     trainingFocus: [
@@ -370,7 +370,7 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
         title: 'Plyometrics & jumping',
         detail:
           'High-performance movements suit this phase. Note: some research points to increased knee injury risk ' +
-          'during high oestrogen — thorough warm-up is especially important.',
+          'during high estrogen — thorough warm-up is especially important.',
         intensity: 'kõrge',
       },
       {
@@ -399,11 +399,11 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     tagline: 'Listen to your body — recovery is progress too.',
     overview:
       'In the luteal phase, progesterone rises to prepare the body for a possible pregnancy. ' +
-      'As the cycle nears its end, both oestrogen and progesterone drop, which can cause various symptoms. ' +
+      'As the cycle nears its end, both estrogen and progesterone drop, which can cause various symptoms. ' +
       'This phase is long — about 14 days — and conditions shift considerably throughout it.',
     hormoneContext:
       'Progesterone dominates. It raises body temperature (~0.2–0.5°C), speeds up metabolism and may affect breathing. ' +
-      'The drop in oestrogen towards the end is linked to mood changes and PMS symptoms (Mayo Clinic).',
+      'The drop in estrogen toward the end of the cycle is linked to mood changes and PMS symptoms (Mayo Clinic).',
     energyPattern:
       'Energy varies. Early in the luteal phase energy may still be good, but in the late luteal phase ' +
       'many women experience fatigue and slower recovery. Cardiovascular performance may be lower due to higher body temperature.',
@@ -418,8 +418,7 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       {
         title: 'Endurance training',
         detail:
-          'Higher body temperature may reduce endurance performance. Outdoor training is harder in the heat — ' +
-          'hydration is especially important.',
+          'Higher body temperature may reduce endurance performance — hydration is especially important.',
         intensity: 'mõõdukas',
       },
       {
