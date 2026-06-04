@@ -408,6 +408,32 @@ export default function WorkoutsScreen() {
 
   const effectiveDate = dateMode === 'today' ? todayISO() : dateMode === 'yesterday' ? yesterdayISO() : date;
 
+  // ── HYROX memos — declared here (before conditional early returns) so hook count is always stable
+  // (actual workouts/hyroxGoal data comes from the useQuery calls above; we just reference them here)
+  const hyroxWorkoutsAll = workouts.filter((w: any) =>
+    w.name.startsWith('HYROX') || w.exercises.some((e: any) => e.category === 'hyrox')
+  );
+  const hyroxTimesAll = hyroxWorkoutsAll
+    .map((w: any) => ({ date: w.date, total: calcHyroxTotalTime(w.exercises) }))
+    .filter((x: any) => x.total > 0)
+    .sort((a: any, b: any) => b.date.localeCompare(a.date));
+  const lastSimTimeAll = hyroxTimesAll[0]?.total ?? 0;
+  const hyroxInsights = React.useMemo(
+    () => getHyroxInsights(hyroxWorkoutsAll.map((w: any) => ({
+      name: w.name, date: w.date, phase: w.phase, exercises: w.exercises,
+    })), lang as any),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hyroxWorkoutsAll.length, lang]
+  );
+  const personalizedPlan = React.useMemo(
+    () => generatePersonalizedPlan(
+      hyroxGoal?.competition_date, hyroxGoal?.goal_minutes,
+      lastSimTimeAll || undefined, hyroxGoal?.weakest_stations, lang as any,
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hyroxGoal?.goal_minutes, hyroxGoal?.competition_date, lastSimTimeAll, lang]
+  );
+
   const resetBuilder = () => {
     setDate(todayISO()); setDateMode('today');
     setWorkoutName(''); setLoggedExercises([]);
@@ -782,34 +808,13 @@ export default function WorkoutsScreen() {
   const progress = getExerciseProgress(workouts as any);
   const weekly   = getWeeklyVolume(workouts as any, 6);
 
-  // HYROX computed
-  const hyroxWorkouts = workouts.filter(w =>
-    w.name.startsWith('HYROX') || w.exercises.some((e: any) => e.category === 'hyrox')
-  );
-  const hyroxTimes = hyroxWorkouts
-    .map(w => ({ date: w.date, total: calcHyroxTotalTime(w.exercises as any) }))
-    .filter(x => x.total > 0)
-    .sort((a, b) => b.date.localeCompare(a.date));
-  const bestSimTime = hyroxTimes.length ? Math.min(...hyroxTimes.map(x => x.total)) : 0;
-  const lastSimTime = hyroxTimes[0]?.total ?? 0;
+  // HYROX computed (using the already-filtered list from top of component)
+  const hyroxWorkouts = hyroxWorkoutsAll;
+  const hyroxTimes = hyroxTimesAll;
+  const bestSimTime = hyroxTimes.length ? Math.min(...hyroxTimes.map((x: any) => x.total)) : 0;
+  const lastSimTime = lastSimTimeAll;
   const goalTotalMinutes = hyroxGoal?.goal_minutes ?? 0;
   const gapMinutes = lastSimTime && goalTotalMinutes ? lastSimTime - goalTotalMinutes : 0;
-
-  const hyroxInsights = React.useMemo(
-    () => getHyroxInsights(hyroxWorkouts.map(w => ({
-      name: w.name, date: w.date, phase: w.phase, exercises: w.exercises as any,
-    })), lang as any),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [hyroxWorkouts.length, lang]
-  );
-  const personalizedPlan = React.useMemo(
-    () => generatePersonalizedPlan(
-      hyroxGoal?.competition_date, hyroxGoal?.goal_minutes,
-      lastSimTime || undefined, hyroxGoal?.weakest_stations, lang as any,
-    ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [hyroxGoal?.goal_minutes, hyroxGoal?.competition_date, lastSimTime, lang]
-  );
 
   const openHyroxGoalForm = () => {
     if (hyroxGoal) {
