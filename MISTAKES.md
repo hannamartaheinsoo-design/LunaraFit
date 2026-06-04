@@ -115,3 +115,9 @@
 **Root cause:** The `|| undefined` shorthand converts any falsy value (including a deliberate `false`) to `undefined`, making it indistinguishable from "field not provided".
 **Fix applied:** Changed to `spotting: spotting === true` so the field is always an explicit boolean in mutation args, ensuring patch always writes the intended value.
 **Rule going forward:** Never use `value || undefined` for boolean fields that need to be patchable. Use `value === true` to coerce to an explicit boolean, or `value ?? undefined` only when `null`/`undefined` are the only cases that should be omitted.
+
+### [2026-06-04] Used non-existent theme tokens Colors.ink and Fonts.body
+**What happened:** `DatePicker.tsx` was written using `Colors.ink` and `Fonts.body`, neither of which exist in `constants/theme.ts`. TypeScript caught `Colors.ink`; `Fonts.body` silently fell back to the system font.
+**Root cause:** Wrote component from memory without checking the actual theme exports.
+**Fix applied:** Replaced with `Colors.dark` (the correct dark text token) and `Fonts.sans` (the correct body font).
+**Rule going forward:** Before using any `Colors.*` or `Fonts.*` token in a new component, grep `constants/theme.ts` to confirm it exists. Never assume token names from convention.

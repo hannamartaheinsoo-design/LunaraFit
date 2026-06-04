@@ -27,6 +27,7 @@ This project uses **Convex** as the backend and **`@convex-dev/auth`** for authe
 - Auth providers: email/password (works), Google + Apple (need `AUTH_GOOGLE_ID/SECRET`, `AUTH_APPLE_ID/SECRET` env vars)
 - Backend files: `convex/schema.ts`, `convex/auth.ts`, `convex/profiles.ts`, `convex/workouts.ts`, `convex/cycleDays.ts`, `convex/userData.ts`
 - `cycle_days` table has: `period` (bool), `spotting` (optional bool), `mood`, `symptoms[]`
+- `profiles` table has: `birth_year`, `birth_month`, `birth_day` (all optional numbers) — used together for precise age validation (≥ 16 required)
 
 **Data access — always use Convex, never `storage.*`:**
 - Read: `useQuery(api.profiles.get)`, `useQuery(api.workouts.list)`, `useQuery(api.cycleDays.list)` — reactive, no `useEffect` needed
@@ -58,3 +59,15 @@ All user-visible strings must go through `useTranslation()` from `lib/LangContex
 - Hook: `const { t, tArr, lang, setLang } = useTranslation()`
 - Content libraries with display text (e.g. `lib/cycleInsights.ts`) must export lang-aware functions: `getXxx(lang)`
 - `lib/cycle.ts` exposes `getPhaseLabel(phase, lang)` — use this instead of `PHASE_LABELS[phase]`
+
+---
+
+# UI Components
+
+**DatePicker** (`components/ui/DatePicker.tsx`)
+- Reusable 3-field date input (year / month / day). Returns and accepts ISO `YYYY-MM-DD` strings.
+- Field order is lang-aware: ET → year / Kuu (KK) / Päev (PP); EN → year / Day (DD) / Month (MM)
+- Auto-advances focus after 4 digits (year) or 2 digits (month/day)
+- Month is clamped to max 12 automatically
+- Styled with underline only (no border box) — do not add borders, keep it minimal
+- Usage: `<DatePicker value={dateString} onChange={setDateString} />`
