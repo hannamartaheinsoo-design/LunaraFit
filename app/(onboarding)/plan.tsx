@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
@@ -11,6 +12,7 @@ import type { Plan } from '../../types';
 import { useTranslation } from '../../lib/LangContext';
 
 export default function PlanScreen() {
+  const T = useTheme();
   const { t } = useTranslation();
   const [selected, setSelected] = useState<Plan>('monthly');
   const upsertProfile = useMutation(api.profiles.upsert);
@@ -47,7 +49,7 @@ export default function PlanScreen() {
   ];
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.scroll, { backgroundColor: T.bg }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <TouchableOpacity onPress={() => router.back()} style={styles.back}>
         <Text style={styles.backText}>{t('ob.back')}</Text>
       </TouchableOpacity>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { router } from 'expo-router';
 import { Colors, Spacing } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
@@ -11,6 +12,7 @@ import { todayISO } from '../../lib/cycle';
 import { useTranslation } from '../../lib/LangContext';
 
 export default function CycleScreen() {
+  const T = useTheme();
   const { t } = useTranslation();
   const [lastPeriod, setLastPeriod] = useState('');
   const [cycleLen, setCycleLen] = useState('28');
@@ -29,7 +31,7 @@ export default function CycleScreen() {
 
   return (
     <ScrollView
-      style={styles.scroll}
+      style={[styles.scroll, { backgroundColor: T.bg }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >

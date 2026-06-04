@@ -275,10 +275,10 @@ export default function CycleScreen() {
                 <View style={[
                   styles.calCircle,
                   isLogged    && styles.calPeriodLogged,
-                  isSpotting  && !isLogged && styles.calSpotting,
-                  !isLogged && !isSpotting && isPred && styles.calPeriodPred,
+                  isSpotting  && !isLogged && [styles.calSpotting, T.dark && { backgroundColor: T.blushBg, borderColor: T.blushBorder }],
+                  !isLogged && !isSpotting && isPred && [styles.calPeriodPred, T.dark && { backgroundColor: T.blushBg, borderColor: T.blushBorder }],
                   isOv && !isLogged && !isSpotting && styles.calOv,
-                  isFert && !isOv && !isLogged && !isSpotting && styles.calFert,
+                  isFert && !isOv && !isLogged && !isSpotting && [styles.calFert, T.dark && { backgroundColor: T.skyBg, borderColor: T.skyBorder }],
                   isToday && styles.calToday,
                 ]}>
                   <Text style={[

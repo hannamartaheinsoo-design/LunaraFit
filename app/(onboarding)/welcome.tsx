@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
 import { useTranslation } from '../../lib/LangContext';
@@ -19,11 +20,12 @@ const LANGS = [
 ];
 
 export default function WelcomeScreen() {
+  const T = useTheme();
   const { lang, setLang, t } = useTranslation();
 
   return (
     <ScrollView
-      style={styles.scroll}
+      style={[styles.scroll, { backgroundColor: T.bg }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >

@@ -860,11 +860,21 @@ export default function WorkoutsScreen() {
         {(['log', 'routines', 'progress'] as const).map(tab => (
           <TouchableOpacity
             key={tab}
-            style={[styles.tabBtn, activeTab === tab && styles.tabBtnOn]}
+            style={[styles.tabBtn,
+              { borderColor: T.border },
+              activeTab === tab && (T.dark
+                ? { backgroundColor: T.surface2, borderColor: T.border2 }
+                : { backgroundColor: Colors.blush[400], borderColor: Colors.blush[400] }
+              ),
+            ]}
             onPress={() => setActiveTab(tab)}
             activeOpacity={0.8}
           >
-            <Text style={[styles.tabBtnTxt, activeTab === tab && styles.tabBtnTxtOn]}>
+            <Text style={[
+              styles.tabBtnTxt,
+              { color: T.textMuted },
+              activeTab === tab && { color: T.dark ? T.text : '#fff', fontFamily: Fonts.sansBold },
+            ]}>
               {t(`w.tab.${tab}` as any)}
             </Text>
             {tab === 'progress' && progress.some(p => p.isNew) && <View style={styles.prDot} />}
@@ -891,19 +901,19 @@ export default function WorkoutsScreen() {
             {routines.length > 0 && (
               <>
                 <View style={styles.sectionLblRow}>
-                  <Icon name="folder" size={12} color={Colors.beige[400]} />
-                  <Text style={styles.sectionLbl}>{t('w.routine.lbl')}</Text>
+                  <Icon name="folder" size={12} color={T.textMuted} />
+                  <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('w.routine.lbl')}</Text>
                 </View>
                 {routines.map(r => (
                   <TouchableOpacity
                     key={r._id}
-                    style={styles.routineLogCard}
+                    style={[styles.routineLogCard, T.dark && { backgroundColor: T.surface, borderColor: T.border }]}
                     activeOpacity={0.8}
                     onPress={() => openBuilderFromRoutine(r)}
                   >
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.routineLogName}>{r.name}</Text>
-                      <Text style={styles.routineLogEx} numberOfLines={1}>
+                      <Text style={[styles.routineLogName, { color: T.text }]}>{r.name}</Text>
+                      <Text style={[styles.routineLogEx, { color: T.textMuted }]} numberOfLines={1}>
                         {r.exercises.map(e => e.name).join(' · ')}
                       </Text>
                     </View>
@@ -917,22 +927,22 @@ export default function WorkoutsScreen() {
 
             {/* History */}
             <View style={styles.sectionLblRow}>
-              <Icon name="eye" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>{t('w.log.lbl')}</Text>
+              <Icon name="eye" size={12} color={T.textMuted} />
+              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('w.log.lbl')}</Text>
             </View>
 
             {workouts.length === 0 ? (
-              <View style={styles.empty}>
-                <Text style={styles.emptyTxt}>{t('w.empty')}</Text>
-                <Text style={styles.emptyHint}>{t('w.empty.hint')}</Text>
+              <View style={[styles.empty, T.dark && { backgroundColor: T.surface2 }]}>
+                <Text style={[styles.emptyTxt, { color: T.textMuted }]}>{t('w.empty')}</Text>
+                <Text style={[styles.emptyHint, { color: T.textMuted }]}>{t('w.empty.hint')}</Text>
               </View>
             ) : (
               workouts.slice(0, 30).map(w => (
-                <View key={w._id} style={styles.workoutCard}>
+                <View key={w._id} style={[styles.workoutCard, T.dark && { backgroundColor: T.surface, borderColor: T.border }]}>
                   <View style={styles.workoutHeader}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.workoutName}>{w.name}</Text>
-                      <Text style={styles.workoutMeta}>
+                      <Text style={[styles.workoutName, { color: T.text }]}>{w.name}</Text>
+                      <Text style={[styles.workoutMeta, { color: T.textMuted }]}>
                         {formatDate(w.date)} · {getPhaseLabel(w.phase as any, lang)}
                       </Text>
                     </View>
@@ -941,9 +951,9 @@ export default function WorkoutsScreen() {
                     </TouchableOpacity>
                   </View>
                   {w.exercises.map((e, i) => (
-                    <View key={i} style={styles.exLine}>
-                      <Text style={styles.exName}>{e.name}</Text>
-                      <Text style={styles.exStats}>
+                    <View key={i} style={[styles.exLine, T.dark && { borderBottomColor: T.border }]}>
+                      <Text style={[styles.exName, { color: T.textSec }]}>{e.name}</Text>
+                      <Text style={[styles.exStats, { color: T.textMuted }]}>
                         {e.logged_sets?.length ? (
                           e.logged_sets.map(s => {
                             const parts = [];
@@ -974,8 +984,8 @@ export default function WorkoutsScreen() {
           <>
             {/* ── Training Programmes ── */}
             <View style={styles.sectionLblRow}>
-              <Icon name="spark" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>{lang === 'en' ? 'Training Programmes' : 'Treeningprogrammid'}</Text>
+              <Icon name="spark" size={12} color={T.textMuted} />
+              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{lang === 'en' ? 'Training Programmes' : 'Treeningprogrammid'}</Text>
             </View>
             <TouchableOpacity style={styles.hyroxProgramCard} activeOpacity={0.88} onPress={() => setShowHyroxModal(true)}>
               <View style={styles.hyroxProgramIcon}><Icon name="wave" size={22} color={Colors.cream} /></View>
@@ -1000,8 +1010,8 @@ export default function WorkoutsScreen() {
 
             {/* ── My Routines ── */}
             <View style={[styles.sectionLblRow, { marginTop: 6 }]}>
-              <Icon name="barbell" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>{lang === 'en' ? 'My Routines' : 'Minu kavad'}</Text>
+              <Icon name="barbell" size={12} color={T.textMuted} />
+              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{lang === 'en' ? 'My Routines' : 'Minu kavad'}</Text>
             </View>
             <TouchableOpacity
               style={styles.newWorkoutBtn}
@@ -1013,22 +1023,22 @@ export default function WorkoutsScreen() {
             </TouchableOpacity>
 
             {routines.length === 0 ? (
-              <View style={styles.empty}>
-                <Text style={styles.emptyTxt}>{t('w.routine.empty')}</Text>
-                <Text style={styles.emptyHint}>{t('w.routine.empty.hint')}</Text>
+              <View style={[styles.empty, T.dark && { backgroundColor: T.surface2 }]}>
+                <Text style={[styles.emptyTxt, { color: T.textMuted }]}>{t('w.routine.empty')}</Text>
+                <Text style={[styles.emptyHint, { color: T.textMuted }]}>{t('w.routine.empty.hint')}</Text>
               </View>
             ) : (
               routines.map(r => (
-                <View key={r._id} style={styles.workoutCard}>
+                <View key={r._id} style={[styles.workoutCard, T.dark && { backgroundColor: T.surface, borderColor: T.border }]}>
                   <View style={styles.workoutHeader}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.workoutName}>{r.name}</Text>
-                      <Text style={styles.workoutMeta}>
+                      <Text style={[styles.workoutName, { color: T.text }]}>{r.name}</Text>
+                      <Text style={[styles.workoutMeta, { color: T.textMuted }]}>
                         {r.exercises.length} {lang === 'en' ? 'exercises' : 'harjutust'}
                       </Text>
                     </View>
                     <TouchableOpacity onPress={() => openRoutineForEdit(r)} style={[styles.deleteBtn, { marginRight: 4 }]}>
-                      <Icon name="edit" size={16} color={Colors.beige[400]} />
+                      <Icon name="edit" size={16} color={T.textMuted} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleDeleteRoutine(r._id)} style={styles.deleteBtn}>
                       <Icon name="trash" size={16} color={Colors.error.text} />
@@ -1102,56 +1112,56 @@ export default function WorkoutsScreen() {
                 )}
 
                 <View style={styles.sectionLblRow}>
-                  <Icon name="wave" size={12} color={Colors.beige[400]} />
-                  <Text style={styles.sectionLbl}>{t('w.progress.weekly')}</Text>
+                  <Icon name="wave" size={12} color={T.textMuted} />
+                  <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('w.progress.weekly')}</Text>
                 </View>
-                <View style={styles.chartCard}>
+                <View style={[styles.chartCard, T.dark && { backgroundColor: T.surface, borderColor: T.border }]}>
                   <View style={styles.chartBars}>
                     {weekly.map((w, i) => (
                       <View key={i} style={styles.chartCol}>
-                        <Text style={styles.chartVolLbl}>
+                        <Text style={[styles.chartVolLbl, { color: T.textMuted }]}>
                           {w.totalKg > 0 ? (w.totalKg >= 1000 ? `${(w.totalKg/1000).toFixed(1)}t` : `${w.totalKg}`) : ''}
                         </Text>
                         <View style={styles.chartBarWrap}>
                           <View style={[
                             styles.chartBar,
                             { height: `${Math.max((w.totalKg / maxVol) * 100, w.totalKg > 0 ? 8 : 0)}%` as any,
-                              backgroundColor: i === weekly.length - 1 ? Colors.blush[400] : Colors.beige[100] }
+                              backgroundColor: i === weekly.length - 1 ? Colors.blush[400] : T.border }
                           ]} />
                         </View>
-                        <Text style={styles.chartWeekLbl}>{w.weekLabel}</Text>
+                        <Text style={[styles.chartWeekLbl, { color: T.textMuted }]}>{w.weekLabel}</Text>
                       </View>
                     ))}
                   </View>
                 </View>
 
                 <View style={styles.sectionLblRow}>
-                  <Icon name="spark" size={12} color={Colors.beige[400]} />
-                  <Text style={styles.sectionLbl}>{t('w.progress.exheader')}</Text>
+                  <Icon name="spark" size={12} color={T.textMuted} />
+                  <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('w.progress.exheader')}</Text>
                 </View>
 
                 {progress.filter(p => p.totalSessions >= 1).map(p => (
-                  <View key={p.name} style={styles.progressCard}>
+                  <View key={p.name} style={[styles.progressCard, T.dark && { backgroundColor: T.surface, borderColor: T.border }]}>
                     <View style={styles.progressHeader}>
                       <View style={{ flex: 1 }}>
                         <View style={styles.progressNameRow}>
-                          <Text style={styles.progressName}>{p.name}</Text>
+                          <Text style={[styles.progressName, { color: T.text }]}>{p.name}</Text>
                           {p.isNew && (
                             <View style={styles.prBadge}>
                               <Text style={styles.prBadgeTxt}>🏆 PR</Text>
                             </View>
                           )}
                         </View>
-                        <Text style={styles.progressMeta}>
+                        <Text style={[styles.progressMeta, { color: T.textMuted }]}>
                           {p.totalSessions} {t('w.progress.logged')}
                         </Text>
                       </View>
                     </View>
-                    <View style={styles.progressMetrics}>
+                    <View style={[styles.progressMetrics, T.dark && { borderTopColor: T.border }]}>
                       {p.bestWeight > 0 && (
                         <View style={styles.progressMetric}>
-                          <Text style={styles.progressMetricVal}>{p.bestWeight} kg</Text>
-                          <Text style={styles.progressMetricLbl}>{t('w.progress.bestkg')}</Text>
+                          <Text style={[styles.progressMetricVal, { color: T.text }]}>{p.bestWeight} kg</Text>
+                          <Text style={[styles.progressMetricLbl, { color: T.textMuted }]}>{t('w.progress.bestkg')}</Text>
                           {p.weightGainPct !== null && p.weightGainPct > 0 && (
                             <Text style={styles.progressGain}>+{p.weightGainPct}%</Text>
                           )}
@@ -1159,20 +1169,20 @@ export default function WorkoutsScreen() {
                       )}
                       {p.bestReps > 0 && (
                         <View style={styles.progressMetric}>
-                          <Text style={styles.progressMetricVal}>{p.bestReps}</Text>
-                          <Text style={styles.progressMetricLbl}>{t('w.progress.bestreps')}</Text>
+                          <Text style={[styles.progressMetricVal, { color: T.text }]}>{p.bestReps}</Text>
+                          <Text style={[styles.progressMetricLbl, { color: T.textMuted }]}>{t('w.progress.bestreps')}</Text>
                         </View>
                       )}
                       {p.bestDistance > 0 && (
                         <View style={styles.progressMetric}>
-                          <Text style={styles.progressMetricVal}>{p.bestDistance} km</Text>
-                          <Text style={styles.progressMetricLbl}>{t('w.progress.bestdist')}</Text>
+                          <Text style={[styles.progressMetricVal, { color: T.text }]}>{p.bestDistance} km</Text>
+                          <Text style={[styles.progressMetricLbl, { color: T.textMuted }]}>{t('w.progress.bestdist')}</Text>
                         </View>
                       )}
                       {p.bestDuration > 0 && (
                         <View style={styles.progressMetric}>
-                          <Text style={styles.progressMetricVal}>{p.bestDuration} min</Text>
-                          <Text style={styles.progressMetricLbl}>{t('w.progress.bestdur')}</Text>
+                          <Text style={[styles.progressMetricVal, { color: T.text }]}>{p.bestDuration} min</Text>
+                          <Text style={[styles.progressMetricLbl, { color: T.textMuted }]}>{t('w.progress.bestdur')}</Text>
                         </View>
                       )}
                     </View>
@@ -1202,8 +1212,8 @@ export default function WorkoutsScreen() {
 
       {/* ── HYROX Programme Modal ───────────────────────────────────────── */}
       <Modal visible={showHyroxModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowHyroxModal(false)}>
-        <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: Colors.cream }}>
-          <View style={[styles.topBar, { paddingVertical: Spacing.md }]}>
+        <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: T.bg }}>
+          <View style={[styles.topBar, { paddingVertical: Spacing.md, borderBottomColor: T.border }]}>
             <View>
               <Text style={styles.heading}>HYROX</Text>
               <Text style={styles.subheading}>{lang === 'en' ? 'Competition Preparation' : 'Võistluseks ettevalmistus'}</Text>
@@ -1425,8 +1435,8 @@ export default function WorkoutsScreen() {
       {/* ── HYROX Goal Form Modal ── */}
       <Modal visible={showHyroxGoalForm} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowHyroxGoalForm(false)}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: Colors.cream }}>
-            <View style={styles.pickerHeader}>
+          <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: T.bg }}>
+            <View style={[styles.pickerHeader, { borderBottomColor: T.border }]}>
               <Text style={styles.pickerTitle}>{lang === 'en' ? 'Set HYROX Goal' : 'Seadista HYROX eesmärk'}</Text>
               <TouchableOpacity onPress={() => setShowHyroxGoalForm(false)} style={styles.pickerClose}>
                 <Icon name="close" size={20} color={Colors.beige[600]} />

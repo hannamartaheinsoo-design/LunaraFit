@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
@@ -17,6 +18,7 @@ const LEVEL_KEYS: { key: FitnessLevel; titleKey: any; subKey: any; icon: any }[]
 ];
 
 export default function FitnessScreen() {
+  const T = useTheme();
   const { t } = useTranslation();
   const [selected, setSelected] = useState<FitnessLevel | null>(null);
 
@@ -29,7 +31,7 @@ export default function FitnessScreen() {
   };
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.scroll, { backgroundColor: T.bg }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <TouchableOpacity onPress={() => router.back()} style={styles.back}>
         <Text style={styles.backText}>{t('ob.back')}</Text>
       </TouchableOpacity>

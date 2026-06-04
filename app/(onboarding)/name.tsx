@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, Text, View, Alert, Platform } from 'react-native';
 import { router, useNavigation } from 'expo-router';
 import { Colors, Spacing } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { DatePicker } from '../../components/ui/DatePicker';
@@ -19,6 +20,7 @@ function calcAge(year: number, month: number, day: number): number {
 }
 
 export default function NameScreen() {
+  const T = useTheme();
   const navigation = useNavigation();
   const { t } = useTranslation();
   const [name, setName] = useState('');
@@ -79,7 +81,7 @@ export default function NameScreen() {
   };
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.scroll, { backgroundColor: T.bg }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       {navigation.canGoBack() && (
         <TouchableOpacity onPress={() => router.back()} style={styles.back}>
           <Text style={styles.backText}>{t('ob.back')}</Text>

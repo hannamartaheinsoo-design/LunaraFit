@@ -51,8 +51,13 @@ function IntensityDot({ level }: { level: TrainingTip['intensity'] }) {
 
 function ConfidenceBadge({ level }: { level: DetectedPattern['confidence'] }) {
   const { lang } = useTranslation();
+  const T = useTheme();
   const labels = getConfidenceLabels(lang);
-  const colors = {
+  const colors = T.dark ? {
+    preliminary: { bg: T.surface2,   txt: T.textMuted  },
+    emerging:    { bg: T.skyBg,      txt: Colors.green[200] },
+    consistent:  { bg: T.blushBg,    txt: Colors.blush[200] },
+  } : {
     preliminary: { bg: Colors.beige[50],  txt: Colors.beige[600]  },
     emerging:    { bg: Colors.green[50],  txt: Colors.green[700]  },
     consistent:  { bg: Colors.blush[50],  txt: Colors.blush[700]  },
@@ -83,6 +88,26 @@ export default function InsightsScreen() {
 
   const phaseKey = ci?.phaseKey ?? 'unknown';
   const insight  = getPhaseInsights(lang)[phaseKey];
+
+  // In dark mode, override the hardcoded light phase card colors
+  const phaseAccent =
+    phaseKey === 'menstruation' ? Colors.blush[400] :
+    phaseKey === 'follicular'   ? Colors.green[400]  :
+    phaseKey === 'ovulation'    ? Colors.green[400]  :
+    phaseKey === 'luteal'       ? Colors.blush[400]  : T.textMuted;
+  const PC = T.dark ? {
+    bg:     T.surface,
+    border: T.border,
+    text:   T.text,
+    sub:    T.textSec,
+    accent: phaseAccent,
+  } : {
+    bg:     insight.colors.bg,
+    border: insight.colors.border,
+    text:   insight.colors.text,
+    sub:    insight.colors.sub,
+    accent: insight.colors.accent,
+  };
   const patterns = detectPatterns(workouts, cycleDays, lang);
   const CONFIDENCE_LABELS = getConfidenceLabels(lang);
   const DISCLAIMER = getDisclaimer(lang);
@@ -102,30 +127,30 @@ export default function InsightsScreen() {
         contentContainerStyle={{ paddingBottom: 48 }}>
 
         {/* ── Current Phase Hero ── */}
-        <View style={[styles.phaseCard, { backgroundColor: insight.colors.bg, borderColor: insight.colors.border }]}>
+        <View style={[styles.phaseCard, { backgroundColor: PC.bg, borderColor: PC.border, borderWidth: T.dark ? 1 : 1.5 }]}>
           <View style={styles.phaseCardTop}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.phaseEye, { color: insight.colors.sub }]}>{t('phase.current')}</Text>
-              <Text style={[styles.phaseName, { color: insight.colors.text }]}>{insight.phase}</Text>
-              <Text style={[styles.phaseDays, { color: insight.colors.sub }]}>{insight.daysRange}</Text>
+              <Text style={[styles.phaseEye, { color: PC.sub }]}>{t('phase.current')}</Text>
+              <Text style={[styles.phaseName, { color: PC.text }]}>{insight.phase}</Text>
+              <Text style={[styles.phaseDays, { color: PC.sub }]}>{insight.daysRange}</Text>
             </View>
             {ci && (
-              <View style={[styles.phasePill, { borderColor: insight.colors.border }]}>
-                <Text style={[styles.phaseDaysN, { color: insight.colors.text }]}>{ci.daysLeft}</Text>
-                <Text style={[styles.phaseDaysLbl, { color: insight.colors.sub }]}>{t('phase.daysleft')}</Text>
+              <View style={[styles.phasePill, { borderColor: PC.border, backgroundColor: T.dark ? T.surface2 : undefined }]}>
+                <Text style={[styles.phaseDaysN, { color: PC.text }]}>{ci.daysLeft}</Text>
+                <Text style={[styles.phaseDaysLbl, { color: PC.sub }]}>{t('phase.daysleft')}</Text>
               </View>
             )}
           </View>
-          <View style={[styles.taglineRow, { borderTopColor: insight.colors.border }]}>
-            <Text style={[styles.phaseTagline, { color: insight.colors.accent }]}>
+          <View style={[styles.taglineRow, { borderTopColor: PC.border }]}>
+            <Text style={[styles.phaseTagline, { color: PC.accent }]}>
               {insight.tagline}
             </Text>
           </View>
           {insight.overview ? (
             <RichText
               text={insight.overview}
-              style={[styles.phaseOverview, { color: insight.colors.sub }]}
-              boldStyle={{ fontFamily: Fonts.sansBold, color: insight.colors.text }}
+              style={[styles.phaseOverview, { color: PC.sub }]}
+              boldStyle={{ fontFamily: Fonts.sansBold, color: PC.text }}
             />
           ) : null}
         </View>
