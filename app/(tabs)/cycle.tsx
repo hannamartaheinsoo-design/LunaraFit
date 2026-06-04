@@ -51,8 +51,8 @@ export default function CycleScreen() {
   const upsertProf   = useMutation(api.profiles.upsert);
   const fillGap      = useMutation(api.cycleDays.fillPeriodGap);
   const [date,       setDate]       = useState(todayISO());
-  const [period,     setPeriod]     = useState(false);
-  const [spotting,   setSpotting]   = useState(false);
+  const [period,     setPeriod]     = useState<boolean | null>(null);
+  const [spotting,   setSpotting]   = useState<boolean | null>(null);
   const [mood,       setMood]       = useState<MoodKey | null>(null);
   const [energy,     setEnergy]     = useState<EnergyKey | null>(null);
   const [contra,     setContra]     = useState<ContraKey | null>(null);
@@ -94,9 +94,15 @@ export default function CycleScreen() {
       ...Array.from(sleepChips),
       ...Array.from(digestion),
     ];
+    // Treat null (unanswered) as false — always pass an explicit boolean so
+    // patching an existing record overwrites any previous true value correctly.
+    const periodVal   = period   === true;
+    const spottingVal = spotting === true;
+
     await upsertDay({
-      date, period,
-      spotting: spotting || undefined,
+      date,
+      period:   periodVal,
+      spotting: spottingVal,
       contra: contra ?? undefined,
       mood: (mood as Mood) ?? undefined,
       symptoms: allSymptoms,
@@ -104,7 +110,7 @@ export default function CycleScreen() {
 
     // Auto-fill gap days between this period day and the nearest other period day.
     // Only runs for actual period days (not spotting-only).
-    if (period) {
+    if (periodVal) {
       const otherPeriodDates = cycleDays
         .filter((d) => d.period && d.date !== date)
         .map((d) => d.date)
@@ -134,7 +140,7 @@ export default function CycleScreen() {
     // Only recalculate cycle predictions when the period phase ends.
     // Logging period=true just marks the day; predictions don't shift until
     // the user logs their first no-period day after a streak.
-    if (!period) {
+    if (!periodVal) {
       // Find all period days strictly before this date, sorted newest-first
       const prevPeriodDays = cycleDays
         .filter((d) => d.period && d.date < date)
@@ -159,7 +165,7 @@ export default function CycleScreen() {
       }
     }
 
-    setPeriod(false); setSpotting(false); setMood(null); setEnergy(null); setContra(null);
+    setPeriod(null); setSpotting(null); setMood(null); setEnergy(null); setContra(null);
     setFeelings(new Set()); setMind(new Set()); setPain(new Set());
     setCravings(new Set()); setSleepChips(new Set()); setDigestion(new Set());
     setSleepHours('');
@@ -320,14 +326,14 @@ export default function CycleScreen() {
 
           <Text style={styles.fieldLabel}>{t('c.period.lbl')}</Text>
           <View style={styles.rowGap8}>
-            <Button variant={period ? 'blush' : 'outline'} size="sm" onPress={() => { setPeriod(true); setSpotting(false); }}>{t('c.period.yes')}</Button>
-            <Button variant={!period ? 'dark' : 'outline'} size="sm" onPress={() => setPeriod(false)}>{t('c.period.no')}</Button>
+            <Button variant={period === true ? 'blush' : 'outline'} size="sm" onPress={() => { setPeriod(true);  setSpotting(false); }}>{t('c.period.yes')}</Button>
+            <Button variant={period === false ? 'dark' : 'outline'} size="sm" onPress={() => setPeriod(false)}>{t('c.period.no')}</Button>
           </View>
 
           <Text style={styles.fieldLabel}>{t('c.spotting.lbl')}</Text>
           <View style={styles.rowGap8}>
-            <Button variant={spotting ? 'blush' : 'outline'} size="sm" onPress={() => { setSpotting(true); setPeriod(false); }}>{t('c.spotting.yes')}</Button>
-            <Button variant={!spotting ? 'dark' : 'outline'} size="sm" onPress={() => setSpotting(false)}>{t('c.spotting.no')}</Button>
+            <Button variant={spotting === true ? 'blush' : 'outline'} size="sm" onPress={() => { setSpotting(true);  setPeriod(false); }}>{t('c.spotting.yes')}</Button>
+            <Button variant={spotting === false ? 'dark' : 'outline'} size="sm" onPress={() => setSpotting(false)}>{t('c.spotting.no')}</Button>
           </View>
 
           {/* Mood */}
