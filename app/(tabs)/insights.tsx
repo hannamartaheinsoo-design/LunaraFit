@@ -120,9 +120,11 @@ export default function InsightsScreen() {
             </Text>
           </View>
           {insight.overview ? (
-            <Text style={[styles.phaseOverview, { color: insight.colors.sub }]}>
-              {insight.overview}
-            </Text>
+            <RichText
+              text={insight.overview}
+              style={[styles.phaseOverview, { color: insight.colors.sub }]}
+              boldStyle={{ fontFamily: Fonts.sansBold, color: insight.colors.text }}
+            />
           ) : null}
         </View>
 
