@@ -121,14 +121,14 @@ const Field = React.forwardRef<TextInput, FieldProps>(
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
+    alignItems: 'flex-end',
+    gap: 2,
   },
   sep: {
-    fontSize: 20,
-    color: Colors.beige[300],
-    marginTop: 10,
-    lineHeight: 28,
+    fontSize: 18,
+    color: Colors.beige[200],
+    marginBottom: 18,
+    lineHeight: 24,
   },
   field: {
     alignItems: 'center',
@@ -136,16 +136,16 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    height: 38,
-    borderWidth: 1.5,
-    borderColor: Colors.beige[100],
-    borderRadius: 10,
-    paddingHorizontal: 6,
+    height: 36,
+    borderWidth: 0,
+    borderBottomWidth: 1.5,
+    borderBottomColor: Colors.beige[200],
+    paddingHorizontal: 4,
     textAlign: 'center',
     fontSize: 14,
     fontFamily: Fonts.sans,
     color: Colors.beige[800],
-    backgroundColor: Colors.cream,
+    backgroundColor: 'transparent',
   },
   fieldLbl: {
     fontSize: 10,
