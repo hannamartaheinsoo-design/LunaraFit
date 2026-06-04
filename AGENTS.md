@@ -62,6 +62,22 @@ All user-visible strings must go through `useTranslation()` from `lib/LangContex
 
 ---
 
+# Fonts
+
+The app uses **Inter** via `@expo-google-fonts/inter`. Fonts are loaded in `app/_layout.tsx` and named in `constants/theme.ts`.
+
+Loaded weights: `Inter_300Light`, `Inter_400Regular`, `Inter_500Medium`, `Inter_600SemiBold`
+
+`Fonts` token → Inter mapping:
+- `sans` / `serif` → `Inter_400Regular`
+- `sansLight` / `serifItalic` → `Inter_300Light`
+- `sansMedium` / `serifSemiBold` / `sansSemiBold` → `Inter_500Medium`
+- `sansBold` / `serifSemiBoldItalic` → `Inter_600SemiBold`
+
+**Rule:** The heaviest weight in use is 600 (SemiBold) — do not use 700 Bold. When adding new text styles, pick from the four loaded weights above.
+
+---
+
 # UI Components
 
 **DatePicker** (`components/ui/DatePicker.tsx`)

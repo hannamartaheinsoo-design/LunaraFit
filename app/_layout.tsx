@@ -4,18 +4,11 @@ import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import {
-  CormorantGaramond_400Regular,
-  CormorantGaramond_400Regular_Italic,
-  CormorantGaramond_600SemiBold,
-  CormorantGaramond_600SemiBold_Italic,
-} from '@expo-google-fonts/cormorant-garamond';
-import {
-  Jost_300Light,
-  Jost_400Regular,
-  Jost_500Medium,
-  Jost_600SemiBold,
-  Jost_700Bold,
-} from '@expo-google-fonts/jost';
+  Inter_300Light,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+} from '@expo-google-fonts/inter';
 import { ConvexReactClient } from 'convex/react';
 import { ConvexAuthProvider } from '@convex-dev/auth/react';
 import * as SecureStore from 'expo-secure-store';
@@ -57,15 +50,10 @@ function NavigationController() {
 export default function RootLayout() {
   const scheme = useColorScheme();
   const [fontsLoaded] = useFonts({
-    CormorantGaramond_400Regular,
-    CormorantGaramond_400Regular_Italic,
-    CormorantGaramond_600SemiBold,
-    CormorantGaramond_600SemiBold_Italic,
-    Jost_300Light,
-    Jost_400Regular,
-    Jost_500Medium,
-    Jost_600SemiBold,
-    Jost_700Bold,
+    Inter_300Light,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
   });
 
   const bg = scheme === 'dark' ? '#0C0C0C' : Colors.cream;

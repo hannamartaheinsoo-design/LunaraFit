@@ -5,7 +5,9 @@
   "dependencies": {
     "@convex-dev/auth": "^0.0.92",
     "@expo-google-fonts/cormorant-garamond": "^0.4.1",
+    "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/jost": "^0.4.2",
+    "@expo-google-fonts/lato": "^0.4.1",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@simplewebauthn/browser": "^9.0.1",
     "@supabase/supabase-js": "^2.106.2",

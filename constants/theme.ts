@@ -57,15 +57,15 @@ export const Colors = {
 };
 
 export const Fonts = {
-  serif: 'CormorantGaramond',
-  serifItalic: 'CormorantGaramond_Italic',
-  serifSemiBold: 'CormorantGaramond_SemiBold',
-  serifSemiBoldItalic: 'CormorantGaramond_SemiBoldItalic',
-  sans: 'Jost',
-  sansLight: 'Jost_Light',
-  sansMedium: 'Jost_Medium',
-  sansSemiBold: 'Jost_SemiBold',
-  sansBold: 'Jost_Bold',
+  serif: 'Inter_400Regular',
+  serifItalic: 'Inter_400Regular',
+  serifSemiBold: 'Inter_500Medium',
+  serifSemiBoldItalic: 'Inter_500Medium',
+  sans: 'Inter_400Regular',
+  sansLight: 'Inter_300Light',
+  sansMedium: 'Inter_500Medium',
+  sansSemiBold: 'Inter_500Medium',
+  sansBold: 'Inter_600SemiBold',
 };
 
 export const Radius = {
