@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import Svg, { Polyline, Circle, Line } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Colors, Fonts, Spacing } from '../../constants/theme';
@@ -52,6 +53,153 @@ function phaseDiff(workouts: any[]): number | null {
   return ((fa - la) / la) * 100;
 }
 
+const PHASES: PhaseKey[] = ['menstruation', 'follicular', 'ovulation', 'luteal'];
+
+function PatternCard({ workouts, lang, T, t, pd, ci, now }: any) {
+  const phaseVolumes = PHASES.map(p => ({ phase: p, vol: avgVolume(workouts, p) }));
+  const maxVol = Math.max(...phaseVolumes.map(p => p.vol), 1);
+  const phaseCounts = PHASES.map(p => workouts.filter((w: any) => w.phase === p).length);
+  const hasData = workouts.length >= 2;
+
+  // 28-day dot grid
+  const dots = Array.from({ length: 28 }, (_, i) => {
+    const d = new Date(now.getTime() - (27 - i) * 86400000);
+    const ds = d.toISOString().slice(0, 10);
+    const w = workouts.find((w: any) => w.date === ds);
+    return { ds, phase: w?.phase as PhaseKey | undefined, hasWorkout: !!w };
+  });
+
+  // Best phase
+  const bestPhase = phaseVolumes.reduce((best, cur) => cur.vol > best.vol ? cur : best, phaseVolumes[0]);
+
+  const phaseLabel = (p: PhaseKey) => getPhaseLabel(p, lang);
+
+  return (
+    <InsightCard variant="default" style={styles.insightPreview}>
+      <View style={styles.insightEyeRow}>
+        <Icon name="spark" size={10} color={Colors.green[T.dark ? 200 : 600]} />
+        <Text style={[styles.insightEye, { color: Colors.green[T.dark ? 200 : 600] }]}>{t('home.pattern.eye')}</Text>
+      </View>
+
+      {!hasData ? (
+        <>
+          <Text style={[styles.insightTitle, { color: T.text }]}>{t('home.pattern.empty')}</Text>
+          <Text style={[styles.insightBody, { color: T.textSec }]}>{t('home.pattern.sub')}</Text>
+        </>
+      ) : (
+        <>
+          {/* Key finding */}
+          {pd != null && (
+            <View style={styles.findingRow}>
+              <Text style={[styles.findingBig, { color: pd >= 0 ? Colors.green[600] : Colors.blush[500] }]}>
+                {pd >= 0 ? '+' : ''}{pd.toFixed(1)}%
+              </Text>
+              <Text style={[styles.findingTxt, { color: T.textSec }]}>
+                {lang === 'en'
+                  ? `${pd >= 0 ? 'more' : 'less'} avg weight in ${pd >= 0 ? 'follicular' : 'luteal'} vs ${pd >= 0 ? 'luteal' : 'follicular'} phase`
+                  : `${pd >= 0 ? 'kõrgem' : 'madalam'} keskmine raskus ${pd >= 0 ? 'follikulaarfaasis' : 'luteaalfaasis'}`}
+              </Text>
+            </View>
+          )}
+
+          {/* Phase line chart */}
+          <Text style={[styles.sectionMini, { color: T.textMuted }]}>
+            {lang === 'en' ? 'AVG VOLUME BY PHASE' : 'MAHT FAASI JÄRGI'}
+          </Text>
+          {(() => {
+            const PAD_L = 20, PAD_R = 20, VW = 300, VH = 72;
+            const chartH = 52;
+            const xOf = (i: number) => PAD_L + (i / (phaseVolumes.length - 1)) * (VW - PAD_L - PAD_R);
+            const yOf = (vol: number) => 4 + (1 - vol / maxVol) * chartH;
+            // build line segments skipping zero-volume phases
+            const segments: { x: number; y: number }[][] = [];
+            let seg: { x: number; y: number }[] = [];
+            phaseVolumes.forEach(({ vol }, i) => {
+              if (vol > 0) { seg.push({ x: xOf(i), y: yOf(vol) }); }
+              else { if (seg.length) { segments.push(seg); seg = []; } }
+            });
+            if (seg.length) segments.push(seg);
+            return (
+              <View>
+                <Svg width="100%" height={VH} viewBox={`0 0 ${VW} ${VH}`}>
+                  <Line x1={PAD_L} y1={chartH + 6} x2={VW - PAD_R} y2={chartH + 6} stroke={T.border} strokeWidth={1} />
+                  {segments.map((s, si) =>
+                    s.length > 1 ? (
+                      <Polyline key={si} points={s.map(p => `${p.x},${p.y}`).join(' ')}
+                        fill="none" stroke={Colors.blush[300]} strokeWidth={2}
+                        strokeLinejoin="round" strokeLinecap="round" />
+                    ) : null
+                  )}
+                  {phaseVolumes.map(({ phase, vol }, i) =>
+                    vol > 0 ? (
+                      <Circle key={phase} cx={xOf(i)} cy={yOf(vol)} r={5}
+                        fill={PHASE_COLORS[phase]} stroke="white" strokeWidth={1.5} />
+                    ) : null
+                  )}
+                </Svg>
+                <View style={styles.phaseLineLabels}>
+                  {phaseVolumes.map(({ phase, vol }, i) => (
+                    <Text key={phase} style={[styles.phaseBarLbl, { color: vol > 0 ? PHASE_COLORS[phase] : T.textMuted, opacity: vol > 0 ? 1 : 0.4 }]} numberOfLines={1}>
+                      {phaseLabel(phase).slice(0, 4).toUpperCase()}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            );
+          })()}
+
+          {/* Best phase callout */}
+          {bestPhase.vol > 0 && (
+            <View style={[styles.bestPhaseRow, { backgroundColor: PHASE_BG[bestPhase.phase] }]}>
+              <View style={[styles.bestPhaseDot, { backgroundColor: PHASE_COLORS[bestPhase.phase] }]} />
+              <Text style={[styles.bestPhaseTxt, { color: T.textSec }]}>
+                {lang === 'en'
+                  ? `Strongest phase: `
+                  : `Tugevaim faas: `}
+                <Text style={{ color: PHASE_COLORS[bestPhase.phase], fontFamily: Fonts.sansBold }}>
+                  {phaseLabel(bestPhase.phase)}
+                </Text>
+              </Text>
+            </View>
+          )}
+
+          {/* 28-day dot grid */}
+          <Text style={[styles.sectionMini, { color: T.textMuted, marginTop: 14 }]}>
+            {lang === 'en' ? 'LAST 28 DAYS' : 'VIIMASED 28 PÄEVA'}
+          </Text>
+          <View style={styles.dotGrid}>
+            {dots.map(({ ds, phase, hasWorkout }) => (
+              <View
+                key={ds}
+                style={[
+                  styles.dot,
+                  hasWorkout
+                    ? { backgroundColor: phase ? PHASE_COLORS[phase] : Colors.blush[400] }
+                    : { backgroundColor: T.border, opacity: 0.5 }
+                ]}
+              />
+            ))}
+          </View>
+          <View style={styles.dotLegend}>
+            {PHASES.map(p => (
+              <View key={p} style={styles.dotLegendItem}>
+                <View style={[styles.dotLegendDot, { backgroundColor: PHASE_COLORS[p] }]} />
+                <Text style={[styles.dotLegendTxt, { color: T.textMuted }]}>{phaseLabel(p).slice(0, 5)}</Text>
+              </View>
+            ))}
+          </View>
+        </>
+      )}
+
+      <TouchableOpacity onPress={() => router.push('/(tabs)/insights')} style={styles.insightLink}>
+        <Text style={[styles.insightLinkTxt, { color: Colors.green[T.dark ? 200 : 600] }]}>
+          {lang === 'en' ? 'Full analysis →' : 'Täielik analüüs →'}
+        </Text>
+      </TouchableOpacity>
+    </InsightCard>
+  );
+}
+
 export default function HomeScreen() {
   const T = useTheme();
   const { lang, t, tArr } = useTranslation();
@@ -83,16 +231,6 @@ export default function HomeScreen() {
     const dayIdx = (d.getDay() + 6) % 7;
     return { label: WEEKDAYS[dayIdx], has };
   });
-
-  const insightTitle = pd != null && ci
-    ? `${t('home.ins.based')} ${pd >= 0 ? t('home.ins.follik') : t('home.ins.luteal')} ${Math.abs(pd).toFixed(1)}${t('home.ins.higher')}`
-    : workouts.length
-    ? `${workouts.length} ${t('home.ins.count')}`
-    : t('home.pattern.empty');
-
-  const insightBody = pd != null
-    ? `${t('home.ins.based')} ${workouts.length} ${t('home.ins.sessions')}`
-    : t('home.pattern.sub');
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: T.bg }]} edges={['top']}>
@@ -163,13 +301,41 @@ export default function HomeScreen() {
         <Card style={styles.chartCard}>
           <View style={styles.cardLblRow}><Icon name="wave" size={12} color={T.textMuted} /><Text style={[styles.cardLbl, { color: T.textMuted }]}>{t('home.chart.lbl')}</Text></View>
           {workouts.length ? (
-            <View style={styles.chartWrap}>
-              {weekBars.map((bar, i) => (
-                <View key={i} style={styles.barCol}>
-                  <View style={[styles.barFill, { height: bar.has ? '82%' : '10%', backgroundColor: bar.has ? Colors.blush[400] : T.border }]} />
-                  <Text style={[styles.barLbl, { color: T.textMuted }]}>{bar.label}</Text>
-                </View>
-              ))}
+            <View>
+              {(() => {
+                const VW = 280, yActive = 12, yBase = 62;
+                const xOf = (i: number) => i * (VW / 6);
+                const segs: { x: number; y: number }[][] = [];
+                let seg: { x: number; y: number }[] = [];
+                weekBars.forEach((bar, i) => {
+                  if (bar.has) { seg.push({ x: xOf(i), y: yActive }); }
+                  else { if (seg.length) { segs.push(seg); seg = []; } }
+                });
+                if (seg.length) segs.push(seg);
+                return (
+                  <Svg width="100%" height={80} viewBox={`0 0 ${VW} 80`}>
+                    <Line x1={0} y1={yBase} x2={VW} y2={yBase} stroke={T.border} strokeWidth={1} />
+                    {segs.map((s, si) =>
+                      s.length > 1 ? (
+                        <Polyline key={si} points={s.map(p => `${p.x},${p.y}`).join(' ')}
+                          fill="none" stroke={Colors.blush[300]} strokeWidth={1.5}
+                          strokeLinejoin="round" strokeLinecap="round" />
+                      ) : null
+                    )}
+                    {weekBars.map((bar, i) =>
+                      bar.has ? (
+                        <Circle key={i} cx={xOf(i)} cy={yActive} r={5}
+                          fill={Colors.blush[400]} stroke={Colors.blush[200]} strokeWidth={2} />
+                      ) : null
+                    )}
+                  </Svg>
+                );
+              })()}
+              <View style={styles.lineLabels}>
+                {weekBars.map((bar, i) => (
+                  <Text key={i} style={[styles.barLbl, { color: T.textMuted }]}>{bar.label}</Text>
+                ))}
+              </View>
             </View>
           ) : (
             <Text style={[styles.empty, { color: T.textMuted }]}>{t('home.chart.empty')}</Text>
@@ -233,14 +399,42 @@ const styles = StyleSheet.create({
   chartCard: {},
   cardLblRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
   cardLbl: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.1, textTransform: 'uppercase', color: Colors.beige[400] },
-  chartWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 96 },
-  barCol: { flex: 1, alignItems: 'center', gap: 5, height: '100%', justifyContent: 'flex-end' },
-  barFill: { width: '100%', borderRadius: 5 },
-  barLbl: { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.beige[400] },
+  lineLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+  barLbl: { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.beige[400], textAlign: 'center' },
   empty: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], textAlign: 'center', paddingVertical: 8 },
   insightPreview: { marginTop: 0 },
-  insightEyeRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 },
+  insightEyeRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8 },
   insightEye: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', color: Colors.green[600] },
   insightTitle: { fontFamily: Fonts.sansSemiBold, fontSize: 14, marginBottom: 4, color: Colors.beige[800] },
   insightBody: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[600], lineHeight: 19 },
+
+  // Pattern card
+  findingRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
+  findingBig: { fontFamily: Fonts.serifSemiBold, fontSize: 36, lineHeight: 38 },
+  findingTxt: { flex: 1, fontFamily: Fonts.sansLight, fontSize: 12, lineHeight: 17 },
+
+  sectionMini: {
+    fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1.2,
+    textTransform: 'uppercase', color: Colors.beige[400], marginBottom: 8,
+  },
+
+  phaseLineLabels: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 2, marginBottom: 10 },
+  phaseBarLbl: { fontFamily: Fonts.sansBold, fontSize: 8, letterSpacing: 0.5 },
+
+  bestPhaseRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7, marginBottom: 2,
+  },
+  bestPhaseDot: { width: 8, height: 8, borderRadius: 4 },
+  bestPhaseTxt: { fontFamily: Fonts.sansLight, fontSize: 12 },
+
+  dotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 8 },
+  dot: { width: 14, height: 14, borderRadius: 7 },
+  dotLegend: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  dotLegendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  dotLegendDot: { width: 7, height: 7, borderRadius: 3.5 },
+  dotLegendTxt: { fontFamily: Fonts.sansLight, fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.5 },
+
+  insightLink: { marginTop: 12, alignSelf: 'flex-end' },
+  insightLinkTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.green[600] },
 });
