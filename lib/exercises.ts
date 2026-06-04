@@ -25,6 +25,7 @@ export const CATEGORIES: { id: string; label: string; icon: string; dbCategories
     id: 'mindBody',   label: 'Jooga & Venitus',  icon: 'leaf',
     dbCategories: ['yoga','pilates','mobility','stretching'],
   },
+  { id: 'hyrox', label: 'HYROX', icon: 'wave', dbCategories: ['hyrox'] },
 ];
 
 // Map a UI category id to the list of db category ids it covers
@@ -343,6 +344,27 @@ export const EXERCISE_DB: ExerciseTemplate[] = [
   { id: 'sandbag-carry',        name: 'Sandbag Carry',              category: 'functional',popularity: 5,  fields: CD  },
   { id: 'rope-climb',           name: 'Rope Climb',                 category: 'functional',popularity: 5,  fields: SR  },
   { id: 'tire-flip',            name: 'Tire Flip',                  category: 'functional',popularity: 5,  fields: SR  },
+
+  // ── HYROX ─────────────────────────────────────────────────────────────────
+  // Official HYROX race stations — dedicated entries for competition logging
+  { id: 'hyrox-run',           name: 'HYROX Run (1 km)',           category: 'hyrox',     popularity: 10, fields: ['duration', 'distance'] },
+  { id: 'hyrox-skierg',        name: 'SkiErg (1000 m)',            category: 'hyrox',     popularity: 10, fields: ['duration', 'distance'] },
+  { id: 'hyrox-sled-push',     name: 'Sled Push (50 m)',           category: 'hyrox',     popularity: 10, fields: ['duration', 'distance', 'weight'] },
+  { id: 'hyrox-sled-pull',     name: 'Sled Pull (50 m)',           category: 'hyrox',     popularity: 10, fields: ['duration', 'distance', 'weight'] },
+  { id: 'hyrox-burpee-broad',  name: 'Burpee Broad Jump (80 m)',   category: 'hyrox',     popularity: 10, fields: ['duration', 'distance'] },
+  { id: 'hyrox-row',           name: 'Rowing (1000 m)',            category: 'hyrox',     popularity: 10, fields: ['duration', 'distance'] },
+  { id: 'hyrox-farmers-carry', name: "Farmer's Carry (200 m)",     category: 'hyrox',     popularity: 10, fields: ['duration', 'distance', 'weight'] },
+  { id: 'hyrox-sandbag-lunge', name: 'Sandbag Lunge (100 m)',      category: 'hyrox',     popularity: 10, fields: ['duration', 'distance', 'weight'] },
+  { id: 'hyrox-wall-ball',     name: 'Wall Ball (100 reps)',        category: 'hyrox',     popularity: 10, fields: ['reps', 'weight'] },
+  // Practice / training versions (standalone drills)
+  { id: 'hyrox-run-drill',     name: 'Run Intervals (HYROX)',      category: 'hyrox',     popularity: 8,  fields: ['duration', 'distance'] },
+  { id: 'hyrox-skierg-drill',  name: 'SkiErg Drill',               category: 'hyrox',     popularity: 8,  fields: ['duration', 'distance'] },
+  { id: 'hyrox-sled-drill',    name: 'Sled Push/Pull Drill',       category: 'hyrox',     popularity: 8,  fields: ['duration', 'distance', 'weight'] },
+  { id: 'hyrox-wb-drill',      name: 'Wall Ball Practice',         category: 'hyrox',     popularity: 8,  fields: ['reps', 'weight'] },
+  { id: 'hyrox-row-drill',     name: 'Row Practice (2 km)',        category: 'hyrox',     popularity: 8,  fields: ['duration', 'distance'] },
+  { id: 'hyrox-fc-drill',      name: "Farmer's Carry Drill",       category: 'hyrox',     popularity: 7,  fields: ['duration', 'distance', 'weight'] },
+  { id: 'hyrox-lunge-drill',   name: 'Sandbag Lunge Drill',        category: 'hyrox',     popularity: 7,  fields: ['duration', 'distance', 'weight'] },
+  { id: 'hyrox-sim',           name: 'Full HYROX Simulation',      category: 'hyrox',     popularity: 10, fields: ['duration', 'distance'] },
 ];
 
 // ─── Custom Exercises Storage ─────────────────────────────────────────────────

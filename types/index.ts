@@ -26,6 +26,16 @@ export interface ExerciseSet {
   weight_kg?: number;
   duration_min?: number;
   distance_km?: number;
+  rpe?: number;           // Rate of Perceived Exertion 1–10
+}
+
+export interface HyroxGoal {
+  competition_name?: string;
+  competition_date?: string;
+  division?: 'Women' | 'Men' | 'Doubles' | 'Relay' | 'Pro';
+  goal_minutes?: number;
+  target_run_pace_min_per_km?: number;
+  weakest_stations?: string[];
 }
 
 export interface Exercise {

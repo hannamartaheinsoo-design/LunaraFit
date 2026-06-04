@@ -92,38 +92,14 @@
 **Fix applied:** Added `Platform.OS !== 'web'` guard: on native it still uses `Alert.alert`; on web it sets a `confirmDelete` state flag that renders an inline confirmation UI (title + body + Cancel/Delete buttons) directly in the component.
 **Rule going forward:** Never use `Alert.alert` for user-facing confirmations without a web fallback. On web, always render confirmation UI as React state. Check every `Alert.alert` call in the codebase when adding web support.
 
-### [2026-06-03] useNativeDriver: true crashes silently on Expo web, leaving animated panels blank
-**What happened:** The email sign-up/sign-in panel animated in with `Animated.timing(..., { useNativeDriver: true })`. On web the native animation module is missing, so the animation never ran — `slideAnim` stayed at `0`, the `Animated.View` had `opacity: 0`, and the card appeared completely blank with no error in the console.
-**Root cause:** `useNativeDriver: true` is only valid on native (iOS/Android). On web it silently falls back but the opacity interpolation starts at 0 and never completes, making content invisible.
-**Fix applied:** Changed both `Animated.timing` calls to `useNativeDriver: false`.
-**Rule going forward:** Always use `useNativeDriver: false` for any `Animated` values that drive `opacity` or `transform` on screens that must work on web. Only use `useNativeDriver: true` in native-only components.
+### [2026-06-04] transparent Modal bottom sheet does not work reliably on Expo web
+**What happened:** A `WorkoutTypeSheet` component using `transparent={true}` Modal rendered invisibly on web — the overlay div received the triggering click event immediately after mounting, closing the modal before the user could see it.
+**Root cause:** On Expo web, a transparent Modal renders its overlay as a DOM div. A JS `.click()` eval (and sometimes real pointer events) can bubble through to the overlay's `onPress` handler right after the modal mounts, instantly closing it.
+**Fix applied:** Switched from `transparent` Modal to `presentationStyle="pageSheet"` which renders as a proper full-screen sheet and does not have the overlay pass-through problem.
+**Rule going forward:** Never use `transparent` Modal for bottom-sheet UI in this project. Use `presentationStyle="pageSheet"` instead. Verify modal interaction in the web preview before shipping.
 
-### [2026-06-03] Validation state gated behind blur event — felt broken to users
-**What happened:** Email format feedback (red border, ✕ icon, inline error) only appeared after the user blurred the field, not while typing. Users reported the validation "wasn't working".
-**Root cause:** An `emailTouched` state flag required a blur event before showing any feedback — fine UX theory, but confusing when the prototype was being tested and no blur occurred.
-**Fix applied:** Removed `emailTouched`. Feedback now shows live after 3+ characters are typed (avoids flashing red on the very first keypress). Border turns green with ✓ on valid input, red with ✕ and inline error on invalid.
-**Rule going forward:** For prototype/app validation, prefer live feedback triggered by input length threshold (e.g. 3+ chars) over blur-gated feedback. Blur-gating hides errors during testing and feels unresponsive.
-
-### [2026-06-03] "Delete all data" did not delete the auth account — email remained taken
-**What happened:** After a user deleted all their data, attempting to register again with the same email showed "account already exists". The account was not fully removed.
-**Root cause:** `clearAll` in `convex/userData.ts` only deleted app data (workouts, cycle days, profile). It never touched the Convex Auth tables: `authAccounts`, `authSessions`, `authRefreshTokens`, `authVerificationCodes`, or the `users` row.
-**Fix applied:** Extended `clearAll` to also delete all auth records for the user (sessions → refresh tokens, accounts → verification codes, then sessions, accounts, and the `users` row itself) in the same mutation.
-**Rule going forward:** Any "delete account" or "delete all data" flow must also delete all rows in the Convex Auth tables (`authAccounts`, `authSessions`, `authRefreshTokens`, `authVerificationCodes`) and the `users` row. App data deletion alone is never sufficient for full account removal.
-
-### [2026-06-03] Logging period day 1 immediately shifted all cycle predictions
-**What happened:** When a user logged their first period day, `last_period_date` on the profile was updated immediately, causing ovulation and fertile-window predictions to shift for the whole calendar before the period was even over.
-**Root cause:** `handleSave` in `cycle.tsx` called `upsertProf({ last_period_date: date })` whenever `period === true`, regardless of whether the period phase was complete.
-**Fix applied:** Moved the `last_period_date` update to the `period === false` branch. When the user logs their first no-period day after a streak, the code finds the streak start and only then updates the profile — so predictions recalculate once the period is confirmed finished.
-**Rule going forward:** Never update `last_period_date` on a period=true log. Only update it when the period ends (first period=false day after a consecutive streak of period=true days). The calendar's logged dots and the profile's prediction anchor are separate concerns.
-
-### [2026-06-03] Legend keys referenced wrong i18n keys (c.period.logged vs c.legend.logged)
-**What happened:** The cycle calendar legend used `t('c.period.logged')` and `t('c.ovulation')` etc., but the actual i18n keys are under `c.legend.*`. This caused missing/undefined legend labels.
-**Root cause:** Copy-paste drift between where the keys were defined and where they were used.
-**Fix applied:** Updated the legend array in `cycle.tsx` to use the correct `c.legend.logged`, `c.legend.pred`, `c.legend.spotting`, `c.legend.ovulation`, `c.legend.fertile` keys.
-**Rule going forward:** When adding or changing i18n keys, search for all call sites with `grep` before shipping. Never guess a key name — verify it matches what is defined in `lib/i18n.ts`.
-
-### [2026-06-03] Theme color aliases made two markers visually identical
-**What happened:** The contraceptive calendar dot was given `Colors.sky[400]` as its color, which is the same hex value (`#7A9AB0`) as `Colors.green[400]` used for ovulation — making the two markers indistinguishable.
-**Root cause:** The theme defines `green` and `sky` with identical values (green was repurposed as sky blue). Relying on the semantic name without checking the actual hex led to a silent collision.
-**Fix applied:** Replaced the contraceptive color with a periwinkle (`#8FA8D8`) that is clearly in the blue family but visually distinct, and added a dark gray border to further differentiate the pill shape.
-**Rule going forward:** Before assigning a theme color to a new UI element, grep the existing usages of that color and check whether any current element already uses it. If two markers share a visual channel (color family), differentiate them by a second channel (shape, border, saturation).
+### [2026-06-04] scrollIntoView on React Native Web elements navigates away
+**What happened:** Calling `element.scrollIntoView()` on a React Native Web text element caused the whole app to navigate to a different screen.
+**Root cause:** React Native Web renders nav tab buttons and screen content in the same DOM tree. `scrollIntoView` can match text inside inactive screen components or nav elements, triggering click handlers on those elements as a side effect.
+**Fix applied:** Used manual `scrollTop` on the identified RN ScrollView div instead of `scrollIntoView`.
+**Rule going forward:** Never use `scrollIntoView` in Expo web previews to navigate to app content. Always find the RN ScrollView container div (largest scrollHeight, overflowY scroll/auto) and set `scrollTop` directly.
