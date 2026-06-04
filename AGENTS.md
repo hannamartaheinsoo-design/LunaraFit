@@ -33,6 +33,11 @@ This project uses **Convex** as the backend and **`@convex-dev/auth`** for authe
 - Write: `useMutation(api.profiles.upsert)`, `useMutation(api.workouts.add)`, `useMutation(api.workouts.remove)`, `useMutation(api.cycleDays.upsert)`, `useMutation(api.cycleDays.fillPeriodGap)`, `useMutation(api.userData.clearAll)`
 - Auth state: `useAuth()` from `lib/authContext` (wraps `useConvexAuth()` + `api.profiles.get`)
 
+**Toggle state pattern:**
+- Yes/no toggles that may be unanswered must use `boolean | null` (null = unanswered, not `false`)
+- Button highlight: `variant={val === true ? 'active' : 'outline'}` — never `val ? 'active' : 'outline'`
+- Boolean fields passed to Convex mutations must always be explicit booleans — use `val === true`, never `val || undefined` (which silently drops `false` and prevents patching)
+
 **Platform guards:**
 - `expo-secure-store` is native-only — always wrap with `Platform.OS !== 'web'`
 - Pass `storage={undefined}` to `ConvexAuthProvider` on web (falls back to `localStorage`)

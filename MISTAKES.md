@@ -103,3 +103,15 @@
 **Root cause:** React Native Web renders nav tab buttons and screen content in the same DOM tree. `scrollIntoView` can match text inside inactive screen components or nav elements, triggering click handlers on those elements as a side effect.
 **Fix applied:** Used manual `scrollTop` on the identified RN ScrollView div instead of `scrollIntoView`.
 **Rule going forward:** Never use `scrollIntoView` in Expo web previews to navigate to app content. Always find the RN ScrollView container div (largest scrollHeight, overflowY scroll/auto) and set `scrollTop` directly.
+
+### [2026-06-04] Boolean state defaulting to false created a pre-selected "No" with no neutral state
+**What happened:** `period` and `spotting` state were initialised as `false`, which caused the "No" button to appear highlighted by default. Users had no way to indicate "I haven't answered yet", and the form looked already filled in on open.
+**Root cause:** Using `boolean` instead of `boolean | null` for toggle state that has three meaningful states: yes, no, and unanswered.
+**Fix applied:** Changed state type to `boolean | null` (null = unanswered). Buttons use `=== true` / `=== false` comparisons so null leaves both unselected. Reset after save uses `null`.
+**Rule going forward:** Any yes/no toggle the user may not have answered yet must use `boolean | null` state. Never use `false` as a default when "not yet chosen" is meaningfully different from "explicitly chose No".
+
+### [2026-06-04] `value || undefined` silently skips DB patch for falsy boolean values
+**What happened:** `spotting: spotting || undefined` meant saving spotting=false passed `undefined` to the Convex mutation. The `ctx.db.patch` call received no `spotting` key, so an existing `true` in the DB was never overwritten — users couldn't change a logged "Yes" back to "No".
+**Root cause:** The `|| undefined` shorthand converts any falsy value (including a deliberate `false`) to `undefined`, making it indistinguishable from "field not provided".
+**Fix applied:** Changed to `spotting: spotting === true` so the field is always an explicit boolean in mutation args, ensuring patch always writes the intended value.
+**Rule going forward:** Never use `value || undefined` for boolean fields that need to be patchable. Use `value === true` to coerce to an explicit boolean, or `value ?? undefined` only when `null`/`undefined` are the only cases that should be omitted.
