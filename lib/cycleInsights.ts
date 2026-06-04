@@ -260,9 +260,9 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       'Many women notice energy and mood changes during this time — this is completely normal. ' +
       'Moderate movement is generally safe and may even help relieve discomfort.',
     hormoneContext:
-      'Both estrogen and progesterone are at their lowest right now. FSH (follicle-stimulating hormone — ' +
-      'the hormone that kick-starts your next cycle) begins to rise quietly in the background. ' +
-      'The hormonal dip is what causes cramps, fatigue and mood shifts — it\'s not in your head, it\'s biology.',
+      '**Estrogen** and **progesterone** are at their lowest right now. ' +
+      '**FSH** (follicle-stimulating hormone — the hormone that kick-starts your next cycle) begins to rise quietly in the background. ' +
+      'The hormonal dip is what causes cramps, fatigue and mood shifts — **it\'s not in your head, it\'s biology.**',
     energyPattern:
       'Energy is often lower, especially in the first days. This is individual — some women train normally, ' +
       'others need more rest. Listen to your body.',
@@ -288,12 +288,12 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       },
     ],
     recoveryNote:
-      'Recovery time may be slightly longer. Sleep is especially important. Focus on magnesium- and iron-rich foods.',
+      '**Recovery time may be slightly longer** than usual. **Sleep is especially important** right now. Focus on **magnesium-** and **iron-rich foods** to support your body.',
     wellnessTips: [
-      'A hot water bottle can help relieve cramps.',
-      'Hydration matters — fluid loss may increase.',
-      'Iron-rich foods (legumes, spinach, red meat) support recovery.',
-      'Don\'t feel guilty about skipping a workout — rest is part of the routine.',
+      '**Hot water bottle** — applying heat can help ease cramps.',
+      '**Hydration** — fluid loss may increase, so drink more than usual.',
+      '**Iron-rich foods** (legumes, spinach, red meat) support recovery after blood loss.',
+      '**Rest without guilt** — skipping a workout this week is not falling behind. It\'s part of the plan.',
     ],
     researchContext:
       'Sources: ACSM Position Stand; Mayo Clinic (menstruation and exercise); NHS (menstrual cycle and physical activity).',
@@ -310,9 +310,9 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       'Many women notice improved energy, motivation and performance during this time. ' +
       'Research suggests this may be an optimal time for more intense training.',
     hormoneContext:
-      'Estrogen is climbing steadily — and this is the hormone that tends to make you feel good, sharp and strong. ' +
-      'Research suggests it may even have a mild muscle-building effect. ' +
-      'Cortisol (your stress hormone) is also relatively low, which means your body recovers better between sessions.',
+      '**Estrogen** is climbing steadily — this is the hormone that tends to make you feel good, sharp and strong. ' +
+      'Research suggests it may even have a mild **muscle-building effect**. ' +
+      '**Cortisol** (your stress hormone) is also relatively low, which means your body **recovers better** between sessions.',
     energyPattern:
       'Energy tends to be higher. Motivation to train may increase. Neuromuscular performance may improve ' +
       'with rising estrogen — though this varies significantly between individuals.',
@@ -338,10 +338,10 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     recoveryNote:
       'Recovery is often faster in the follicular phase. Harder sessions are less likely to result in prolonged soreness.',
     wellnessTips: [
-      'A good time to set new goals — energy and motivation support this.',
-      'Protein intake supports muscle adaptations during intense training.',
-      'Sleep is still important even during high-energy periods.',
-      'Increased social drive is common during this phase — enjoy it.',
+      '**Set new goals** — this is one of the best times in your cycle for motivation and drive.',
+      '**Protein** — increase your intake to support muscle adaptations from harder training.',
+      '**Sleep** — still important even when energy is high. Don\'t sacrifice it.',
+      '**Social energy** is naturally higher now — enjoy it and lean into it.',
     ],
     researchContext:
       'Sources: Sung et al. (2014, J Strength Cond Res); ACSM guidelines; Elliott-Sale et al. (2021).',
@@ -357,10 +357,10 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       'During ovulation, estrogen reaches its highest point in the cycle. Many women experience ' +
       'their greatest energy, confidence and physical performance right in this phase.',
     hormoneContext:
-      'Estrogen peaks and your LH (luteinizing hormone — the hormone that triggers ovulation) surges. ' +
-      'Testosterone may also rise slightly, which can boost confidence and drive. ' +
-      'One thing to keep in mind: research (Hewett et al.) suggests that high estrogen may make ligaments slightly looser — ' +
-      'so good technique and a proper warm-up matter more than ever right now.',
+      '**Estrogen** peaks and your **LH** (luteinizing hormone — the hormone that triggers ovulation) surges. ' +
+      '**Testosterone** may also rise slightly, which can boost confidence and drive. ' +
+      'One thing to keep in mind: research suggests that high estrogen may make **ligaments slightly looser** — ' +
+      'so good technique and a proper warm-up **matter more than ever** right now.',
     energyPattern:
       'Energy is at its peak. Many women feel greater confidence, clearer thinking and better physical output.',
     trainingFocus: [
@@ -386,10 +386,10 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     recoveryNote:
       'Recovery is good. Even with high energy, don\'t neglect recovery. Excessive fatigue now can lead to overload in the next phase.',
     wellnessTips: [
-      'Warm-up is always important, especially during ovulation due to ligament sensitivity.',
-      'A great time for social activities and team sports.',
-      'Your body temperature may rise slightly — this is normal.',
-      'Hydration supports performance.',
+      '**Warm up properly** — ligament sensitivity is higher right now, so never skip it.',
+      '**Social activities & team sports** — your energy and confidence are at their peak.',
+      '**Body temperature** may rise slightly around ovulation — completely normal.',
+      '**Hydration** — especially important when pushing hard. Don\'t wait until you\'re thirsty.',
     ],
     researchContext:
       'Sources: Hewett et al. (2007, Am J Sports Med); Janse de Jonge (2003); Cleveland Clinic.',
@@ -406,10 +406,10 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       'As the cycle nears its end, both estrogen and progesterone drop, which can cause various symptoms. ' +
       'This phase is long — about 14 days — and conditions shift considerably throughout it.',
     hormoneContext:
-      'Progesterone is now the dominant hormone. It raises your resting body temperature slightly (~0.2–0.5°C), ' +
+      '**Progesterone** is now the dominant hormone. It raises your resting body temperature slightly (**~0.2–0.5°C**), ' +
       'speeds up your metabolism and can make breathing feel a little harder during cardio. ' +
-      'Toward the end of the phase, both estrogen and progesterone drop — this hormonal fall is what drives ' +
-      'PMS symptoms like mood dips, bloating and cravings. Completely normal, and temporary.',
+      'Toward the end of the phase, both **estrogen** and **progesterone** drop — this hormonal fall is what drives ' +
+      'PMS symptoms like mood dips, bloating and cravings. **Completely normal, and temporary.**',
     energyPattern:
       'Energy varies. Early in the luteal phase energy may still be good, but in the late luteal phase ' +
       'many women experience fatigue and slower recovery. Cardiovascular performance may be lower due to higher body temperature.',
@@ -435,14 +435,13 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       },
     ],
     recoveryNote:
-      'Recovery may be slower, especially towards the end of the cycle. Sleep may be disrupted. ' +
-      'Rest and sleep are especially important during this phase.',
+      '**Recovery is slower**, especially in the second half of this phase. **Sleep may be disrupted** by hormonal shifts — this is normal. Prioritise rest and don\'t push through fatigue.',
     wellnessTips: [
-      'Magnesium may help ease PMS symptoms.',
-      'Complex carbohydrates and protein-rich foods help stabilise blood sugar.',
-      'Stress management matters — cortisol and progesterone together can increase fatigue.',
-      'Cravings are common — try to satisfy them with nourishing choices rather than feeling guilty.',
-      'A rise in body temperature is normal — avoid overheating during intense training.',
+      '**Magnesium** — may help ease PMS symptoms like cramps and mood dips.',
+      '**Complex carbs + protein** — help stabilise blood sugar and reduce cravings.',
+      '**Manage stress** — cortisol and progesterone together can make fatigue feel much worse.',
+      '**Cravings are real** — your metabolism is higher. Satisfy them with nourishing food, not guilt.',
+      '**Body temperature is higher** — avoid overheating during intense sessions.',
     ],
     researchContext:
       'Sources: Janse de Jonge (2003, Sports Med); Mayo Clinic; NHS; WHO.',

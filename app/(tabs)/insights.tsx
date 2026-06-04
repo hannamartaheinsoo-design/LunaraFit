@@ -14,6 +14,20 @@ import {
 } from '../../lib/cycleInsights';
 import { useTranslation } from '../../lib/LangContext';
 
+// Renders **bold** markers inline inside a Text block
+function RichText({ text, style, boldStyle }: { text: string; style?: any; boldStyle?: any }) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return (
+    <Text style={style}>
+      {parts.map((part, i) =>
+        part.startsWith('**') && part.endsWith('**')
+          ? <Text key={i} style={[style, boldStyle ?? styles.bold]}>{part.slice(2, -2)}</Text>
+          : part
+      )}
+    </Text>
+  );
+}
+
 function IntensityDot({ level }: { level: TrainingTip['intensity'] }) {
   const { t } = useTranslation();
   const colors = {
@@ -117,8 +131,8 @@ export default function InsightsScreen() {
               <Icon name="spark" size={12} color={Colors.beige[400]} />
               <Text style={styles.sectionLbl}>{t('ins.hormone')}</Text>
             </View>
-            <View style={styles.infoCard}>
-              <Text style={styles.infoTxt}>{insight.hormoneContext}</Text>
+            <View style={[styles.infoCard, styles.infoCardAccent]}>
+              <RichText text={insight.hormoneContext} style={styles.infoTxt} />
             </View>
           </>
         ) : null}
@@ -131,7 +145,7 @@ export default function InsightsScreen() {
               <Text style={styles.sectionLbl}>{t('ins.energy')}</Text>
             </View>
             <View style={styles.infoCard}>
-              <Text style={styles.infoTxt}>{insight.energyPattern}</Text>
+              <RichText text={insight.energyPattern} style={styles.infoTxt} />
             </View>
           </>
         ) : null}
@@ -162,7 +176,7 @@ export default function InsightsScreen() {
                   </View>
                 </View>
                 {openTip === `tip-${i}` && (
-                  <Text style={styles.tipDetail}>{tip.detail}</Text>
+                  <RichText text={tip.detail} style={styles.tipDetail} />
                 )}
               </TouchableOpacity>
             ))}
@@ -177,7 +191,7 @@ export default function InsightsScreen() {
               <Text style={styles.sectionLbl}>{t('ins.recovery')}</Text>
             </View>
             <View style={styles.infoCard}>
-              <Text style={styles.infoTxt}>{insight.recoveryNote}</Text>
+              <RichText text={insight.recoveryNote} style={styles.infoTxt} />
             </View>
           </>
         ) : null}
@@ -193,7 +207,7 @@ export default function InsightsScreen() {
               {insight.wellnessTips.map((tip, i) => (
                 <View key={i} style={[styles.wellnessRow, i === insight.wellnessTips.length - 1 && { borderBottomWidth: 0 }]}>
                   <View style={styles.wellnessDot} />
-                  <Text style={styles.wellnessTxt}>{tip}</Text>
+                  <RichText text={tip} style={styles.wellnessTxt} />
                 </View>
               ))}
             </View>
@@ -296,7 +310,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.beige[50], borderRadius: Radius.md,
     padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
   },
-  infoTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[700], lineHeight: 20 },
+  infoCardAccent: {
+    borderLeftWidth: 3, borderLeftColor: Colors.blush[300],
+  },
+  infoTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[700], lineHeight: 21 },
+  bold: { fontFamily: Fonts.sansBold, color: Colors.beige[800] },
 
   // Training tip cards
   tipCard: {
