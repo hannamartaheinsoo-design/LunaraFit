@@ -260,8 +260,9 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       'Many women notice energy and mood changes during this time — this is completely normal. ' +
       'Moderate movement is generally safe and may even help relieve discomfort.',
     hormoneContext:
-      'Both estrogen and progesterone are low. FSH begins to rise slowly, preparing the body for the next phase. ' +
-      'Mayo Clinic notes that hormonal fluctuations can affect pain perception and energy levels.',
+      'Both estrogen and progesterone are at their lowest right now. FSH (follicle-stimulating hormone — ' +
+      'the hormone that kick-starts your next cycle) begins to rise quietly in the background. ' +
+      'The hormonal dip is what causes cramps, fatigue and mood shifts — it\'s not in your head, it\'s biology.',
     energyPattern:
       'Energy is often lower, especially in the first days. This is individual — some women train normally, ' +
       'others need more rest. Listen to your body.',
@@ -309,8 +310,9 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       'Many women notice improved energy, motivation and performance during this time. ' +
       'Research suggests this may be an optimal time for more intense training.',
     hormoneContext:
-      'Estrogen rises progressively. PubMed studies (Sung et al., 2014) suggest estrogen may have an anabolic effect. ' +
-      'Cortisol is relatively low, which may support better recovery.',
+      'Estrogen is climbing steadily — and this is the hormone that tends to make you feel good, sharp and strong. ' +
+      'Research suggests it may even have a mild muscle-building effect. ' +
+      'Cortisol (your stress hormone) is also relatively low, which means your body recovers better between sessions.',
     energyPattern:
       'Energy tends to be higher. Motivation to train may increase. Neuromuscular performance may improve ' +
       'with rising estrogen — though this varies significantly between individuals.',
@@ -355,8 +357,10 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       'During ovulation, estrogen reaches its highest point in the cycle. Many women experience ' +
       'their greatest energy, confidence and physical performance right in this phase.',
     hormoneContext:
-      'Estrogen peak and LH surge. Testosterone may also rise slightly. Important note: research ' +
-      '(Hewett et al.) suggests high estrogen may affect ligament laxity — pay attention to technique.',
+      'Estrogen peaks and your LH (luteinizing hormone — the hormone that triggers ovulation) surges. ' +
+      'Testosterone may also rise slightly, which can boost confidence and drive. ' +
+      'One thing to keep in mind: research (Hewett et al.) suggests that high estrogen may make ligaments slightly looser — ' +
+      'so good technique and a proper warm-up matter more than ever right now.',
     energyPattern:
       'Energy is at its peak. Many women feel greater confidence, clearer thinking and better physical output.',
     trainingFocus: [
@@ -402,8 +406,10 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
       'As the cycle nears its end, both estrogen and progesterone drop, which can cause various symptoms. ' +
       'This phase is long — about 14 days — and conditions shift considerably throughout it.',
     hormoneContext:
-      'Progesterone dominates. It raises body temperature (~0.2–0.5°C), speeds up metabolism and may affect breathing. ' +
-      'The drop in estrogen toward the end of the cycle is linked to mood changes and PMS symptoms (Mayo Clinic).',
+      'Progesterone is now the dominant hormone. It raises your resting body temperature slightly (~0.2–0.5°C), ' +
+      'speeds up your metabolism and can make breathing feel a little harder during cardio. ' +
+      'Toward the end of the phase, both estrogen and progesterone drop — this hormonal fall is what drives ' +
+      'PMS symptoms like mood dips, bloating and cravings. Completely normal, and temporary.',
     energyPattern:
       'Energy varies. Early in the luteal phase energy may still be good, but in the late luteal phase ' +
       'many women experience fatigue and slower recovery. Cardiovascular performance may be lower due to higher body temperature.',
