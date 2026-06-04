@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 import { Icon } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import { DatePicker } from '../../components/ui/DatePicker';
@@ -52,6 +53,7 @@ function ExercisePicker({
   onSelect: (ex: ExerciseTemplate) => void;
   onClose: () => void;
 }) {
+  const T = useTheme();
   const { t } = useTranslation();
   const [query,        setQuery]        = useState('');
   const [category,     setCategory]     = useState('all');
@@ -96,12 +98,12 @@ function ExercisePicker({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={styles.pickerSafe}>
-        <SafeAreaView edges={['top']} style={{ backgroundColor: Colors.cream }}>
-          <View style={styles.pickerHeader}>
-            <Text style={styles.pickerTitle}>{t('w.picker.title')}</Text>
+      <View style={[styles.pickerSafe, { backgroundColor: T.bg }]}>
+        <SafeAreaView edges={['top']} style={{ backgroundColor: T.bg }}>
+          <View style={[styles.pickerHeader, { borderBottomColor: T.border }]}>
+            <Text style={[styles.pickerTitle, { color: T.text }]}>{t('w.picker.title')}</Text>
             <TouchableOpacity onPress={onClose} style={styles.pickerClose}>
-              <Icon name="close" size={20} color={Colors.beige[600]} />
+              <Icon name="close" size={20} color={T.textSec} />
             </TouchableOpacity>
           </View>
           <View style={styles.searchBar}>
@@ -354,6 +356,7 @@ function SetLogger({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function WorkoutsScreen() {
+  const T = useTheme();
   const { lang, t } = useTranslation();
   const [showBuilder, setShowBuilder]             = useState(false);
   const [showRoutineBuilder, setShowRoutineBuilder] = useState(false);
@@ -568,12 +571,12 @@ export default function WorkoutsScreen() {
   // ── Routine Builder ────────────────────────────────────────────────────────
   if (showRoutineBuilder) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <View style={styles.topBar}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: T.bg }]} edges={['top']}>
+        <View style={[styles.topBar, { borderBottomColor: T.border }]}>
           <TouchableOpacity onPress={() => { resetRoutineBuilder(); setShowRoutineBuilder(false); }} style={styles.backBtn}>
-            <Icon name="arr-l" size={20} color={Colors.beige[600]} />
+            <Icon name="arr-l" size={20} color={T.textSec} />
           </TouchableOpacity>
-          <Text style={styles.heading}>{editingRoutineId ? t('w.routine.edit.title') : t('w.routine.builder.title')}</Text>
+          <Text style={[styles.heading, { color: T.text }]}>{editingRoutineId ? t('w.routine.edit.title') : t('w.routine.builder.title')}</Text>
           <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSaveRoutine}>
             <Text style={styles.saveHeaderTxt}>{t('w.routine.save')}</Text>
           </TouchableOpacity>
@@ -678,12 +681,12 @@ export default function WorkoutsScreen() {
   // ── Workout Builder ────────────────────────────────────────────────────────
   if (showBuilder) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <View style={styles.topBar}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: T.bg }]} edges={['top']}>
+        <View style={[styles.topBar, { borderBottomColor: T.border }]}>
           <TouchableOpacity onPress={() => { resetBuilder(); setShowBuilder(false); }} style={styles.backBtn}>
-            <Icon name="arr-l" size={20} color={Colors.beige[600]} />
+            <Icon name="arr-l" size={20} color={T.textSec} />
           </TouchableOpacity>
-          <Text style={styles.heading}>{t('w.builder.title')}</Text>
+          <Text style={[styles.heading, { color: T.text }]}>{t('w.builder.title')}</Text>
           <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSave}>
             <Text style={styles.saveHeaderTxt}>{t('w.builder.save')}</Text>
           </TouchableOpacity>
@@ -844,11 +847,11 @@ export default function WorkoutsScreen() {
   const maxVol   = Math.max(...weekly.map(w => w.totalKg), 1);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.topBar}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: T.bg }]} edges={['top']}>
+      <View style={[styles.topBar, { borderBottomColor: T.border }]}>
         <View>
-          <Text style={styles.heading}>{t('w.heading')}</Text>
-          <Text style={styles.subheading}>{t('w.sub')}</Text>
+          <Text style={[styles.heading, { color: T.text }]}>{t('w.heading')}</Text>
+          <Text style={[styles.subheading, { color: T.textMuted }]}>{t('w.sub')}</Text>
         </View>
       </View>
 

@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 import { Icon } from '../../components/ui/Icon';
 import { useTranslation } from '../../lib/LangContext';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
@@ -90,6 +91,7 @@ type Flow = 'signIn' | 'signUp';
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function LoginScreen() {
+  const T = useTheme();
   const { signIn } = useAuthActions();
   const { t } = useTranslation();
 
@@ -194,7 +196,7 @@ export default function LoginScreen() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={[styles.root, { backgroundColor: T.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}

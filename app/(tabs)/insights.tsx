@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 import { Icon } from '../../components/ui/Icon';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
@@ -67,6 +68,7 @@ function ConfidenceBadge({ level }: { level: DetectedPattern['confidence'] }) {
 }
 
 export default function InsightsScreen() {
+  const T = useTheme();
   const { lang, t } = useTranslation();
   const profile   = useQuery(api.profiles.get);
   const workouts  = useQuery(api.workouts.list) ?? [];
@@ -88,11 +90,11 @@ export default function InsightsScreen() {
   const hasData  = workouts.length > 0 || cycleDays.length > 0;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.topBar}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: T.bg }]} edges={['top']}>
+      <View style={[styles.topBar, { borderBottomColor: T.border }]}>
         <View>
-          <Text style={styles.heading}>{t('ins.heading')}</Text>
-          <Text style={styles.subheading}>{t('ins.sub')}</Text>
+          <Text style={[styles.heading, { color: T.text }]}>{t('ins.heading')}</Text>
+          <Text style={[styles.subheading, { color: T.textMuted }]}>{t('ins.sub')}</Text>
         </View>
       </View>
 
@@ -132,14 +134,14 @@ export default function InsightsScreen() {
         {insight.hormoneContext ? (
           <>
             <View style={styles.sectionRow}>
-              <Icon name="spark" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>{t('ins.hormone')}</Text>
+              <Icon name="spark" size={12} color={T.textMuted} />
+              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.hormone')}</Text>
             </View>
-            <View style={styles.hormoneCard}>
+            <View style={[styles.hormoneCard, { backgroundColor: T.blushBg, borderColor: T.blushBorder, borderLeftColor: Colors.blush[400] }]}>
               {insight.hormoneContext.split('. ').filter(Boolean).map((sentence, i, arr) => (
-                <View key={i} style={[styles.hormoneRow, i === arr.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]}>
+                <View key={i} style={[styles.hormoneRow, { borderBottomColor: T.blushBorder }, i === arr.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]}>
                   <View style={styles.hormoneDot} />
-                  <RichText text={sentence.endsWith('.') ? sentence : sentence + '.'} style={styles.infoTxt} />
+                  <RichText text={sentence.endsWith('.') ? sentence : sentence + '.'} style={[styles.infoTxt, { color: T.textSec }]} boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }} />
                 </View>
               ))}
             </View>
@@ -150,11 +152,11 @@ export default function InsightsScreen() {
         {insight.energyPattern ? (
           <>
             <View style={styles.sectionRow}>
-              <Icon name="energized" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>{t('ins.energy')}</Text>
+              <Icon name="energized" size={12} color={T.textMuted} />
+              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.energy')}</Text>
             </View>
-            <View style={styles.energyCard}>
-              <RichText text={insight.energyPattern} style={styles.energyTxt} />
+            <View style={[styles.energyCard, { backgroundColor: T.surface2, borderColor: T.border, borderLeftColor: T.border2 }]}>
+              <RichText text={insight.energyPattern} style={[styles.energyTxt, { color: T.textSec }]} boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }} />
             </View>
           </>
         ) : null}
@@ -163,30 +165,30 @@ export default function InsightsScreen() {
         {insight.trainingFocus.length > 0 ? (
           <>
             <View style={styles.sectionRow}>
-              <Icon name="barbell" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>{t('ins.training')}</Text>
+              <Icon name="barbell" size={12} color={T.textMuted} />
+              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.training')}</Text>
             </View>
             {insight.trainingFocus.map((tip, i) => (
               <TouchableOpacity
                 key={i}
-                style={styles.tipCard}
+                style={[styles.tipCard, { backgroundColor: T.surface, borderColor: T.border, borderLeftColor: T.border }]}
                 activeOpacity={0.8}
                 onPress={() => setOpenTip(openTip === `tip-${i}` ? null : `tip-${i}`)}
               >
                 <View style={styles.tipHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.tipTitle}>{tip.title}</Text>
+                    <Text style={[styles.tipTitle, { color: T.text }]}>{tip.title}</Text>
                     {openTip !== `tip-${i}` && (
-                      <Text style={styles.tipHint} numberOfLines={1}>{tip.detail.replace(/\*\*/g, '')}</Text>
+                      <Text style={[styles.tipHint, { color: T.textMuted }]} numberOfLines={1}>{tip.detail.replace(/\*\*/g, '')}</Text>
                     )}
                   </View>
                   <View style={{ alignItems: 'flex-end', gap: 4 }}>
                     <IntensityDot level={tip.intensity} />
-                    <Icon name="chevr" size={13} color={Colors.beige[300]} />
+                    <Icon name="chevr" size={13} color={T.border2} />
                   </View>
                 </View>
                 {openTip === `tip-${i}` && (
-                  <RichText text={tip.detail} style={styles.tipDetail} />
+                  <RichText text={tip.detail} style={[styles.tipDetail, { color: T.textSec, borderTopColor: T.border }]} boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }} />
                 )}
               </TouchableOpacity>
             ))}
@@ -197,11 +199,11 @@ export default function InsightsScreen() {
         {insight.recoveryNote ? (
           <>
             <View style={styles.sectionRow}>
-              <Icon name="moon" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>{t('ins.recovery')}</Text>
+              <Icon name="moon" size={12} color={T.textMuted} />
+              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.recovery')}</Text>
             </View>
-            <View style={styles.recoveryCard}>
-              <RichText text={insight.recoveryNote} style={styles.infoTxt} />
+            <View style={[styles.recoveryCard, { backgroundColor: T.skyBg, borderColor: T.skyBorder, borderLeftColor: Colors.sky[400] }]}>
+              <RichText text={insight.recoveryNote} style={[styles.infoTxt, { color: T.textSec }]} boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }} />
             </View>
           </>
         ) : null}
@@ -210,14 +212,14 @@ export default function InsightsScreen() {
         {insight.wellnessTips.length > 0 ? (
           <>
             <View style={styles.sectionRow}>
-              <Icon name="leaf" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>{t('ins.wellness')}</Text>
+              <Icon name="leaf" size={12} color={T.textMuted} />
+              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.wellness')}</Text>
             </View>
-            <View style={styles.wellnessCard}>
+            <View style={[styles.wellnessCard, { backgroundColor: T.surface, borderColor: T.border }]}>
               {insight.wellnessTips.map((tip, i) => (
-                <View key={i} style={[styles.wellnessRow, i === insight.wellnessTips.length - 1 && { borderBottomWidth: 0 }]}>
-                  <Text style={styles.wellnessNum}>{i + 1}</Text>
-                  <RichText text={tip} style={styles.wellnessTxt} />
+                <View key={i} style={[styles.wellnessRow, { borderBottomColor: T.border }, i === insight.wellnessTips.length - 1 && { borderBottomWidth: 0 }]}>
+                  <Text style={[styles.wellnessNum, { backgroundColor: T.text, color: T.bg }]}>{i + 1}</Text>
+                  <RichText text={tip} style={[styles.wellnessTxt, { color: T.textSec }]} boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }} />
                 </View>
               ))}
             </View>
@@ -228,50 +230,51 @@ export default function InsightsScreen() {
         {patterns.length > 0 ? (
           <>
             <View style={styles.sectionRow}>
-              <Icon name="eye" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>{t('ins.patterns')}</Text>
+              <Icon name="eye" size={12} color={T.textMuted} />
+              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.patterns')}</Text>
             </View>
             {patterns.map(p => (
               <View key={p.id} style={[
                 styles.patternCard,
-                p.color === 'green' && styles.patternGreen,
-                p.color === 'blush' && styles.patternBlush,
+                { backgroundColor: T.surface2, borderColor: T.border, borderLeftColor: T.border2 },
+                p.color === 'green' && { backgroundColor: T.skyBg, borderColor: T.skyBorder, borderLeftColor: Colors.green[400] },
+                p.color === 'blush' && { backgroundColor: T.blushBg, borderColor: T.blushBorder, borderLeftColor: Colors.blush[400] },
               ]}>
                 <View style={styles.patternHeader}>
-                  <Text style={styles.patternTitle}>{p.title}</Text>
+                  <Text style={[styles.patternTitle, { color: T.text }]}>{p.title}</Text>
                   <ConfidenceBadge level={p.confidence} />
                 </View>
-                <Text style={styles.patternBody}>{p.body}</Text>
+                <Text style={[styles.patternBody, { color: T.textSec }]}>{p.body}</Text>
               </View>
             ))}
           </>
         ) : hasData ? null : (
           <>
             <View style={styles.sectionRow}>
-              <Icon name="eye" size={12} color={Colors.beige[400]} />
-              <Text style={styles.sectionLbl}>{t('ins.patterns')}</Text>
+              <Icon name="eye" size={12} color={T.textMuted} />
+              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.patterns')}</Text>
             </View>
-            <View style={styles.emptyPatterns}>
-              <Text style={styles.emptyTxt}>{t('ins.patterns.empty')}</Text>
+            <View style={[styles.emptyPatterns, { backgroundColor: T.surface2, borderColor: T.border }]}>
+              <Text style={[styles.emptyTxt, { color: T.textMuted }]}>{t('ins.patterns.empty')}</Text>
             </View>
           </>
         )}
 
         {/* ── Research Source ── */}
         {insight.researchContext ? (
-          <View style={styles.sourceCard}>
-            <Icon name="eye" size={11} color={Colors.beige[300]} />
-            <Text style={styles.sourceTxt}>{insight.researchContext}</Text>
+          <View style={[styles.sourceCard, { backgroundColor: T.surface2, borderColor: T.border }]}>
+            <Icon name="eye" size={11} color={T.textMuted} />
+            <Text style={[styles.sourceTxt, { color: T.textMuted }]}>{insight.researchContext}</Text>
           </View>
         ) : null}
 
         {/* ── Disclaimer ── */}
-        <View style={styles.disclaimer}>
+        <View style={[styles.disclaimer, { backgroundColor: T.surface2, borderColor: T.border2 }]}>
           <View style={styles.disclaimerHeader}>
-            <Icon name="lock" size={13} color={Colors.beige[500]} />
-            <Text style={styles.disclaimerTitle}>{t('ins.note')}</Text>
+            <Icon name="lock" size={13} color={T.textMuted} />
+            <Text style={[styles.disclaimerTitle, { color: T.textSec }]}>{t('ins.note')}</Text>
           </View>
-          <Text style={styles.disclaimerTxt}>{DISCLAIMER}</Text>
+          <Text style={[styles.disclaimerTxt, { color: T.textMuted }]}>{DISCLAIMER}</Text>
         </View>
 
       </ScrollView>
@@ -282,107 +285,117 @@ export default function InsightsScreen() {
 const styles = StyleSheet.create({
   safe:       { flex: 1, backgroundColor: Colors.cream },
   topBar:     {
-    paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
-    borderBottomWidth: 1, borderBottomColor: Colors.beige[50],
+    paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, paddingBottom: 14,
+    borderBottomWidth: 1, borderBottomColor: Colors.beige[100],
   },
-  heading:    { fontFamily: Fonts.serifSemiBold, fontSize: 26, color: Colors.beige[800] },
-  subheading: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 2 },
+  heading:    { fontFamily: Fonts.sansBold, fontSize: 22, color: Colors.beige[800], letterSpacing: -0.3 },
+  subheading: { fontFamily: Fonts.sans, fontSize: 12, color: Colors.beige[400], marginTop: 2 },
   scroll:     { flex: 1 },
 
-  // Phase card
+  // Phase card — dark & bold
   phaseCard: {
-    margin: Spacing.xl, marginBottom: 8, borderRadius: Radius.lg, padding: 20,
-    borderWidth: 1.5,
+    margin: Spacing.xl, marginBottom: 8,
+    borderRadius: Radius.md, padding: 20,
+    borderWidth: 0,
+    overflow: 'hidden',
   },
-  phaseCardTop:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
-  phaseEye:      { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 5 },
-  phaseName:     { fontFamily: Fonts.serifSemiBold, fontSize: 28, lineHeight: 32 },
-  phaseDays:     { fontFamily: Fonts.sansLight, fontSize: 11, marginTop: 5 },
-  phasePill:     { alignItems: 'center', borderWidth: 1, borderRadius: Radius.md, paddingHorizontal: 14, paddingVertical: 8, minWidth: 64 },
-  phaseDaysN:    { fontFamily: Fonts.serifSemiBold, fontSize: 32, lineHeight: 34, textAlign: 'center' },
-  phaseDaysLbl:  { fontFamily: Fonts.sansLight, fontSize: 9, textAlign: 'center', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.8 },
-  taglineRow:    { borderTopWidth: 1, paddingTop: 14, marginBottom: 10 },
-  phaseTagline:  { fontFamily: Fonts.serifSemiBoldItalic, fontSize: 16 },
-  phaseOverview: { fontFamily: Fonts.sansLight, fontSize: 13, lineHeight: 21, marginTop: 2 },
+  phaseCardTop:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
+  phaseEye:      { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6, opacity: 0.7 },
+  phaseName:     { fontFamily: Fonts.sansBold, fontSize: 26, lineHeight: 30, letterSpacing: -0.5 },
+  phaseDays:     { fontFamily: Fonts.sans, fontSize: 11, marginTop: 4, opacity: 0.7 },
+  phasePill:     {
+    alignItems: 'center', borderRadius: Radius.sm,
+    paddingHorizontal: 14, paddingVertical: 10, minWidth: 64,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  phaseDaysN:    { fontFamily: Fonts.sansBold, fontSize: 30, lineHeight: 32, textAlign: 'center' },
+  phaseDaysLbl:  { fontFamily: Fonts.sans, fontSize: 9, textAlign: 'center', marginTop: 2, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.7 },
+  taglineRow:    { borderTopWidth: 1, paddingTop: 12, marginBottom: 10, borderTopColor: 'rgba(255,255,255,0.2)' },
+  phaseTagline:  { fontFamily: Fonts.sansBold, fontSize: 14, letterSpacing: 0.2 },
+  phaseOverview: { fontFamily: Fonts.sans, fontSize: 13, lineHeight: 21, marginTop: 2, opacity: 0.85 },
 
   // Section label
   sectionRow: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: Spacing.xl, marginBottom: 8, marginTop: 14,
+    paddingHorizontal: Spacing.xl, marginBottom: 8, marginTop: 18,
   },
   sectionLbl: {
-    fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.2,
-    textTransform: 'uppercase', color: Colors.beige[400],
+    fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.6,
+    textTransform: 'uppercase', color: Colors.beige[600],
   },
 
   // Info cards
-  infoTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[700], lineHeight: 21, flex: 1 },
+  infoTxt: { fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[700], lineHeight: 21, flex: 1 },
   bold:    { fontFamily: Fonts.sansBold, color: Colors.beige[800] },
 
   // Hormone card — sentence-by-sentence
   hormoneCard: {
     marginHorizontal: Spacing.xl, marginBottom: 4,
-    backgroundColor: Colors.blush[50], borderRadius: Radius.lg,
+    backgroundColor: Colors.blush[50], borderRadius: Radius.md,
     paddingHorizontal: 16, paddingTop: 4, paddingBottom: 4,
     borderWidth: 1, borderColor: Colors.blush[100],
+    borderLeftWidth: 3, borderLeftColor: Colors.blush[400],
   },
   hormoneRow: {
     flexDirection: 'row', gap: 10, paddingVertical: 11,
     borderBottomWidth: 1, borderBottomColor: Colors.blush[100], alignItems: 'flex-start',
   },
-  hormoneDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.blush[300], marginTop: 8, flexShrink: 0 },
+  hormoneDot: { width: 6, height: 6, borderRadius: 2, backgroundColor: Colors.blush[400], marginTop: 8, flexShrink: 0 },
 
   // Energy card
   energyCard: {
     marginHorizontal: Spacing.xl, marginBottom: 4,
-    backgroundColor: Colors.beige[50], borderRadius: Radius.lg,
+    backgroundColor: Colors.beige[50], borderRadius: Radius.md,
     padding: 16, borderWidth: 1, borderColor: Colors.beige[100],
+    borderLeftWidth: 3, borderLeftColor: Colors.beige[400],
   },
-  energyTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[700], lineHeight: 21 },
+  energyTxt: { fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[700], lineHeight: 21 },
 
   // Recovery card
   recoveryCard: {
     marginHorizontal: Spacing.xl, marginBottom: 4,
-    backgroundColor: Colors.sky[50], borderRadius: Radius.lg,
+    backgroundColor: Colors.sky[50], borderRadius: Radius.md,
     padding: 16, borderWidth: 1, borderColor: Colors.sky[100],
+    borderLeftWidth: 3, borderLeftColor: Colors.sky[400],
   },
 
   // Training tip cards
   tipCard: {
     marginHorizontal: Spacing.xl, marginBottom: 6,
-    backgroundColor: Colors.cream, borderRadius: Radius.lg,
+    backgroundColor: Colors.cream, borderRadius: Radius.md,
     padding: 16, borderWidth: 1, borderColor: Colors.beige[100],
+    borderLeftWidth: 3, borderLeftColor: Colors.beige[200],
   },
   tipHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 },
-  tipTitle:   { fontFamily: Fonts.sansBold, fontSize: 14, color: Colors.beige[800], marginBottom: 3 },
-  tipHint:    { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], lineHeight: 16 },
-  tipDetail:  { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[600], lineHeight: 20, marginTop: 12,
-                paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.beige[50] },
+  tipTitle:   { fontFamily: Fonts.sansBold, fontSize: 14, color: Colors.beige[800], marginBottom: 3, letterSpacing: -0.1 },
+  tipHint:    { fontFamily: Fonts.sans, fontSize: 11, color: Colors.beige[400], lineHeight: 16 },
+  tipDetail:  { fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[600], lineHeight: 20, marginTop: 12,
+                paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.beige[100] },
   intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  intensityDot: { width: 6, height: 6, borderRadius: 3 },
-  intensityLbl: { fontFamily: Fonts.sansSemiBold, fontSize: 9, letterSpacing: 0.4 },
+  intensityDot: { width: 5, height: 5, borderRadius: 2 },
+  intensityLbl: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.6 },
 
   // Wellness
   wellnessCard: {
     marginHorizontal: Spacing.xl, marginBottom: 4,
-    backgroundColor: Colors.cream, borderRadius: Radius.lg,
+    backgroundColor: Colors.cream, borderRadius: Radius.md,
     paddingHorizontal: 16, borderWidth: 1, borderColor: Colors.beige[100],
   },
   wellnessRow: {
     flexDirection: 'row', gap: 12, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: Colors.beige[50], alignItems: 'flex-start',
+    borderBottomWidth: 1, borderBottomColor: Colors.beige[100], alignItems: 'flex-start',
   },
   wellnessNum: {
-    width: 20, height: 20, borderRadius: 10,
-    backgroundColor: Colors.beige[100], textAlign: 'center', lineHeight: 20,
-    fontFamily: Fonts.sansBold, fontSize: 10, color: Colors.beige[500], flexShrink: 0,
+    width: 20, height: 20, borderRadius: 4,
+    backgroundColor: Colors.beige[800], textAlign: 'center', lineHeight: 20,
+    fontFamily: Fonts.sansBold, fontSize: 10, color: Colors.cream, flexShrink: 0,
   },
-  wellnessTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[700], lineHeight: 20, flex: 1 },
+  wellnessTxt: { fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[700], lineHeight: 20, flex: 1 },
 
   // Pattern cards
   patternCard: {
     marginHorizontal: Spacing.xl, marginBottom: 8,
-    backgroundColor: Colors.beige[50], borderRadius: Radius.md,
+    backgroundColor: Colors.beige[50], borderRadius: Radius.sm,
     padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
     borderLeftWidth: 3, borderLeftColor: Colors.beige[400],
   },
@@ -395,33 +408,33 @@ const styles = StyleSheet.create({
     borderLeftColor: Colors.blush[400],
   },
   patternHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, gap: 8 },
-  patternTitle:  { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[800], flex: 1 },
-  patternBody:   { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[600], lineHeight: 18 },
-  confidenceBadge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  confidenceTxt:   { fontFamily: Fonts.sansBold, fontSize: 8, letterSpacing: 0.5 },
+  patternTitle:  { fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.beige[800], flex: 1 },
+  patternBody:   { fontFamily: Fonts.sans, fontSize: 12, color: Colors.beige[600], lineHeight: 18 },
+  confidenceBadge: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
+  confidenceTxt:   { fontFamily: Fonts.sansBold, fontSize: 8, letterSpacing: 0.8 },
 
   emptyPatterns: {
     marginHorizontal: Spacing.xl, padding: 20, alignItems: 'center',
     backgroundColor: Colors.beige[50], borderRadius: Radius.md,
     borderWidth: 1, borderColor: Colors.beige[100],
   },
-  emptyTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[400], textAlign: 'center', lineHeight: 20 },
+  emptyTxt: { fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[400], textAlign: 'center', lineHeight: 20 },
 
   // Source & disclaimer
   sourceCard: {
     flexDirection: 'row', gap: 8, alignItems: 'flex-start',
     marginHorizontal: Spacing.xl, marginTop: 8, marginBottom: 4,
     padding: 12, backgroundColor: Colors.beige[50],
-    borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.beige[100],
+    borderRadius: Radius.sm, borderWidth: 1, borderColor: Colors.beige[100],
   },
-  sourceTxt: { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[500], lineHeight: 16, flex: 1 },
+  sourceTxt: { fontFamily: Fonts.sans, fontSize: 10, color: Colors.beige[500], lineHeight: 16, flex: 1 },
 
   disclaimer: {
     marginHorizontal: Spacing.xl, marginTop: 8,
     padding: 14, backgroundColor: Colors.beige[50],
-    borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.beige[200],
+    borderRadius: Radius.sm, borderWidth: 1, borderColor: Colors.beige[200],
   },
   disclaimerHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  disclaimerTitle:  { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.beige[600] },
-  disclaimerTxt:    { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[500], lineHeight: 17 },
+  disclaimerTitle:  { fontFamily: Fonts.sansBold, fontSize: 11, color: Colors.beige[600], letterSpacing: 0.3 },
+  disclaimerTxt:    { fontFamily: Fonts.sans, fontSize: 11, color: Colors.beige[500], lineHeight: 17 },
 });

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { TouchableWithoutFeedback, Animated, StyleSheet, View } from 'react-native';
 import { Colors } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 
 interface Props {
   value: boolean;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function Toggle({ value, onChange }: Props) {
+  const T = useTheme();
   const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
 
   useEffect(() => {
@@ -18,7 +20,7 @@ export function Toggle({ value, onChange }: Props) {
     }).start();
   }, [value]);
 
-  const bg = anim.interpolate({ inputRange: [0, 1], outputRange: [Colors.beige[200], Colors.green[400]] });
+  const bg = anim.interpolate({ inputRange: [0, 1], outputRange: [T.border2, Colors.green[400]] });
   const left = anim.interpolate({ inputRange: [0, 1], outputRange: [3, 22] });
 
   return (

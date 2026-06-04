@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { View, Platform } from 'react-native';
+import { View, Platform, useColorScheme } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
@@ -55,6 +55,7 @@ function NavigationController() {
 }
 
 export default function RootLayout() {
+  const scheme = useColorScheme();
   const [fontsLoaded] = useFonts({
     CormorantGaramond_400Regular,
     CormorantGaramond_400Regular_Italic,
@@ -67,17 +68,19 @@ export default function RootLayout() {
     Jost_700Bold,
   });
 
+  const bg = scheme === 'dark' ? '#0C0C0C' : Colors.cream;
+
   if (!fontsLoaded) {
-    return <View style={{ flex: 1, backgroundColor: Colors.cream }} />;
+    return <View style={{ flex: 1, backgroundColor: bg }} />;
   }
 
   return (
     <ConvexAuthProvider client={convex} storage={secureStorage}>
       <AuthProvider>
         <LangProvider>
-          <StatusBar style="dark" />
+          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
           <NavigationController />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.cream } }}>
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: bg } }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(onboarding)" />

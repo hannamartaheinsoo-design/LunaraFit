@@ -3,21 +3,48 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Colors, Fonts, Spacing } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 import { Card, InsightCard } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
-import { getCycleInfo } from '../../lib/cycle';
+import { getCycleInfo, getPhaseLabel } from '../../lib/cycle';
 import { useTranslation } from '../../lib/LangContext';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 
-function phaseDiff(workouts: Workout[]): number | null {
+type PhaseKey = 'menstruation' | 'follicular' | 'ovulation' | 'luteal';
+
+const PHASE_COLORS: Record<PhaseKey, string> = {
+  menstruation: Colors.blush[300],
+  follicular:   Colors.green[400] ?? '#7EB98A',
+  ovulation:    Colors.coral[400],
+  luteal:       '#9B8EC4',
+};
+
+const PHASE_BG: Record<PhaseKey, string> = {
+  menstruation: Colors.blush[50],
+  follicular:   Colors.green[50] ?? '#F0F7F1',
+  ovulation:    Colors.coral[50] ?? '#FEF1EE',
+  luteal:       '#F3F0FA',
+};
+
+function avgVolume(workouts: any[], phase: PhaseKey): number {
+  const ws = workouts.filter((w) => w.phase === phase);
+  if (!ws.length) return 0;
+  let total = 0, count = 0;
+  ws.forEach((w: any) => w.exercises.forEach((e: any) => {
+    if (e.weight_kg > 0) { total += e.weight_kg * (e.reps || 1) * (e.sets || 1); count++; }
+  }));
+  return count ? total / count : 0;
+}
+
+function phaseDiff(workouts: any[]): number | null {
   const f = workouts.filter((w) => w.phase === 'follicular');
   const l = workouts.filter((w) => w.phase === 'luteal');
   if (!f.length || !l.length) return null;
-  const avg = (ws: Workout[]) => {
+  const avg = (ws: any[]) => {
     let total = 0, count = 0;
-    ws.forEach((w) => w.exercises.forEach((e) => { if (e.weight_kg > 0) { total += e.weight_kg; count++; } }));
+    ws.forEach((w) => w.exercises.forEach((e: any) => { if (e.weight_kg > 0) { total += e.weight_kg; count++; } }));
     return count ? total / count : 0;
   };
   const fa = avg(f), la = avg(l);
@@ -26,6 +53,7 @@ function phaseDiff(workouts: Workout[]): number | null {
 }
 
 export default function HomeScreen() {
+  const T = useTheme();
   const { lang, t, tArr } = useTranslation();
   const profile = useQuery(api.profiles.get);
   const workouts = useQuery(api.workouts.list) ?? [];
@@ -40,10 +68,7 @@ export default function HomeScreen() {
   const d7 = new Date(now.getTime() - 7 * 86400000);
   const recentCount = workouts.filter((w) => new Date(w.date) >= d7).length;
 
-  let bestKg = 0, bestName = '', bestDate = '';
-  workouts.forEach((w) => w.exercises.forEach((e) => {
-    if (e.weight_kg > bestKg) { bestKg = e.weight_kg; bestName = e.name; bestDate = w.date; }
-  }));
+  const daysUntilPeriod = ci ? ci.cycleLength - ci.day + 1 : null;
 
   const pd = phaseDiff(workouts);
 
@@ -69,43 +94,38 @@ export default function HomeScreen() {
     ? `${t('home.ins.based')} ${workouts.length} ${t('home.ins.sessions')}`
     : t('home.pattern.sub');
 
-  const formatDate = (ds: string) => {
-    const [y, m, d] = ds.split('-');
-    return `${d}.${m}.${y}`;
-  };
-
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.topBar}>
-        <Text style={styles.logo}><Text style={styles.logoAccent}>Lunara</Text>Fit</Text>
-        <TouchableOpacity style={styles.avatar} onPress={() => router.push('/(tabs)/profile')}>
-          <Text style={styles.avatarText}>{profile?.name?.[0]?.toUpperCase() ?? '?'}</Text>
+    <SafeAreaView style={[styles.safe, { backgroundColor: T.bg }]} edges={['top']}>
+      <View style={[styles.topBar, { borderBottomColor: T.border }]}>
+        <Text style={[styles.logo, { color: T.textMuted }]}><Text style={styles.logoAccent}>Lunara</Text>Fit</Text>
+        <TouchableOpacity style={[styles.avatar, { backgroundColor: T.blushBg, borderColor: T.blushBorder }]} onPress={() => router.push('/(tabs)/profile')}>
+          <Text style={[styles.avatarText, { color: Colors.blush[T.dark ? 200 : 800] }]}>{profile?.name?.[0]?.toUpperCase() ?? '?'}</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Greeting */}
         <View style={styles.greeting}>
-          <Text style={styles.dateLbl}>{DAYS[now.getDay()]}, {now.getDate()}. {MONTHS[now.getMonth()]}</Text>
-          <Text style={styles.greetingName}>{t('home.greet')} <Text style={styles.nameAccent}>{profile?.name || t('home.noname')}.</Text></Text>
-          <Text style={styles.greetingSub}>
+          <Text style={[styles.dateLbl, { color: T.textMuted }]}>{DAYS[now.getDay()]}, {now.getDate()}. {MONTHS[now.getMonth()]}</Text>
+          <Text style={[styles.greetingName, { color: T.text }]}>{t('home.greet')} <Text style={styles.nameAccent}>{profile?.name || t('home.noname')}.</Text></Text>
+          <Text style={[styles.greetingSub, { color: T.textMuted }]}>
             {ci ? `${t('home.cycleday')} ${ci.day} · ${ci.daysLeft} ${t('home.daysleft')}` : t('home.addcycle')}
           </Text>
         </View>
 
         {/* Phase banner */}
-        <View style={styles.phaseBanner}>
-          <View style={styles.phaseIconWrap}>
+        <View style={[styles.phaseBanner, { backgroundColor: T.blushBg, borderColor: T.blushBorder }]}>
+          <View style={[styles.phaseIconWrap, { backgroundColor: T.blushBorder, borderColor: T.blushBorder }]}>
             <Icon name="moon" size={24} color={Colors.blush[600]} strokeWidth={1.4} />
           </View>
           <View style={styles.phaseInfo}>
             <Text style={styles.phaseEye}>{t('home.phase.eye')}</Text>
-            <Text style={styles.phaseName}>{ci?.phase ?? '—'}</Text>
+            <Text style={[styles.phaseName, { color: Colors.blush[T.dark ? 200 : 800] }]}>{ci?.phase ?? '—'}</Text>
             <Text style={styles.phaseDesc}>{ci?.description ?? t('home.phase.nodesc')}</Text>
           </View>
           {ci && (
             <View style={styles.phaseMeta}>
-              <Text style={styles.phaseDaysN}>{ci.daysLeft}</Text>
+              <Text style={[styles.phaseDaysN, { color: Colors.blush[T.dark ? 200 : 800] }]}>{ci.daysLeft}</Text>
               <Text style={styles.phaseDaysL}>{t('home.daysleft')}</Text>
             </View>
           )}
@@ -113,22 +133,22 @@ export default function HomeScreen() {
 
         {/* Stat tiles */}
         <View style={styles.statRow}>
-          <View style={styles.statTile}>
-            <View style={styles.statLblRow}><Icon name="barbell" size={10} color={Colors.beige[400]} /><Text style={styles.statLbl}>{t('home.stat.workouts')}</Text></View>
-            <Text style={styles.statVal}>{recentCount}</Text>
-            <Text style={styles.statSub}>{t('home.stat.workouts.sub')}</Text>
+          <View style={[styles.statTile, { backgroundColor: T.surface2, borderColor: T.border }]}>
+            <View style={styles.statLblRow}><Icon name="barbell" size={10} color={T.textMuted} /><Text style={[styles.statLbl, { color: T.textMuted }]}>{t('home.stat.workouts')}</Text></View>
+            <Text style={[styles.statVal, { color: T.text }]}>{recentCount}</Text>
+            <Text style={[styles.statSub, { color: T.textSec }]}>{t('home.stat.workouts.sub')}</Text>
           </View>
-          <View style={styles.statTile}>
-            <View style={styles.statLblRow}><Icon name="spark" size={10} color={Colors.beige[400]} /><Text style={styles.statLbl}>{bestName ? (bestName.length > 10 ? bestName.slice(0, 10) + '…' : bestName) : t('home.stat.best')}</Text></View>
-            <Text style={styles.statVal}>{bestKg ? `${bestKg}kg` : '—'}</Text>
-            <Text style={styles.statSub}>{bestDate ? formatDate(bestDate) : t('home.stat.best.sub')}</Text>
-          </View>
-          <View style={styles.statTile}>
-            <View style={styles.statLblRow}><Icon name="wave" size={10} color={Colors.beige[400]} /><Text style={styles.statLbl}>{t('home.stat.phase')}</Text></View>
-            <Text style={[styles.statVal, { fontSize: 18 }, pd != null ? { color: pd >= 0 ? Colors.green[600] : Colors.blush[400] } : {}]}>
+          <TouchableOpacity style={[styles.statTile, { backgroundColor: T.blushBg, borderColor: T.blushBorder }]} onPress={() => router.push('/(tabs)/cycle')}>
+            <View style={styles.statLblRow}><Icon name="moon" size={10} color={Colors.blush[400]} /><Text style={[styles.statLbl, { color: Colors.blush[400] }]}>{t('home.stat.period')}</Text></View>
+            <Text style={[styles.statVal, { color: Colors.blush[T.dark ? 200 : 700] }]}>{daysUntilPeriod != null ? daysUntilPeriod : '—'}</Text>
+            <Text style={[styles.statSub, { color: Colors.blush[400] }]}>{daysUntilPeriod != null ? t('home.stat.period.sub') : t('home.stat.period.none')}</Text>
+          </TouchableOpacity>
+          <View style={[styles.statTile, { backgroundColor: T.surface2, borderColor: T.border }]}>
+            <View style={styles.statLblRow}><Icon name="wave" size={10} color={T.textMuted} /><Text style={[styles.statLbl, { color: T.textMuted }]}>{t('home.stat.phase')}</Text></View>
+            <Text style={[styles.statVal, { color: T.text, fontSize: 18 }, pd != null ? { color: pd >= 0 ? Colors.green[T.dark ? 200 : 600] : Colors.blush[400] } : {}]}>
               {pd != null ? `${pd >= 0 ? '+' : ''}${pd.toFixed(1)}%` : '—'}
             </Text>
-            <Text style={styles.statSub}>{t('home.stat.phase.sub')}</Text>
+            <Text style={[styles.statSub, { color: T.textSec }]}>{t('home.stat.phase.sub')}</Text>
           </View>
         </View>
 
@@ -141,27 +161,23 @@ export default function HomeScreen() {
 
         {/* Weekly chart */}
         <Card style={styles.chartCard}>
-          <View style={styles.cardLblRow}><Icon name="wave" size={12} color={Colors.beige[400]} /><Text style={styles.cardLbl}>{t('home.chart.lbl')}</Text></View>
+          <View style={styles.cardLblRow}><Icon name="wave" size={12} color={T.textMuted} /><Text style={[styles.cardLbl, { color: T.textMuted }]}>{t('home.chart.lbl')}</Text></View>
           {workouts.length ? (
             <View style={styles.chartWrap}>
               {weekBars.map((bar, i) => (
                 <View key={i} style={styles.barCol}>
-                  <View style={[styles.barFill, { height: bar.has ? '82%' : '10%', backgroundColor: bar.has ? Colors.blush[400] : Colors.beige[100] }]} />
-                  <Text style={styles.barLbl}>{bar.label}</Text>
+                  <View style={[styles.barFill, { height: bar.has ? '82%' : '10%', backgroundColor: bar.has ? Colors.blush[400] : T.border }]} />
+                  <Text style={[styles.barLbl, { color: T.textMuted }]}>{bar.label}</Text>
                 </View>
               ))}
             </View>
           ) : (
-            <Text style={styles.empty}>{t('home.chart.empty')}</Text>
+            <Text style={[styles.empty, { color: T.textMuted }]}>{t('home.chart.empty')}</Text>
           )}
         </Card>
 
-        {/* Insight preview */}
-        <InsightCard variant="default" style={styles.insightPreview}>
-          <View style={styles.insightEyeRow}><Icon name="spark" size={10} color={Colors.green[600]} /><Text style={styles.insightEye}>{t('home.pattern.eye')}</Text></View>
-          <Text style={styles.insightTitle}>{insightTitle}</Text>
-          <Text style={styles.insightBody}>{insightBody}</Text>
-        </InsightCard>
+        {/* Pattern analysis card */}
+        <PatternCard workouts={workouts} lang={lang} T={T} t={t} pd={pd} ci={ci} now={now} />
 
         <View style={{ height: 20 }} />
       </ScrollView>

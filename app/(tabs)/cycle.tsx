@@ -3,6 +3,7 @@ import { useFocusEffect } from 'expo-router';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -34,16 +35,18 @@ const CONTRA_KEYS: ContraKey[] = ['none','taken','late'];
 const CAL_H_PADDING = 16;
 
 function CatHeader({ icon, label, badge }: { icon: any; label: string; badge?: string }) {
+  const T = useTheme();
   return (
     <View style={styles.catHdr}>
-      <Icon name={icon} size={13} color={Colors.beige[400]} strokeWidth={1.5} />
-      <Text style={styles.catHdrTxt}>{label}</Text>
+      <Icon name={icon} size={13} color={T.textMuted} strokeWidth={1.5} />
+      <Text style={[styles.catHdrTxt, { color: T.textSec }]}>{label}</Text>
       {badge && <View style={styles.proBadge}><Text style={styles.proBadgeTxt}>{badge}</Text></View>}
     </View>
   );
 }
 
 export default function CycleScreen() {
+  const T = useTheme();
   const { lang, t, tArr } = useTranslation();
   const profile    = useQuery(api.profiles.get);
   const cycleDays  = useQuery(api.cycleDays.list) ?? [];
@@ -220,11 +223,11 @@ export default function CycleScreen() {
   const CONTRA_OPTS = CONTRA_KEYS.map((k, i) => ({ key: k, label: t(`c.contra.${k}` as any), icon: CONTRA_ICONS[i] }));
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.topBar}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: T.bg }]} edges={['top']}>
+      <View style={[styles.topBar, { borderBottomColor: T.border }]}>
         <View>
-          <Text style={styles.heading}>{t('c.heading')}</Text>
-          {ci && <Text style={styles.subheading}>{t('c.day')} {ci.day} / {ci.cycleLength}</Text>}
+          <Text style={[styles.heading, { color: T.text }]}>{t('c.heading')}</Text>
+          {ci && <Text style={[styles.subheading, { color: T.textMuted }]}>{t('c.day')} {ci.day} / {ci.cycleLength}</Text>}
         </View>
       </View>
 
@@ -233,13 +236,13 @@ export default function CycleScreen() {
         {/* Month navigation */}
         <View style={styles.calNav}>
           <TouchableOpacity onPress={goToPrevMonth} style={styles.calNavBtn} activeOpacity={0.7}>
-            <Text style={styles.calNavArrow}>‹</Text>
+            <Text style={[styles.calNavArrow, { color: T.textSec }]}>‹</Text>
           </TouchableOpacity>
-          <Text style={styles.calNavTitle}>
+          <Text style={[styles.calNavTitle, { color: T.text }]}>
             {(MONTHS[displayMonth] ?? '').charAt(0).toUpperCase() + (MONTHS[displayMonth] ?? '').slice(1)} {displayYear}
           </Text>
           <TouchableOpacity onPress={goToNextMonth} style={styles.calNavBtn} activeOpacity={0.7}>
-            <Text style={styles.calNavArrow}>›</Text>
+            <Text style={[styles.calNavArrow, { color: T.textSec }]}>›</Text>
           </TouchableOpacity>
         </View>
 
@@ -247,7 +250,7 @@ export default function CycleScreen() {
         <View style={styles.calHRow}>
           {WEEKDAYS.map((d) => (
             <View key={d} style={styles.calCol}>
-              <Text style={styles.calHDay}>{d}</Text>
+              <Text style={[styles.calHDay, { color: T.textMuted }]}>{d}</Text>
             </View>
           ))}
         </View>
@@ -280,11 +283,12 @@ export default function CycleScreen() {
                 ]}>
                   <Text style={[
                     styles.calDayTxt,
+                    { color: T.textSec },
                     isLogged   && { color: '#fff' },
-                    isSpotting && !isLogged && { color: Colors.blush[800] },
+                    isSpotting && !isLogged && { color: Colors.blush[T.dark ? 200 : 800] },
                     isOv       && !isLogged && !isSpotting && { color: '#fff' },
-                    isPred     && !isLogged && !isSpotting && { color: Colors.blush[600] },
-                    isFert     && !isOv && !isLogged && !isSpotting && { color: Colors.green[800] },
+                    isPred     && !isLogged && !isSpotting && { color: Colors.blush[T.dark ? 400 : 600] },
+                    isFert     && !isOv && !isLogged && !isSpotting && { color: Colors.green[T.dark ? 200 : 800] },
                   ]}>{day}</Text>
                 </View>
                 {isSpotting && !isLogged && <View style={styles.spottingDot} />}
@@ -298,7 +302,7 @@ export default function CycleScreen() {
         <View style={styles.legend}>
           {[
             { color: Colors.blush[600], label: t('c.legend.logged') },
-            { color: Colors.blush[50],  label: t('c.legend.pred'), border: Colors.blush[200] },
+            { color: T.blushBg,  label: t('c.legend.pred'), border: Colors.blush[200] },
             { color: Colors.blush[200], label: t('c.legend.spotting'), border: Colors.blush[300] },
             { color: Colors.green[400], label: t('c.legend.ovulation') },
             { color: Colors.green[200], label: t('c.legend.fertile') },
@@ -309,28 +313,28 @@ export default function CycleScreen() {
                 (l as any).pill ? styles.legPill : styles.legDot,
                 { backgroundColor: l.color, borderWidth: l.border ? 1 : 0, borderColor: l.border },
               ]} />
-              <Text style={styles.legTxt}>{l.label}</Text>
+              <Text style={[styles.legTxt, { color: T.textSec }]}>{l.label}</Text>
             </View>
           ))}
         </View>
 
         {/* Log entry */}
         <View style={styles.sectionLblRow}>
-          <Icon name="drop" size={12} color={Colors.beige[400]} />
-          <Text style={styles.sectionLbl}>{t('c.cal.today')}</Text>
+          <Icon name="drop" size={12} color={T.textMuted} />
+          <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('c.cal.today')}</Text>
         </View>
 
         <Card>
-          <Text style={styles.fieldLabel}>{t('c.date.lbl')}</Text>
+          <Text style={[styles.fieldLabel, { color: T.textSec }]}>{t('c.date.lbl')}</Text>
           <DatePicker value={date} onChange={setDate} />
 
-          <Text style={styles.fieldLabel}>{t('c.period.lbl')}</Text>
+          <Text style={[styles.fieldLabel, { color: T.textSec }]}>{t('c.period.lbl')}</Text>
           <View style={styles.rowGap8}>
             <Button variant={period === true ? 'blush' : 'outline'} size="sm" onPress={() => { setPeriod(true);  setSpotting(false); }}>{t('c.period.yes')}</Button>
             <Button variant={period === false ? 'dark' : 'outline'} size="sm" onPress={() => setPeriod(false)}>{t('c.period.no')}</Button>
           </View>
 
-          <Text style={styles.fieldLabel}>{t('c.spotting.lbl')}</Text>
+          <Text style={[styles.fieldLabel, { color: T.textSec }]}>{t('c.spotting.lbl')}</Text>
           <View style={styles.rowGap8}>
             <Button variant={spotting === true ? 'blush' : 'outline'} size="sm" onPress={() => { setSpotting(true);  setPeriod(false); }}>{t('c.spotting.yes')}</Button>
             <Button variant={spotting === false ? 'dark' : 'outline'} size="sm" onPress={() => setSpotting(false)}>{t('c.spotting.no')}</Button>
@@ -342,11 +346,11 @@ export default function CycleScreen() {
             {MOODS.map((m) => (
               <TouchableOpacity
                 key={m.key} activeOpacity={0.7}
-                style={[styles.chip, mood === m.key && styles.chipOn]}
+                style={[styles.chip, { backgroundColor: T.surface, borderColor: T.border }, mood === m.key && { backgroundColor: T.blushBg, borderColor: Colors.blush[400] }]}
                 onPress={() => setMood(mood === m.key ? null : m.key)}
               >
-                <Icon name={m.icon} size={14} color={mood === m.key ? Colors.blush[600] : Colors.beige[400]} strokeWidth={1.5} />
-                <Text style={[styles.chipLbl, mood === m.key && styles.chipLblOn]}>{m.label}</Text>
+                <Icon name={m.icon} size={14} color={mood === m.key ? Colors.blush[600] : T.textMuted} strokeWidth={1.5} />
+                <Text style={[styles.chipLbl, { color: T.textSec }, mood === m.key && styles.chipLblOn]}>{m.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -401,11 +405,11 @@ export default function CycleScreen() {
                 ))}
               </View>
               <View style={styles.sleepHrsRow}>
-                <Text style={styles.sleepHrsLbl}>{t('c.sleep.hrs')}</Text>
+                <Text style={[styles.sleepHrsLbl, { color: T.textSec }]}>{t('c.sleep.hrs')}</Text>
                 <TextInput
-                  style={styles.sleepHrsInput}
+                  style={[styles.sleepHrsInput, { backgroundColor: T.surface, borderColor: T.border, color: T.text }]}
                   placeholder={t('c.sleep.hrs.ph')}
-                  placeholderTextColor={Colors.beige[200]}
+                  placeholderTextColor={T.textMuted}
                   keyboardType="decimal-pad"
                   value={sleepHours}
                   onChangeText={setSleepHours}
@@ -416,7 +420,7 @@ export default function CycleScreen() {
             {(profile?.plan === 'free' || !profile?.plan) && (
               <View style={styles.lockOverlay}>
                 <Icon name="lock" size={22} color={Colors.beige[400]} />
-                <Text style={styles.lockTxt}>{t('c.sleep.lock')}</Text>
+                <Text style={[styles.lockTxt, { color: T.textSec }]}>{t('c.sleep.lock')}</Text>
               </View>
             )}
           </View>
@@ -435,11 +439,11 @@ export default function CycleScreen() {
             {CONTRA_OPTS.map((c) => (
               <TouchableOpacity
                 key={c.key} activeOpacity={0.7}
-                style={[styles.contraBtn, contra === c.key && styles.contraBtnOn]}
+                style={[styles.contraBtn, { backgroundColor: T.surface, borderColor: T.border }, contra === c.key && { backgroundColor: T.blushBg, borderColor: Colors.blush[400] }]}
                 onPress={() => setContra(contra === c.key ? null : c.key)}
               >
-                <Icon name={c.icon} size={22} color={contra === c.key ? Colors.blush[500] : Colors.beige[400]} strokeWidth={1.5} />
-                <Text style={[styles.contraLbl, contra === c.key && { color: Colors.blush[800] }]}>{c.label}</Text>
+                <Icon name={c.icon} size={22} color={contra === c.key ? Colors.blush[500] : T.textMuted} strokeWidth={1.5} />
+                <Text style={[styles.contraLbl, { color: T.textSec }, contra === c.key && { color: Colors.blush[T.dark ? 200 : 800] }]}>{c.label}</Text>
               </TouchableOpacity>
             ))}
           </View>

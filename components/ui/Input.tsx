@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TextInputProps, ViewStyle } from 'react-native';
 import { Colors, Fonts, Radius } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 
 interface Props extends TextInputProps {
   label?: string;
@@ -10,18 +11,20 @@ interface Props extends TextInputProps {
 
 export function Input({ label, error, containerStyle, style, ...rest }: Props) {
   const [focused, setFocused] = useState(false);
+  const T = useTheme();
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? <Text style={[styles.label, { color: T.textSec }]}>{label}</Text> : null}
       <TextInput
         style={[
           styles.input,
-          focused ? styles.inputFocused : null,
-          error ? styles.inputError : null,
+          { backgroundColor: T.surface, borderColor: T.border, color: T.text },
+          focused ? { borderColor: Colors.blush[400] } : null,
+          error  ? styles.inputError : null,
           style,
         ]}
-        placeholderTextColor={Colors.beige[200]}
+        placeholderTextColor={T.textMuted}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         {...rest}
@@ -38,7 +41,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    color: Colors.beige[600],
     marginBottom: 6,
     marginTop: 16,
   },
@@ -47,15 +49,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderWidth: 1.5,
-    borderColor: Colors.beige[100],
     borderRadius: Radius.md,
-    backgroundColor: Colors.cream,
     fontFamily: Fonts.sans,
     fontSize: 14,
-    color: Colors.beige[800],
-  },
-  inputFocused: {
-    borderColor: Colors.blush[400],
   },
   inputError: {
     borderColor: Colors.error.text,

@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/authContext';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Colors, Fonts, Spacing } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 import { Card } from '../../components/ui/Card';
 import { Icon } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
@@ -16,6 +17,7 @@ import { useTranslation } from '../../lib/LangContext';
 import { Lang } from '../../types';
 
 export default function ProfileScreen() {
+  const T = useTheme();
   const { signOut } = useAuth();
   const { lang, setLang, t } = useTranslation();
   const profile    = useQuery(api.profiles.get);
@@ -105,20 +107,20 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.topBar}>
-        <Text style={styles.heading}>{t('prof.heading')}</Text>
-        <Text style={styles.subheading}>{t('prof.sub')}</Text>
+    <SafeAreaView style={[styles.safe, { backgroundColor: T.bg }]} edges={['top']}>
+      <View style={[styles.topBar, { borderBottomColor: T.border }]}>
+        <Text style={[styles.heading, { color: T.text }]}>{t('prof.heading')}</Text>
+        <Text style={[styles.subheading, { color: T.textMuted }]}>{t('prof.sub')}</Text>
       </View>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Plan card */}
-        <View style={styles.sectionLblRow}><Icon name="star" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.plan.lbl')}</Text></View>
+        <View style={styles.sectionLblRow}><Icon name="star" size={12} color={T.textMuted} /><Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('prof.plan.lbl')}</Text></View>
         <Card>
           <View style={styles.planRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.planName}>{planName}</Text>
-              <Text style={styles.planSub}>{planSub}</Text>
+              <Text style={[styles.planName, { color: T.text }]}>{planName}</Text>
+              <Text style={[styles.planSub, { color: T.textMuted }]}>{planSub}</Text>
             </View>
             {(!profile?.plan || profile?.plan === 'free') && (
               <Button variant="blush" size="sm" onPress={() => router.push('/(onboarding)/plan')}>
@@ -129,7 +131,7 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Language picker */}
-        <View style={styles.sectionLblRow}><Icon name="eye" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.lang.lbl')}</Text></View>
+        <View style={styles.sectionLblRow}><Icon name="eye" size={12} color={T.textMuted} /><Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('prof.lang.lbl')}</Text></View>
         <Card>
           <View style={styles.langRow}>
             {LANGS.map((l) => (
@@ -147,7 +149,7 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Personal data */}
-        <View style={styles.sectionLblRow}><Icon name="person" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.data.lbl')}</Text></View>
+        <View style={styles.sectionLblRow}><Icon name="person" size={12} color={T.textMuted} /><Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('prof.data.lbl')}</Text></View>
         <Card>
           <Input label={t('prof.name.lbl')} value={name} onChangeText={setName} placeholder={t('prof.name.ph')} />
           <View style={styles.row}>
@@ -161,17 +163,17 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Privacy */}
-        <View style={styles.sectionLblRow}><Icon name="lock" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.privacy.lbl')}</Text></View>
+        <View style={styles.sectionLblRow}><Icon name="lock" size={12} color={T.textMuted} /><Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('prof.privacy.lbl')}</Text></View>
         <Card>
           {[
             { titleKey: 'prof.sync.title', subKey: 'prof.sync.sub', val: sync, set: setSync },
             { titleKey: 'prof.notif.title', subKey: 'prof.notif.sub', val: reminders, set: setReminders },
             { titleKey: 'prof.anon.title', subKey: 'prof.anon.sub', val: analytics, set: setAnalytics },
           ].map((item, i) => (
-            <View key={i} style={[styles.toggleRow, i === 2 && { borderBottomWidth: 0 }]}>
+            <View key={i} style={[styles.toggleRow, { borderBottomColor: T.border }, i === 2 && { borderBottomWidth: 0 }]}>
               <View style={styles.toggleInfo}>
-                <Text style={styles.toggleTitle}>{t(item.titleKey as any)}</Text>
-                <Text style={styles.toggleSub}>{t(item.subKey as any)}</Text>
+                <Text style={[styles.toggleTitle, { color: T.text }]}>{t(item.titleKey as any)}</Text>
+                <Text style={[styles.toggleSub, { color: T.textSec }]}>{t(item.subKey as any)}</Text>
               </View>
               <Toggle value={item.val} onChange={item.set} />
             </View>
@@ -179,9 +181,9 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Library */}
-        <View style={styles.sectionLblRow}><Icon name="folder" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.lib.lbl')}</Text></View>
+        <View style={styles.sectionLblRow}><Icon name="folder" size={12} color={T.textMuted} /><Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('prof.lib.lbl')}</Text></View>
         {Object.keys(library).length === 0 ? (
-          <Text style={styles.empty}>{t('prof.lib.empty')}</Text>
+          <Text style={[styles.empty, { color: T.textMuted }]}>{t('prof.lib.empty')}</Text>
         ) : (
           Object.keys(library).map((folderName) => {
             const sessions = library[folderName];
@@ -197,12 +199,12 @@ export default function ProfileScreen() {
                   {folderName}  ·  {sessions.length} {t('prof.lib.sessions')}  {isOpen ? '▲' : '▼'}
                 </Button>
                 {isOpen && sessions.map((w) => (
-                  <View key={w._id} style={styles.sessEntry}>
-                    <Text style={styles.sessDate}>{formatDate(w.date)} · {getPhaseLabel(w.phase, lang)}</Text>
+                  <View key={w._id} style={[styles.sessEntry, { borderTopColor: T.border, backgroundColor: T.surface2 }]}>
+                    <Text style={[styles.sessDate, { color: T.textMuted }]}>{formatDate(w.date)} · {getPhaseLabel(w.phase, lang)}</Text>
                     {w.exercises.map((e, i) => (
                       <View key={i} style={styles.exLine}>
-                        <Text style={styles.exName}>{e.name}</Text>
-                        <Text style={styles.exStats}>{e.sets}×{e.reps}{e.weight_kg ? ` · ${e.weight_kg} kg` : ''}</Text>
+                        <Text style={[styles.exName, { color: T.text }]}>{e.name}</Text>
+                        <Text style={[styles.exStats, { color: T.textSec }]}>{e.sets}×{e.reps}{e.weight_kg ? ` · ${e.weight_kg} kg` : ''}</Text>
                       </View>
                     ))}
                   </View>
@@ -213,7 +215,7 @@ export default function ProfileScreen() {
         )}
 
         {/* Account */}
-        <View style={[styles.sectionLblRow, { marginTop: 20 }]}><Icon name="person" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.signout')}</Text></View>
+        <View style={[styles.sectionLblRow, { marginTop: 20 }]}><Icon name="person" size={12} color={T.textMuted} /><Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('prof.signout')}</Text></View>
         <Card>
           <Button variant="outline" fullWidth onPress={async () => { await signOut(); router.replace('/(auth)/login' as any); }}>
             {t('prof.signout')}
@@ -221,7 +223,7 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Data */}
-        <View style={[styles.sectionLblRow, { marginTop: 20 }]}><Icon name="download" size={12} color={Colors.beige[400]} /><Text style={styles.sectionLbl}>{t('prof.data.lbl2')}</Text></View>
+        <View style={[styles.sectionLblRow, { marginTop: 20 }]}><Icon name="download" size={12} color={T.textMuted} /><Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('prof.data.lbl2')}</Text></View>
         <Card>
           <Button variant="outline" fullWidth onPress={handleExport} style={{ marginBottom: 8 }}>
             {t('prof.export')}
@@ -244,7 +246,7 @@ export default function ProfileScreen() {
               {t('prof.clear')}
             </Button>
           )}
-          <Text style={styles.dataNote}>{t('prof.local')}</Text>
+          <Text style={[styles.dataNote, { color: T.textMuted }]}>{t('prof.local')}</Text>
         </Card>
         <View style={{ height: 20 }} />
       </ScrollView>

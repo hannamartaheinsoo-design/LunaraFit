@@ -1,30 +1,34 @@
 import { Tabs } from 'expo-router';
+import { useColorScheme } from 'react-native';
 import { Colors, Fonts } from '../../constants/theme';
 import { Icon } from '../../components/ui/Icon';
 import { useTranslation } from '../../lib/LangContext';
+import { useTheme } from '../../lib/useTheme';
 
 function TabIcon({ name, focused }: { name: any; focused: boolean }) {
+  const T = useTheme();
   return (
-    <Icon name={name} size={22} color={focused ? Colors.beige[800] : Colors.beige[200]} strokeWidth={1.4} />
+    <Icon name={name} size={22} color={focused ? T.text : T.border2} strokeWidth={1.4} />
   );
 }
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const T = useTheme();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.cream,
-          borderTopColor: Colors.beige[100],
+          backgroundColor: T.surface,
+          borderTopColor: T.border,
           borderTopWidth: 1,
           paddingBottom: 24,
           paddingTop: 10,
           height: 80,
         },
-        tabBarActiveTintColor: Colors.beige[800],
-        tabBarInactiveTintColor: Colors.beige[200],
+        tabBarActiveTintColor: T.text,
+        tabBarInactiveTintColor: T.textMuted,
         tabBarLabelStyle: {
           fontFamily: Fonts.sansBold,
           fontSize: 9,

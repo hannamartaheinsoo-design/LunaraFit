@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { Colors, Spacing, Radius } from '../../constants/theme';
+import { useTheme } from '../../lib/useTheme';
 
 interface CardProps {
   children: React.ReactNode;
@@ -9,8 +10,13 @@ interface CardProps {
 }
 
 export function Card({ children, style, flat = false }: CardProps) {
+  const T = useTheme();
   return (
-    <View style={[flat ? styles.flat : styles.card, style]}>
+    <View style={[
+      flat ? styles.flat : styles.card,
+      { backgroundColor: T.surface, borderColor: T.border },
+      style,
+    ]}>
       {children}
     </View>
   );
@@ -23,8 +29,15 @@ interface InsightCardProps {
 }
 
 export function InsightCard({ children, variant = 'default', style }: InsightCardProps) {
+  const T = useTheme();
+  const variantStyle = variant === 'blush'
+    ? { backgroundColor: T.blushBg, borderColor: T.blushBorder, borderLeftColor: '#D9898B' }
+    : variant === 'green'
+    ? { backgroundColor: T.skyBg, borderColor: T.skyBorder, borderLeftColor: '#7A9AB0' }
+    : { backgroundColor: T.surface2, borderColor: T.border, borderLeftColor: T.border2 };
+
   return (
-    <View style={[styles.insightBase, styles[`insight_${variant}`], style]}>
+    <View style={[styles.insightBase, variantStyle, style]}>
       {children}
     </View>
   );
@@ -34,16 +47,13 @@ const styles = StyleSheet.create({
   card: {
     marginHorizontal: Spacing.xl,
     marginBottom: Spacing.md,
-    backgroundColor: Colors.cream,
     borderWidth: 1,
-    borderColor: Colors.beige[100],
     borderRadius: Radius.xl,
     padding: 16,
   },
   flat: {
     marginHorizontal: Spacing.xl,
     marginBottom: Spacing.md,
-    backgroundColor: Colors.beige[50],
     borderRadius: Radius.xl,
     padding: 14,
   },
@@ -52,21 +62,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: Radius.lg,
     padding: 14,
-    backgroundColor: Colors.beige[50],
     borderWidth: 1,
-    borderColor: Colors.beige[100],
     borderLeftWidth: 3,
-    borderLeftColor: Colors.beige[400],
   },
-  insight_default: {},
-  insight_blush: {
-    backgroundColor: Colors.blush[50],
-    borderColor: Colors.blush[100],
-    borderLeftColor: Colors.blush[400],
-  },
-  insight_green: {
-    backgroundColor: Colors.green[50],
-    borderColor: Colors.green[100],
-    borderLeftColor: Colors.green[400],
-  },
-} as any);
+});
