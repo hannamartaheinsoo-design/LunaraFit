@@ -122,6 +122,12 @@
 **Fix applied:** Replaced with `Colors.dark` (the correct dark text token) and `Fonts.sans` (the correct body font).
 **Rule going forward:** Before using any `Colors.*` or `Fonts.*` token in a new component, grep `constants/theme.ts` to confirm it exists. Never assume token names from convention.
 
+### [2026-06-13] react-native-reanimated does not work on Expo web without Babel plugin; babel.config.js broke the build
+**What happened:** Switched onboarding animations from `Animated` (built-in) to `react-native-reanimated` for spring physics. `useAnimatedStyle` threw "was used without a dependency array or Babel plugin". Created `babel.config.js` with `react-native-reanimated/plugin`, but `babel-preset-expo` is nested inside `expo/node_modules/` not at root — so the preset resolution failed, crashing the Metro bundler entirely (blank page, empty DOM).
+**Root cause:** Two compounding issues: (1) Reanimated on web requires the Babel plugin to transform `useAnimatedStyle` calls; (2) In this project, `babel-preset-expo` is not a top-level dependency — it lives inside `expo/node_modules/babel-preset-expo`. Adding `babel.config.js` with the wrong preset name broke the build.
+**Fix applied:** Deleted `babel.config.js` entirely. Rewrote all animations using React Native's built-in `Animated` API with `Animated.spring()` (for bounce) and `Animated.loop()` (for repeating blob/logo pulse). Built-in `Animated` works reliably on web with `useNativeDriver: false`.
+**Rule going forward:** Do not use `react-native-reanimated` in onboarding or any screen that needs to work on Expo web preview without first confirming the Babel plugin is wired up. Built-in `Animated` with `Animated.spring()` + `Animated.loop()` covers 95% of animation needs and is always safe on web.
+
 ### [2026-06-15] Seeded workouts with only 1–3 exercises per session instead of full routines
 **What happened:** Test workouts in `convex/seed.ts` each contained only a subset of the routine exercises (e.g. only Bench Press and Overhead Press for Upper Body instead of all 8 exercises). This made the Progress tab show thin data and gave false impressions of exercise coverage.
 **Root cause:** Seed was written quickly with representative exercises rather than complete routines.
@@ -151,6 +157,12 @@
 **Root cause:** Colors were written from memory or with intermediate shades assumed to exist without checking the palette definition.
 **Fix applied:** Replaced all invalid indices with the nearest valid shade (`[400]` for the 500s, `[600]` for 700s etc.).
 **Rule going forward:** Before using any `Colors.palette[N]`, check `constants/theme.ts` to confirm that index exists. The valid set for most palettes is `{ 50, 100, 200, 400, 600, 800 }`. Never assume intermediate steps.
+
+### [2026-06-15] Home chart showed workout count instead of meaningful training volume
+**What happened:** The "Nädala aktiivsus" area chart plotted workout count per day (0 or 1), producing a nearly flat line with no useful information since most users log at most one workout per day.
+**Root cause:** Initial implementation chose the simplest metric (count) without considering whether it would produce a readable chart shape.
+**Fix applied:** Changed chart data to sum total `sets` across all exercises in all workouts per day so bar height is proportional to training volume.
+**Rule going forward:** Home screen charts must show a metric that varies meaningfully day-to-day. Total sets, volume (kg×reps), or duration are good candidates. Workout count is only useful as a number, not as a chart visual.
 
 ### [2026-06-15] Progression sparkline bars normalised to 0-max instead of min-max
 **What happened:** Sparkline bars normalised bar height as `(weight / max) * barHeight`. When weights only varied by 10–20% (e.g. 55→67.5 kg), all bars appeared nearly the same height and the progression was invisible.

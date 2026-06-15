@@ -103,6 +103,14 @@ Loaded weights: `Inter_300Light`, `Inter_400Regular`, `Inter_500Medium`, `Inter_
 
 ---
 
+# Home Screen — home.tsx
+
+**No decorative background:** the home screen uses a plain `backgroundColor` only — no `LinearGradient`, no blob `View`s. Do not re-add decorative blobs or gradients.
+
+**Activity chart metric:** "Nädala aktiivsus" charts **total sets per day** (sum of `e.sets` across all exercises in all workouts for that date), not workout count. The peak day shows its value as a label above the dot. Do not revert to workout-count-per-day.
+
+---
+
 # Progress Tab — workouts.tsx
 
 **Catalog grouping:** exercise progress cards are grouped by routine name (matched by `e.name.toLowerCase()`), then a HYROX bucket (hardcoded station names), then catch-all "Other". Catalogs are collapsible via `expandedCatalogs: Set<string>` state.

@@ -223,10 +223,13 @@ export default function HomeScreen() {
   const weekBars = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(now.getTime() - (6 - i) * 86400000);
     const ds = d.toISOString().slice(0, 10);
-    const has = workouts.some((w) => w.date === ds);
+    const sets = workouts
+      .filter((w) => w.date === ds)
+      .reduce((sum: number, w: any) => sum + w.exercises.reduce((s: number, e: any) => s + (e.sets || 0), 0), 0);
     const dayIdx = (d.getDay() + 6) % 7;
-    return { label: WEEKDAYS[dayIdx], has };
+    return { label: WEEKDAYS[dayIdx], sets };
   });
+  const maxSets = Math.max(...weekBars.map((b) => b.sets), 1);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -298,7 +301,7 @@ export default function HomeScreen() {
             <View style={styles.chartWrap}>
               {weekBars.map((bar, i) => (
                 <View key={i} style={styles.barCol}>
-                  <View style={[styles.barFill, { height: bar.has ? '82%' : '10%', backgroundColor: bar.has ? Colors.blush[400] : T.border }]} />
+                  <View style={[styles.barFill, { height: `${bar.sets > 0 ? 10 + (bar.sets / maxSets) * 72 : 8}%`, backgroundColor: bar.sets > 0 ? Colors.blush[400] : T.border }]} />
                   <Text style={styles.barLbl}>{bar.label}</Text>
                 </View>
               ))}
