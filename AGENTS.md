@@ -157,6 +157,23 @@ Palette maps: `{ 50, 100, 200, 400, 600, 800 }` — indices 300, 500, 700 do NOT
 
 ---
 
+# Onboarding Flow — routing & auth
+
+**Onboarding screens:** `app/(onboarding)/` — welcome → signup → name → fitness → plan
+
+**Auth is step 2 of onboarding** (not a pre-gate). Unauthenticated users land on `welcome`, pick language, then proceed to `signup` to create/sign-in. The `/(auth)/login` route still exists but is no longer the primary entry point.
+
+**NavigationController routing (in `_layout.tsx`):**
+- unauthenticated → `/(onboarding)/welcome`
+- authenticated + not onboarded (no `profile.name`) → `/(onboarding)/name`
+- authenticated + onboarded → `/(tabs)/home`
+
+**Post-auth redirect rule:** Any screen that calls `signIn()` must have its own `useEffect` watching `isReady + isAuthenticated + isOnboarded` to redirect after auth settles. Do NOT rely solely on `NavigationController` — it has a dev bypass (`ob_preview` sessionStorage) and can miss transitions.
+
+**CTA button rule:** Never wrap primary action buttons in `Animated.View` with an opacity/delay animation. Animate content cards and headings only. The CTA must be visible from the moment the screen mounts.
+
+---
+
 # Cycle Screen — cycle.tsx
 
 **Calendar tap-to-log:** every calendar day cell is a `TouchableOpacity`. Tapping calls `handleDayPress(ds)` which sets the `date` state and scrolls the `ScrollView` (ref: `scrollRef`) down to y=520 so the log form comes into view. The calendar itself is display-only — all logging happens in the form below.

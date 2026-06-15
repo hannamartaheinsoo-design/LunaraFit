@@ -35,13 +35,16 @@ function NavigationController() {
   useEffect(() => {
     if (!isReady) return;
 
+    // Dev preview bypass — set sessionStorage.ob_preview='1' to skip auth redirects
+    if (typeof window !== 'undefined' && sessionStorage?.getItem?.('ob_preview') === '1') return;
+
     const state = isAuthenticated ? (isOnboarded ? 'home' : 'onboarding') : 'login';
     if (prev.current === state) return;
     prev.current = state;
 
     if (state === 'home') router.replace('/(tabs)/home' as any);
-    else if (state === 'onboarding') router.replace('/(onboarding)/welcome' as any);
-    else router.replace('/(auth)/login' as any);
+    else if (state === 'onboarding') router.replace('/(onboarding)/name' as any);
+    else router.replace('/(onboarding)/welcome' as any);
   }, [isReady, isAuthenticated, isOnboarded]);
 
   return null;

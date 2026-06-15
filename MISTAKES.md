@@ -169,3 +169,15 @@
 **Root cause:** 0-based normalisation compresses small relative gains into a tiny visual range.
 **Fix applied:** Switched to min-max normalisation: `4 + ((weight - min) / (max - min)) * 14` so the lowest session always renders at minimum height and the highest at maximum, exaggerating the visible delta.
 **Rule going forward:** Always use min-max normalisation for sparklines showing incremental progression. 0-max is only appropriate when 0 is a meaningful baseline (e.g. session count, not weight).
+
+### [2026-06-15] Onboarding CTA wrapped in delayed Animated.View stayed unresponsive on web
+**What happened:** The "Continue →" button on the name screen was wrapped in `Animated.View` with `useSpringIn(460)` — starting at `opacity: 0` and `translateY: 32`. On web, if the animation didn't complete (timing issues, fast navigation), the button remained invisible or off-screen and appeared broken.
+**Root cause:** Footer CTAs should never be hidden by animation delays. Animating content above the fold is fine, but a button the user needs to progress must always be visible and tappable.
+**Fix applied:** Replaced `Animated.View` footer wrapper with a plain `View`. Also added a loading spinner and inline error display instead of silently swallowing the mutation error.
+**Rule going forward:** Never wrap primary CTA buttons in opacity/transform animations with a delay. Animate headings and content cards, not the action button. The button must be visible from the moment the screen mounts.
+
+### [2026-06-15] Post-auth navigation relied solely on NavigationController and silently broke with ob_preview bypass
+**What happened:** After signing in on the new signup screen, nothing happened — the user stayed on the signup screen and the app appeared broken. The `signIn()` call succeeded but no navigation occurred.
+**Root cause:** The signup screen delegated 100% of post-auth navigation to `NavigationController` in `_layout.tsx`. That controller has a dev bypass (`ob_preview` sessionStorage flag) that skips all redirects, which was active from testing. Even without the bypass, relying on a global controller for screen-level navigation is fragile — it can miss redirects if state transitions arrive in an unexpected order.
+**Fix applied:** Added a `useEffect` directly in `SignupScreen` watching `isReady + isAuthenticated + isOnboarded`. When the user is authenticated: if onboarded → `router.replace('/(tabs)/home')`, else → `router.replace('/(onboarding)/name')`. This fires regardless of NavigationController.
+**Rule going forward:** Any screen that triggers auth (sign-in, sign-up, OAuth) must have its own post-auth `useEffect` redirect. Do not rely solely on a global NavigationController for screen-level navigation after auth. The global controller handles cold-start routing; individual auth screens handle their own post-success redirect.
