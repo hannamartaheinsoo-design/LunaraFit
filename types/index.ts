@@ -10,9 +10,12 @@ export interface Profile {
   id: string;
   name: string;
   birth_year: number | null;
+  weight_kg: number | null;
+  height_cm: number | null;
   cycle_length: number;
   period_length: number;
   last_period_date: string | null;
+  birth_control_pills: boolean;
   fitness_level: FitnessLevel | null;
   plan: Plan;
   created_at: string;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { router } from 'expo-router';
 import { Colors, Spacing } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
@@ -8,32 +8,19 @@ import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
 import { OnboardingProgress } from '../../components/ui/OnboardingProgress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function NameScreen() {
-  const [name, setName] = useState('');
-  const [birthYear, setBirthYear] = useState('');
-  const [ageError, setAgeError] = useState('');
+export default function BodyScreen() {
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
 
-  const handleContinue = async () => {
-    if (!name.trim()) {
-      Alert.alert('', 'Palun sisesta oma nimi');
-      return;
-    }
-    const yr = parseInt(birthYear);
-    if (yr && 2026 - yr < 16) {
-      setAgeError('LunaraFit on mõeldud 16-aastastele ja vanematele.');
-      return;
-    }
-    setAgeError('');
-
+  const proceed = async (skip: boolean) => {
     const existing = await AsyncStorage.getItem('lf_profile');
     const profile = existing ? JSON.parse(existing) : {};
     await AsyncStorage.setItem('lf_profile', JSON.stringify({
       ...profile,
-      name: name.trim(),
-      birth_year: yr || null,
+      weight_kg: skip ? null : (parseFloat(weight) || null),
+      height_cm: skip ? null : (parseInt(height) || null),
     }));
-
-    router.push('/(onboarding)/body');
+    router.push('/(onboarding)/cycle');
   };
 
   return (
@@ -46,32 +33,33 @@ export default function NameScreen() {
         <Text style={styles.backText}>← Tagasi</Text>
       </TouchableOpacity>
 
-      <OnboardingProgress step={1} total={5} />
+      <OnboardingProgress step={2} total={5} />
 
-      <Eyebrow>Sinu andmed</Eyebrow>
-      <SerifTitle>Kuidas sind kutsuda?</SerifTitle>
-      <BodyText>Isikupärastab sinu kogemuse.</BodyText>
+      <Eyebrow>Keha andmed</Eyebrow>
+      <SerifTitle>Mõned mõõtmed.</SerifTitle>
+      <BodyText>Aitab arvutada isiklikke tervisemõõdikuid. Saad hiljem muuta.</BodyText>
 
       <Input
-        label="Eesnimi"
-        value={name}
-        onChangeText={setName}
-        placeholder="Sinu nimi"
-        autoCapitalize="words"
-        autoComplete="given-name"
+        label="Kaal (kg)"
+        value={weight}
+        onChangeText={setWeight}
+        placeholder="nt 65"
+        keyboardType="decimal-pad"
       />
       <Input
-        label="Sünniaasta"
-        value={birthYear}
-        onChangeText={(v) => { setBirthYear(v); setAgeError(''); }}
-        placeholder="aaaa"
+        label="Pikkus (cm)"
+        value={height}
+        onChangeText={setHeight}
+        placeholder="nt 168"
         keyboardType="number-pad"
-        maxLength={4}
-        error={ageError}
+        maxLength={3}
       />
 
-      <Button variant="dark" size="lg" fullWidth onPress={handleContinue} style={styles.btn}>
+      <Button variant="dark" size="lg" fullWidth onPress={() => proceed(false)} style={styles.btn}>
         Jätka →
+      </Button>
+      <Button variant="ghost" size="md" fullWidth onPress={() => proceed(true)} style={styles.skip}>
+        Jäta vahele
       </Button>
     </ScrollView>
   );
@@ -83,4 +71,5 @@ const styles = StyleSheet.create({
   back: { marginBottom: 20 },
   backText: { color: Colors.beige[400], fontSize: 14 },
   btn: { marginTop: 22 },
+  skip: { marginTop: 10 },
 });

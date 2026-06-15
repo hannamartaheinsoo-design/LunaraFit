@@ -5,6 +5,7 @@ import { Colors, Spacing, Radius } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
+import { OnboardingProgress } from '../../components/ui/OnboardingProgress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Plan } from '../../types';
 
@@ -72,6 +73,8 @@ export default function PlanScreen() {
       <TouchableOpacity onPress={() => router.back()} style={styles.back}>
         <Text style={styles.backText}>← Tagasi</Text>
       </TouchableOpacity>
+
+      <OnboardingProgress step={5} total={5} />
 
       <Eyebrow>Vali pakett</Eyebrow>
       <SerifTitle>Alusta oma teekonda.</SerifTitle>

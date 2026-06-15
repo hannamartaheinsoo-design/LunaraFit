@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Colors, Spacing, Radius } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
 import { SerifTitle, Eyebrow, BodyText } from '../../components/ui/Typography';
+import { OnboardingProgress } from '../../components/ui/OnboardingProgress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { FitnessLevel } from '../../types';
 
@@ -36,6 +37,8 @@ export default function FitnessScreen() {
       <TouchableOpacity onPress={() => router.back()} style={styles.back}>
         <Text style={styles.backText}>← Tagasi</Text>
       </TouchableOpacity>
+
+      <OnboardingProgress step={4} total={5} />
 
       <Eyebrow>Spordikogemus</Eyebrow>
       <SerifTitle>Milline on sinu treeningkogemus?</SerifTitle>
