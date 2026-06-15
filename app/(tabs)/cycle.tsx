@@ -455,7 +455,7 @@ export default function CycleScreen() {
                 style={[styles.contraBtn, { backgroundColor: T.surface, borderColor: T.border }, contra === c.key && { backgroundColor: T.blushBg, borderColor: Colors.blush[400] }]}
                 onPress={() => setContra(contra === c.key ? null : c.key)}
               >
-                <Icon name={c.icon} size={22} color={contra === c.key ? Colors.blush[500] : T.textMuted} strokeWidth={1.5} />
+                <Icon name={c.icon} size={22} color={contra === c.key ? Colors.blush[400] : T.textMuted} strokeWidth={1.5} />
                 <Text style={[styles.contraLbl, { color: T.textSec }, contra === c.key && { color: Colors.blush[T.dark ? 200 : 800] }]}>{c.label}</Text>
               </TouchableOpacity>
             ))}

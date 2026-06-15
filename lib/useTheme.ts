@@ -33,18 +33,18 @@ const light: ThemeTokens = {
 };
 
 const dark: ThemeTokens = {
-  bg:          '#141414',
-  surface:     '#1F1F1F',
-  surface2:    '#282828',
-  border:      '#323232',
-  border2:     '#484848',
-  text:        '#F0EDE8',
-  textSec:     '#B0A89E',
-  textMuted:   '#6A6260',
-  blushBg:     '#251518',
-  blushBorder: '#4A2428',
-  skyBg:       '#141C22',
-  skyBorder:   '#1E2E3A',
+  bg:          '#111111',
+  surface:     '#1C1C1C',
+  surface2:    '#262626',
+  border:      '#333333',
+  border2:     '#4A4A4A',
+  text:        '#EDEAE5',
+  textSec:     '#A09890',
+  textMuted:   '#6E6460',
+  blushBg:     '#2A191C',
+  blushBorder: '#4E2830',
+  skyBg:       '#161E2A',
+  skyBorder:   '#243040',
   dark:        true,
 };
 

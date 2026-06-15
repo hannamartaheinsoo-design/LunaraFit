@@ -108,11 +108,11 @@ function ExercisePicker({
             </TouchableOpacity>
           </View>
           <View style={styles.searchBar}>
-            <Icon name="search" size={16} color={Colors.beige[400]} />
+            <Icon name="search" size={16} color={T.textMuted} />
             <TextInput
               style={styles.searchInput}
               placeholder={t('w.picker.search')}
-              placeholderTextColor={Colors.beige[200]}
+              placeholderTextColor={T.border}
               value={query}
               onChangeText={setQuery}
               autoFocus={false}
@@ -120,7 +120,7 @@ function ExercisePicker({
             />
             {query ? (
               <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Icon name="close" size={14} color={Colors.beige[400]} />
+                <Icon name="close" size={14} color={T.textMuted} />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -187,7 +187,7 @@ function ExercisePicker({
                   </View>
                   <Text style={styles.exerciseCat}>{catLabel}</Text>
                 </View>
-                <Icon name="chevr" size={16} color={Colors.beige[200]} />
+                <Icon name="chevr" size={16} color={T.border} />
               </TouchableOpacity>
             );
           }}
@@ -200,7 +200,7 @@ function ExercisePicker({
             <TextInput
               style={styles.createInput}
               placeholder={query || t('w.picker.custom.ph')}
-              placeholderTextColor={Colors.beige[200]}
+              placeholderTextColor={T.border}
               value={customName}
               onChangeText={setCustomName}
               returnKeyType="done"
@@ -307,7 +307,7 @@ function SetLogger({
             <TextInput
               style={styles.setInput}
               placeholder="0"
-              placeholderTextColor={Colors.beige[200]}
+              placeholderTextColor={T.border}
               keyboardType="numeric"
               value={getRaw(i, 'reps')}
               onChangeText={v => handleChange(i, 'reps', v)}
@@ -317,7 +317,7 @@ function SetLogger({
             <TextInput
               style={styles.setInput}
               placeholder="0"
-              placeholderTextColor={Colors.beige[200]}
+              placeholderTextColor={T.border}
               keyboardType="decimal-pad"
               value={getRaw(i, 'weight_kg')}
               onChangeText={v => handleChange(i, 'weight_kg', v)}
@@ -327,7 +327,7 @@ function SetLogger({
             <TextInput
               style={styles.setInput}
               placeholder="0"
-              placeholderTextColor={Colors.beige[200]}
+              placeholderTextColor={T.border}
               keyboardType="decimal-pad"
               value={getRaw(i, 'duration_min')}
               onChangeText={v => handleChange(i, 'duration_min', v)}
@@ -337,14 +337,14 @@ function SetLogger({
             <TextInput
               style={styles.setInput}
               placeholder="0"
-              placeholderTextColor={Colors.beige[200]}
+              placeholderTextColor={T.border}
               keyboardType="decimal-pad"
               value={getRaw(i, 'distance_km')}
               onChangeText={v => handleChange(i, 'distance_km', v)}
             />
           )}
           <TouchableOpacity onPress={() => removeSet(i)} style={styles.removeSetBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Icon name="close" size={12} color={Colors.beige[400]} />
+            <Icon name="close" size={12} color={T.textMuted} />
           </TouchableOpacity>
         </View>
       ))}
@@ -610,7 +610,7 @@ export default function WorkoutsScreen() {
                 value={routineName}
                 onChangeText={v => { setRoutineName(v); setRoutineSaveMsg(null); }}
                 placeholder={t('w.routine.name.ph')}
-                placeholderTextColor={Colors.beige[200]}
+                placeholderTextColor={T.border}
                 autoFocus
               />
             </View>
@@ -623,7 +623,7 @@ export default function WorkoutsScreen() {
 
             {/* Exercise list */}
             <View style={styles.sectionLblRow}>
-              <Icon name="barbell" size={12} color={Colors.beige[400]} />
+              <Icon name="barbell" size={12} color={T.textMuted} />
               <Text style={styles.sectionLbl}>{t('w.routine.ex.lbl')}</Text>
             </View>
 
@@ -744,7 +744,7 @@ export default function WorkoutsScreen() {
                 value={workoutName}
                 onChangeText={setWorkoutName}
                 placeholder={t('w.builder.name.ph')}
-                placeholderTextColor={Colors.beige[200]}
+                placeholderTextColor={T.border}
               />
             </View>
 
@@ -756,7 +756,7 @@ export default function WorkoutsScreen() {
 
             {/* Exercises */}
             <View style={styles.sectionLblRow}>
-              <Icon name="barbell" size={12} color={Colors.beige[400]} />
+              <Icon name="barbell" size={12} color={T.textMuted} />
               <Text style={styles.sectionLbl}>{t('w.ex.lbl')}</Text>
             </View>
 
@@ -781,7 +781,7 @@ export default function WorkoutsScreen() {
 
             {/* Feel */}
             <View style={[styles.sectionLblRow, { marginTop: 8 }]}>
-              <Icon name="smile-good" size={12} color={Colors.beige[400]} />
+              <Icon name="smile-good" size={12} color={T.textMuted} />
               <Text style={styles.sectionLbl}>{t('w.feel.lbl')}</Text>
             </View>
             <View style={styles.chips}>
@@ -805,7 +805,7 @@ export default function WorkoutsScreen() {
                 value={notes}
                 onChangeText={setNotes}
                 placeholder={t('w.notes.ph')}
-                placeholderTextColor={Colors.beige[200]}
+                placeholderTextColor={T.border}
                 multiline
               />
             </View>
@@ -903,7 +903,7 @@ export default function WorkoutsScreen() {
               activeOpacity={0.85}
               onPress={() => { resetBuilder(); setShowBuilder(true); }}
             >
-              <Icon name="plus" size={18} color={Colors.cream} />
+              <Icon name="plus" size={18} color="#fff" />
               <Text style={styles.newWorkoutTxt}>{t('w.add.btn')}</Text>
             </TouchableOpacity>
 
@@ -998,7 +998,7 @@ export default function WorkoutsScreen() {
               <Text style={[styles.sectionLbl, { color: T.textSec }]}>{lang === 'en' ? 'Training Programmes' : 'Treeningprogrammid'}</Text>
             </View>
             <TouchableOpacity style={styles.hyroxProgramCard} activeOpacity={0.88} onPress={() => setShowHyroxModal(true)}>
-              <View style={styles.hyroxProgramIcon}><Icon name="wave" size={22} color={Colors.cream} /></View>
+              <View style={styles.hyroxProgramIcon}><Icon name="wave" size={22} color="#fff" /></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.hyroxProgramTitle}>HYROX</Text>
                 <Text style={styles.hyroxProgramDesc}>
@@ -1028,7 +1028,7 @@ export default function WorkoutsScreen() {
               activeOpacity={0.85}
               onPress={() => { resetRoutineBuilder(); setShowRoutineBuilder(true); }}
             >
-              <Icon name="plus" size={18} color={Colors.cream} />
+              <Icon name="plus" size={18} color="#fff" />
               <Text style={styles.newWorkoutTxt}>{t('w.routine.create')}</Text>
             </TouchableOpacity>
 
@@ -1147,17 +1147,17 @@ export default function WorkoutsScreen() {
                       <View style={styles.monthBarRow}>
                         {monthBuckets.map((b, i) => (
                           <View key={i} style={styles.monthBarCol}>
-                            <Text style={[styles.monthBarCount, { color: b.isCurrent ? Colors.blush[500] : T.text }]}>{b.count}</Text>
+                            <Text style={[styles.monthBarCount, { color: b.isCurrent ? Colors.blush[400] : T.text }]}>{b.count}</Text>
                             <View style={styles.monthBarTrack}>
                               <View style={[
                                 styles.monthBarFill,
                                 { height: `${Math.max((b.count / maxCount) * 100, b.count > 0 ? 15 : 0)}%` as any },
                                 b.isCurrent
                                   ? { backgroundColor: Colors.blush[400] }
-                                  : { backgroundColor: T.dark ? Colors.beige[700] : Colors.beige[200] },
+                                  : { backgroundColor: T.dark ? T.textSec : T.border },
                               ]} />
                             </View>
-                            <Text style={[styles.monthBarLbl, { color: b.isCurrent ? Colors.blush[500] : T.textMuted }]}>{b.label}</Text>
+                            <Text style={[styles.monthBarLbl, { color: b.isCurrent ? Colors.blush[400] : T.textMuted }]}>{b.label}</Text>
                           </View>
                         ))}
                       </View>
@@ -1192,7 +1192,7 @@ export default function WorkoutsScreen() {
                         <Text style={[styles.heatTitle, { color: T.text }]}>
                           {lang === 'et' ? 'Aktiivsus' : 'Activity'} <Text style={[styles.heatSub, { color: T.textMuted }]}>{lang === 'et' ? 'viimased 28 päeva' : 'last 28 days'}</Text>
                         </Text>
-                        <Text style={[styles.heatWeekCount, { color: Colors.blush[500] }]}>
+                        <Text style={[styles.heatWeekCount, { color: Colors.blush[400] }]}>
                           {workoutsThisWeek} {lang === 'et' ? 'sel nädalal' : 'this week'}
                         </Text>
                       </View>
@@ -1212,13 +1212,13 @@ export default function WorkoutsScreen() {
                                   styles.heatDot,
                                   cell.hasWorkout
                                     ? { backgroundColor: Colors.blush[cell.isToday ? 500 : 400] }
-                                    : { backgroundColor: T.dark ? Colors.beige[800] : Colors.beige[100] },
-                                  cell.isToday && !cell.hasWorkout && { borderWidth: 1.5, borderColor: Colors.blush[300] },
+                                    : { backgroundColor: T.border },
+                                  cell.isToday && !cell.hasWorkout && { borderWidth: 1.5, borderColor: Colors.blush[200] },
                                 ]} />
                                 <Text style={[
                                   styles.heatDateLbl,
                                   { color: cell.hasWorkout ? Colors.blush[600] : T.textMuted },
-                                  cell.isToday && { color: Colors.blush[500], fontFamily: Fonts.sansBold },
+                                  cell.isToday && { color: Colors.blush[400], fontFamily: Fonts.sansBold },
                                 ]}>{cell.dayNum}</Text>
                               </>
                             )}
@@ -1312,7 +1312,7 @@ export default function WorkoutsScreen() {
                                 return (
                                   <View key={i} style={styles.sparkStripCol}>
                                     {showNum
-                                      ? <Text style={[styles.sparkStripNum, { color: isLast ? Colors.coral[500] : T.textMuted }]}>{s.weight}</Text>
+                                      ? <Text style={[styles.sparkStripNum, { color: isLast ? Colors.coral[400] : T.textMuted }]}>{s.weight}</Text>
                                       : <View style={styles.sparkStripNumPlaceholder} />
                                     }
                                     <View style={[
@@ -1373,7 +1373,7 @@ export default function WorkoutsScreen() {
               <Text style={styles.subheading}>{lang === 'en' ? 'Competition Preparation' : 'Võistluseks ettevalmistus'}</Text>
             </View>
             <TouchableOpacity onPress={() => setShowHyroxModal(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Icon name="close" size={20} color={Colors.beige[600]} />
+              <Icon name="close" size={20} color={T.textSec} />
             </TouchableOpacity>
           </View>
 
@@ -1469,10 +1469,10 @@ export default function WorkoutsScreen() {
                   {lang === 'en' ? `Week ${personalizedPlan.currentWeekIndex + 1}: ${personalizedPlan.thisWeek.theme.en}` : `Nädal ${personalizedPlan.currentWeekIndex + 1}: ${personalizedPlan.thisWeek.theme.et}`}
                 </Text>
                 {personalizedPlan.thisWeek.sessions.map((sess: any, si: number) => {
-                  const ic: Record<string,string> = { recovery: Colors.sky[200], base: Colors.beige[200], moderate: Colors.coral[200], hard: Colors.coral[400], race: Colors.blush[400] };
+                  const ic: Record<string,string> = { recovery: Colors.sky[200], base: T.border, moderate: Colors.coral[200], hard: Colors.coral[400], race: Colors.blush[400] };
                   return (
                     <View key={si} style={styles.personalPlanSession}>
-                      <View style={[styles.personalPlanDot, { backgroundColor: ic[sess.intensity] ?? Colors.beige[200] }]} />
+                      <View style={[styles.personalPlanDot, { backgroundColor: ic[sess.intensity] ?? T.border }]} />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.personalPlanSessionDay}>{sess.day} — <Text style={{ fontFamily: Fonts.sansBold }}>{sess.type}</Text></Text>
                         <Text style={styles.personalPlanSessionDesc}>{lang === 'en' ? sess.description.en : sess.description.et}</Text>
@@ -1515,7 +1515,7 @@ export default function WorkoutsScreen() {
             {hyroxWorkouts.length > 0 && (
               <>
                 <View style={styles.sectionLblRow}>
-                  <Icon name="eye" size={12} color={Colors.beige[400]} />
+                  <Icon name="eye" size={12} color={T.textMuted} />
                   <Text style={styles.sectionLbl}>{lang === 'en' ? 'Simulation history' : 'Simulatsioonide ajalugu'}</Text>
                 </View>
                 {hyroxWorkouts.slice(0, 3).map((w: any) => {
@@ -1547,7 +1547,7 @@ export default function WorkoutsScreen() {
             {hyroxInsights.length > 0 && (
               <>
                 <View style={styles.sectionLblRow}>
-                  <Icon name="spark" size={12} color={Colors.beige[400]} />
+                  <Icon name="spark" size={12} color={T.textMuted} />
                   <Text style={styles.sectionLbl}>{lang === 'en' ? 'Smart insights' : 'Nutikad tähelepanekud'}</Text>
                 </View>
                 <View style={styles.insightsCard}>
@@ -1563,7 +1563,7 @@ export default function WorkoutsScreen() {
 
             {/* Training plans */}
             <View style={styles.sectionLblRow}>
-              <Icon name="barbell" size={12} color={Colors.beige[400]} />
+              <Icon name="barbell" size={12} color={T.textMuted} />
               <Text style={styles.sectionLbl}>{lang === 'en' ? 'Training Plans' : 'Treeningplaanid'}</Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingBottom: 8, gap: 12 }}>
@@ -1593,15 +1593,15 @@ export default function WorkoutsScreen() {
             <View style={[styles.pickerHeader, { borderBottomColor: T.border }]}>
               <Text style={styles.pickerTitle}>{lang === 'en' ? 'Set HYROX Goal' : 'Seadista HYROX eesmärk'}</Text>
               <TouchableOpacity onPress={() => setShowHyroxGoalForm(false)} style={styles.pickerClose}>
-                <Icon name="close" size={20} color={Colors.beige[600]} />
+                <Icon name="close" size={20} color={T.textSec} />
               </TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={{ padding: Spacing.xl }} keyboardShouldPersistTaps="handled">
               <Text style={styles.fieldLbl}>{lang === 'en' ? 'Competition name' : 'Võistluse nimi'}</Text>
-              <TextInput style={[styles.fieldInput, { marginBottom: 14 }]} placeholder={lang === 'en' ? 'e.g. HYROX London 2025' : 'nt HYROX Tallinn 2025'} placeholderTextColor={Colors.beige[200]} value={hxName} onChangeText={setHxName} />
+              <TextInput style={[styles.fieldInput, { marginBottom: 14 }]} placeholder={lang === 'en' ? 'e.g. HYROX London 2025' : 'nt HYROX Tallinn 2025'} placeholderTextColor={T.border} value={hxName} onChangeText={setHxName} />
 
               <Text style={styles.fieldLbl}>{lang === 'en' ? 'Competition date (yyyy-mm-dd)' : 'Kuupäev (aaaa-kk-pp)'}</Text>
-              <TextInput style={[styles.fieldInput, { marginBottom: 14 }]} placeholder="2025-10-15" placeholderTextColor={Colors.beige[200]} value={hxDate} onChangeText={setHxDate} />
+              <TextInput style={[styles.fieldInput, { marginBottom: 14 }]} placeholder="2025-10-15" placeholderTextColor={T.border} value={hxDate} onChangeText={setHxDate} />
 
               <Text style={styles.fieldLbl}>{lang === 'en' ? 'Division' : 'Kategooria'}</Text>
               <View style={[styles.chips, { marginBottom: 14, paddingHorizontal: 0 }]}>
@@ -1616,16 +1616,16 @@ export default function WorkoutsScreen() {
               <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.inputSubLbl}>{lang === 'en' ? 'Hours' : 'Tunnid'}</Text>
-                  <TextInput style={styles.fieldInput} placeholder="1" placeholderTextColor={Colors.beige[200]} keyboardType="numeric" value={hxHours} onChangeText={setHxHours} />
+                  <TextInput style={styles.fieldInput} placeholder="1" placeholderTextColor={T.border} keyboardType="numeric" value={hxHours} onChangeText={setHxHours} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.inputSubLbl}>{lang === 'en' ? 'Minutes' : 'Minutid'}</Text>
-                  <TextInput style={styles.fieldInput} placeholder="30" placeholderTextColor={Colors.beige[200]} keyboardType="numeric" value={hxMins} onChangeText={setHxMins} />
+                  <TextInput style={styles.fieldInput} placeholder="30" placeholderTextColor={T.border} keyboardType="numeric" value={hxMins} onChangeText={setHxMins} />
                 </View>
               </View>
 
               <Text style={styles.fieldLbl}>{lang === 'en' ? 'Target run pace (min/km)' : 'Jooksutempo eesmärk (min/km)'}</Text>
-              <TextInput style={[styles.fieldInput, { marginBottom: 24 }]} placeholder="6.0" placeholderTextColor={Colors.beige[200]} keyboardType="decimal-pad" value={hxPace} onChangeText={setHxPace} />
+              <TextInput style={[styles.fieldInput, { marginBottom: 24 }]} placeholder="6.0" placeholderTextColor={T.border} keyboardType="decimal-pad" value={hxPace} onChangeText={setHxPace} />
 
               <TouchableOpacity style={styles.newWorkoutBtn} onPress={saveHyroxGoal} activeOpacity={0.85}>
                 <Text style={styles.newWorkoutTxt}>{lang === 'en' ? 'Save goal' : 'Salvesta eesmärk'}</Text>
