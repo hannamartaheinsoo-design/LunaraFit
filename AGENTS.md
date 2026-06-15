@@ -115,6 +115,40 @@ Loaded weights: `Inter_300Light`, `Inter_400Regular`, `Inter_500Medium`, `Inter_
 
 ---
 
+# Dark Mode / Theming
+
+**Theme hook:** `useTheme()` from `lib/useTheme.ts` returns `ThemeTokens` — a typed object with `bg`, `surface`, `surface2`, `border`, `border2`, `text`, `textSec`, `textMuted`, `blushBg`, `blushBorder`, `skyBg`, `skyBorder`, `dark`.
+
+**Never use `StyleSheet.create` with color values.** Colors in static `StyleSheet.create` are baked in at module load and never update when the device switches light/dark. Layout-only properties (padding, flex, borderRadius) are fine in static StyleSheet.
+
+**Pattern — always use `makeStyles`:**
+```ts
+import { useTheme, ThemeTokens } from '../../lib/useTheme';
+
+function makeStyles(T: ThemeTokens) {
+  return StyleSheet.create({
+    card: { backgroundColor: T.surface, borderColor: T.border, ... },
+    label: { color: T.textSec, ... },
+  });
+}
+
+export default function MyScreen() {
+  const T = useTheme();
+  const styles = makeStyles(T);
+  ...
+}
+```
+Every sub-component that uses `styles` must also call `const styles = makeStyles(T)` — the styles object is not shared across components.
+
+**Color palette — valid indices only:**
+Palette maps: `{ 50, 100, 200, 400, 600, 800 }` — indices 300, 500, 700 do NOT exist and evaluate to `undefined` (renders as black). Always confirm index exists in `constants/theme.ts`.
+
+**JSX prop colors must also use T.* tokens** — grep the whole file, not just the StyleSheet block, for `Colors.beige[*]` and `Colors.cream` when auditing theme compliance. Common props to check: `color={}` on `<Icon>`, `placeholderTextColor={}` on `<TextInput>`, inline `{ color: ... }` style objects.
+
+**Icons on colored backgrounds** (blush, coral, green buttons) should use `"#fff"` not `T.bg` — `T.bg` is near-black in dark mode.
+
+---
+
 # Cycle Screen — cycle.tsx
 
 **Calendar tap-to-log:** every calendar day cell is a `TouchableOpacity`. Tapping calls `handleDayPress(ds)` which sets the `date` state and scrolls the `ScrollView` (ref: `scrollRef`) down to y=520 so the log form comes into view. The calendar itself is display-only — all logging happens in the form below.

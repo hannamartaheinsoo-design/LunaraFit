@@ -134,6 +134,24 @@
 **Fix applied:** Replaced day `<View>` with `<TouchableOpacity>`, added `handleDayPress(ds)` which sets the date state and scrolls the form into view via `scrollRef`. Added `calSelected` style (dark border ring) to show the active selection.
 **Rule going forward:** Any calendar or date grid that sits above a log/entry form must have tap-to-select wired up. Always add `onPress` to calendar cells that correspond to loggable dates.
 
+### [2026-06-15] Static StyleSheet.create used hardcoded Colors.* instead of theme tokens
+**What happened:** All five tab screens used `const styles = StyleSheet.create({...})` at module level with hardcoded `Colors.cream`, `Colors.beige[50/100/400/600/800]`, `Colors.sky[50]`, `Colors.blush[50]` etc. Dark mode was broken — white card backgrounds, invisible dark text, near-invisible borders everywhere.
+**Root cause:** `StyleSheet.create` is called once at module load; it can't reference `useTheme()` values. Light-mode colors were baked in permanently even though many elements had inline `{ color: T.text }` overrides for the visible text.
+**Fix applied:** Converted all `const styles = StyleSheet.create({...})` to `function makeStyles(T: ThemeTokens)` returning the same object with `T.*` tokens. Each component (including sub-components like `ExercisePicker`, `SetLogger`, `IntensityDot`, `CatHeader`) now calls `const styles = makeStyles(T)` at render time.
+**Rule going forward:** Never put color or background values into a top-level `StyleSheet.create`. Either (a) use `function makeStyles(T: ThemeTokens)` called inside each component, or (b) put the color inline. Static StyleSheet is fine only for layout/sizing properties that don't change with theme.
+
+### [2026-06-15] JSX prop colors (icon color=, placeholderTextColor=) missed in theme refactor
+**What happened:** After converting `StyleSheet.create` to `makeStyles`, many inline JSX prop values still used `Colors.beige[400]`, `Colors.beige[200]`, `Colors.beige[600]` etc. (icon colors, placeholder text colors). These were outside the styles object and were not caught by the refactor — they rendered as hardcoded light-mode colors in dark mode.
+**Root cause:** The refactor focused on the styles block at the bottom of each file; prop values scattered throughout the JSX were missed.
+**Fix applied:** Replaced all remaining `Colors.beige[*]` prop values with `T.textMuted`, `T.border`, `T.textSec`, `T.text` as appropriate.
+**Rule going forward:** When doing a theme token refactor, grep for `Colors.beige` and `Colors.cream` across the *entire* file — not just the StyleSheet block. JSX prop values (`color={}`, `placeholderTextColor={}`, `backgroundColor:` in inline style objects) are equally likely to have hardcoded values.
+
+### [2026-06-15] Invalid color indices (blush[500], coral[500], beige[700]) render as black
+**What happened:** Several JSX expressions used color palette indices that don't exist in `constants/theme.ts` (e.g. `Colors.blush[500]`, `Colors.coral[500]`, `Colors.beige[700]`). These evaluate to `undefined`, which React Native silently treats as the default text/border color — black — making them invisible on dark backgrounds.
+**Root cause:** Colors were written from memory or with intermediate shades assumed to exist without checking the palette definition.
+**Fix applied:** Replaced all invalid indices with the nearest valid shade (`[400]` for the 500s, `[600]` for 700s etc.).
+**Rule going forward:** Before using any `Colors.palette[N]`, check `constants/theme.ts` to confirm that index exists. The valid set for most palettes is `{ 50, 100, 200, 400, 600, 800 }`. Never assume intermediate steps.
+
 ### [2026-06-15] Progression sparkline bars normalised to 0-max instead of min-max
 **What happened:** Sparkline bars normalised bar height as `(weight / max) * barHeight`. When weights only varied by 10–20% (e.g. 55→67.5 kg), all bars appeared nearly the same height and the progression was invisible.
 **Root cause:** 0-based normalisation compresses small relative gains into a tiny visual range.
