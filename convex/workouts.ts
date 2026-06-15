@@ -42,6 +42,18 @@ export const add = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
+
+    // Enforce free plan: max 10 workouts per calendar month
+    const profile = await ctx.db.query("profiles").withIndex("by_user", (q) => q.eq("userId", userId)).unique();
+    if (!profile || profile.plan === "free") {
+      const monthPrefix = args.date.slice(0, 7); // "YYYY-MM"
+      const all = await ctx.db.query("workouts").withIndex("by_user_date", (q) => q.eq("userId", userId)).collect();
+      const thisMonth = all.filter((w) => w.date.startsWith(monthPrefix));
+      if (thisMonth.length >= 10) {
+        throw new Error("FREE_PLAN_LIMIT");
+      }
+    }
+
     return ctx.db.insert("workouts", { userId, ...args });
   },
 });

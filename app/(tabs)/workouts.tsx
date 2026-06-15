@@ -380,6 +380,7 @@ export default function WorkoutsScreen() {
   const [editingRoutineId, setEditingRoutineId]   = useState<Id<'routines'> | null>(null);
 
   const [activeTab, setActiveTab] = useState<'log' | 'routines' | 'progress'>('log');
+  const [expandedCatalogs, setExpandedCatalogs] = useState<Set<string>>(new Set());
 
   // HYROX modal + goal form
   const [showHyroxModal, setShowHyroxModal] = useState(false);
@@ -517,10 +518,22 @@ export default function WorkoutsScreen() {
       };
     });
 
-    const workoutId = await addWorkout({
-      date: effectiveDate, name, exercises,
-      feel: Array.from(feel), notes: notes.trim(), phase,
-    });
+    let workoutId: string;
+    try {
+      workoutId = await addWorkout({
+        date: effectiveDate, name, exercises,
+        feel: Array.from(feel), notes: notes.trim(), phase,
+      }) as string;
+    } catch (e: any) {
+      if (e?.message?.includes('FREE_PLAN_LIMIT')) {
+        setSaveMsg(lang === 'en'
+          ? 'Free plan limit reached (10/month). Upgrade to Pro for unlimited workouts.'
+          : 'Tasuta paketi limiit täis (10/kuus). Uuenda Pro-le piiramatu treenimise jaoks.');
+      } else {
+        setSaveMsg(lang === 'en' ? 'Failed to save workout.' : 'Treeningu salvestamine ebaõnnestus.');
+      }
+      return;
+    }
     resetBuilder();
     setShowBuilder(false);
 
@@ -1075,134 +1088,278 @@ export default function WorkoutsScreen() {
               </View>
             ) : (
               <>
-                <View style={styles.statsGrid}>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statVal}>{stats.totalWorkouts}</Text>
-                    <Text style={styles.statLbl}>{t('w.progress.total')}</Text>
-                  </View>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statVal}>{stats.currentStreak}</Text>
-                    <Text style={styles.statLbl}>{t('w.progress.streak')}</Text>
-                  </View>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statVal}>{stats.uniqueExercises}</Text>
-                    <Text style={styles.statLbl}>{t('w.progress.unique')}</Text>
-                  </View>
-                </View>
+                {/* ── Compact stats card ── */}
+                {(() => {
+                  // avg workouts/week based on weeks since first workout
+                  const sorted = [...(workouts as any[])].sort((a: any, b: any) => a.date.localeCompare(b.date));
+                  const firstDate = sorted[0]?.date ? new Date(sorted[0].date) : new Date();
+                  const weeksElapsed = Math.max(1, Math.ceil((Date.now() - firstDate.getTime()) / (7 * 86400000)));
+                  const avgPerWeek = (stats.totalWorkouts / weeksElapsed).toFixed(1);
 
-                {(stats.totalThisMonth > 0 || stats.totalLastMonth > 0) && (
-                  <View style={styles.monthCard}>
-                    <View style={styles.monthRow}>
-                      <View>
-                        <Text style={styles.monthVal}>{stats.totalThisMonth}</Text>
-                        <Text style={styles.monthLbl}>{t('w.progress.thismonth')}</Text>
-                      </View>
-                      <View style={styles.monthArrow}>
-                        <Text style={[styles.monthTrend, { color: stats.monthTrend >= 0 ? Colors.coral[400] : Colors.blush[400] }]}>
-                          {stats.monthTrend >= 0 ? '↑' : '↓'} {Math.abs(stats.monthTrend)}%
-                        </Text>
-                        <Text style={styles.monthSub}>{t('w.progress.vsmonth')}</Text>
-                      </View>
-                      <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={styles.monthVal}>{stats.totalLastMonth}</Text>
-                        <Text style={styles.monthLbl}>{t('w.progress.lastmonth')}</Text>
-                      </View>
-                    </View>
-                  </View>
-                )}
+                  // workouts per month — last 5 months
+                  const now2 = new Date();
+                  const SHORT_MONTHS = lang === 'et'
+                    ? ['jaan','veebr','märts','apr','mai','juuni','juuli','aug','sept','okt','nov','dets']
+                    : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                  const monthBuckets = Array.from({ length: 5 }, (_, i) => {
+                    const d = new Date(now2.getFullYear(), now2.getMonth() - (4 - i), 1);
+                    const prefix = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    const count = (workouts as any[]).filter((w: any) => w.date.startsWith(prefix)).length;
+                    return { label: SHORT_MONTHS[d.getMonth()], count, isCurrent: i === 4 };
+                  });
+                  const maxCount = Math.max(...monthBuckets.map(b => b.count), 1);
 
-                <View style={styles.sectionLblRow}>
-                  <Icon name="wave" size={12} color={T.textMuted} />
-                  <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('w.progress.weekly')}</Text>
-                </View>
-                <View style={[styles.chartCard, T.dark && { backgroundColor: T.surface, borderColor: T.border }]}>
-                  <View style={styles.chartBars}>
-                    {weekly.map((w, i) => (
-                      <View key={i} style={styles.chartCol}>
-                        <Text style={[styles.chartVolLbl, { color: T.textMuted }]}>
-                          {w.totalKg > 0 ? (w.totalKg >= 1000 ? `${(w.totalKg/1000).toFixed(1)}t` : `${w.totalKg}`) : ''}
-                        </Text>
-                        <View style={styles.chartBarWrap}>
-                          <View style={[
-                            styles.chartBar,
-                            { height: `${Math.max((w.totalKg / maxVol) * 100, w.totalKg > 0 ? 8 : 0)}%` as any,
-                              backgroundColor: i === weekly.length - 1 ? Colors.blush[400] : T.border }
-                          ]} />
+                  return (
+                    <View style={[styles.summaryCard, T.dark && { backgroundColor: T.surface, borderColor: T.border }]}>
+                      {/* Row 1: total + streak */}
+                      <View style={styles.summaryRow}>
+                        <View style={styles.summaryCell}>
+                          <Text style={[styles.summaryLbl, { color: T.textSec }]}>{t('w.progress.total')}</Text>
+                          <Text style={[styles.summaryVal, { color: T.text }]}>{stats.totalWorkouts}</Text>
                         </View>
-                        <Text style={[styles.chartWeekLbl, { color: T.textMuted }]}>{w.weekLabel}</Text>
+                        <View style={[styles.summarySep, { backgroundColor: T.border }]} />
+                        <View style={styles.summaryCell}>
+                          <Text style={[styles.summaryLbl, { color: T.textSec }]}>{t('w.progress.streak')}</Text>
+                          <Text style={[styles.summaryVal, { color: T.text }]}>{stats.currentStreak}</Text>
+                        </View>
                       </View>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={styles.sectionLblRow}>
-                  <Icon name="spark" size={12} color={T.textMuted} />
-                  <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('w.progress.exheader')}</Text>
-                </View>
-
-                {progress.filter(p => p.totalSessions >= 1).map(p => (
-                  <View key={p.name} style={[styles.progressCard, T.dark && { backgroundColor: T.surface, borderColor: T.border }]}>
-                    <View style={styles.progressHeader}>
-                      <View style={{ flex: 1 }}>
-                        <View style={styles.progressNameRow}>
-                          <Text style={[styles.progressName, { color: T.text }]}>{p.name}</Text>
-                          {p.isNew && (
-                            <View style={styles.prBadge}>
-                              <Text style={styles.prBadgeTxt}>🏆 PR</Text>
+                      <View style={[styles.summaryDivider, { backgroundColor: T.border }]} />
+                      {/* Row 2: this month + avg/week */}
+                      <View style={styles.summaryRow}>
+                        <View style={styles.summaryCell}>
+                          <Text style={[styles.summaryLbl, { color: T.textSec }]}>
+                            {t('w.progress.thismonth')}{stats.totalLastMonth > 0 ? ` (${lang === 'et' ? 'eelmine' : 'prev'}: ${stats.totalLastMonth})` : ''}
+                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+                            <Text style={[styles.summaryVal, { color: T.text }]}>{stats.totalThisMonth}</Text>
+                            {stats.monthTrend !== 0 && (
+                              <Text style={[styles.summaryTrend, { color: stats.monthTrend > 0 ? Colors.coral[400] : Colors.blush[400] }]}>
+                                {stats.monthTrend > 0 ? '↑' : '↓'}{Math.abs(stats.monthTrend)}%
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+                        <View style={[styles.summarySep, { backgroundColor: T.border }]} />
+                        <View style={styles.summaryCell}>
+                          <Text style={[styles.summaryLbl, { color: T.textSec }]}>{lang === 'et' ? 'keskmiselt / nädal' : 'avg / week'}</Text>
+                          <Text style={[styles.summaryVal, { color: T.text }]}>{avgPerWeek}</Text>
+                        </View>
+                      </View>
+                      <View style={[styles.summaryDivider, { backgroundColor: T.border }]} />
+                      {/* Row 3: workouts per month mini bar chart */}
+                      <View style={styles.monthBarRow}>
+                        {monthBuckets.map((b, i) => (
+                          <View key={i} style={styles.monthBarCol}>
+                            <Text style={[styles.monthBarCount, { color: b.isCurrent ? Colors.blush[500] : T.text }]}>{b.count}</Text>
+                            <View style={styles.monthBarTrack}>
+                              <View style={[
+                                styles.monthBarFill,
+                                { height: `${Math.max((b.count / maxCount) * 100, b.count > 0 ? 15 : 0)}%` as any },
+                                b.isCurrent
+                                  ? { backgroundColor: Colors.blush[400] }
+                                  : { backgroundColor: T.dark ? Colors.beige[700] : Colors.beige[200] },
+                              ]} />
                             </View>
-                          )}
-                        </View>
-                        <Text style={[styles.progressMeta, { color: T.textMuted }]}>
-                          {p.totalSessions} {t('w.progress.logged')}
-                        </Text>
+                            <Text style={[styles.monthBarLbl, { color: b.isCurrent ? Colors.blush[500] : T.textMuted }]}>{b.label}</Text>
+                          </View>
+                        ))}
                       </View>
                     </View>
-                    <View style={[styles.progressMetrics, T.dark && { borderTopColor: T.border }]}>
-                      {p.bestWeight > 0 && (
-                        <View style={styles.progressMetric}>
-                          <Text style={[styles.progressMetricVal, { color: T.text }]}>{p.bestWeight} kg</Text>
-                          <Text style={[styles.progressMetricLbl, { color: T.textMuted }]}>{t('w.progress.bestkg')}</Text>
-                          {p.weightGainPct !== null && p.weightGainPct > 0 && (
-                            <Text style={styles.progressGain}>+{p.weightGainPct}%</Text>
-                          )}
-                        </View>
-                      )}
-                      {p.bestReps > 0 && (
-                        <View style={styles.progressMetric}>
-                          <Text style={[styles.progressMetricVal, { color: T.text }]}>{p.bestReps}</Text>
-                          <Text style={[styles.progressMetricLbl, { color: T.textMuted }]}>{t('w.progress.bestreps')}</Text>
-                        </View>
-                      )}
-                      {p.bestDistance > 0 && (
-                        <View style={styles.progressMetric}>
-                          <Text style={[styles.progressMetricVal, { color: T.text }]}>{p.bestDistance} km</Text>
-                          <Text style={[styles.progressMetricLbl, { color: T.textMuted }]}>{t('w.progress.bestdist')}</Text>
-                        </View>
-                      )}
-                      {p.bestDuration > 0 && (
-                        <View style={styles.progressMetric}>
-                          <Text style={[styles.progressMetricVal, { color: T.text }]}>{p.bestDuration} min</Text>
-                          <Text style={[styles.progressMetricLbl, { color: T.textMuted }]}>{t('w.progress.bestdur')}</Text>
-                        </View>
-                      )}
+                  );
+                })()}
+
+                {/* ── 28-day activity heatmap ── */}
+                {(() => {
+                  const todayD = new Date();
+                  const workoutDates = new Set((workouts as any[]).map((w: any) => w.date));
+                  // Build 28 days ending today, padded so week rows align to Mon
+                  const todayDow = (todayD.getDay() + 6) % 7; // Mon=0 … Sun=6
+                  const totalCells = 28 + todayDow; // pad so row 1 starts on Monday
+                  const cells = Array.from({ length: totalCells }, (_, i) => {
+                    const offset = totalCells - 1 - i;
+                    if (i < todayDow) return null; // blank pad
+                    const d = new Date(todayD.getTime() - offset * 86400000);
+                    const ds = d.toISOString().slice(0, 10);
+                    const isToday = offset === 0;
+                    const hasWorkout = workoutDates.has(ds);
+                    return { ds, isToday, hasWorkout, dayNum: d.getDate(), dow: (d.getDay() + 6) % 7 };
+                  });
+                  const DOW_LABELS = lang === 'et'
+                    ? ['E','T','K','N','R','L','P']
+                    : ['M','T','W','T','F','S','S'];
+                  const workoutsThisWeek = cells.filter(c => c && !c.isToday && c.hasWorkout && cells.indexOf(c) >= totalCells - 7).length
+                    + (cells[cells.length - 1]?.hasWorkout ? 1 : 0);
+                  return (
+                    <View style={[styles.heatCard, T.dark && { backgroundColor: T.surface, borderColor: T.border }]}>
+                      <View style={styles.heatHeader}>
+                        <Text style={[styles.heatTitle, { color: T.text }]}>
+                          {lang === 'et' ? 'Aktiivsus' : 'Activity'} <Text style={[styles.heatSub, { color: T.textMuted }]}>{lang === 'et' ? 'viimased 28 päeva' : 'last 28 days'}</Text>
+                        </Text>
+                        <Text style={[styles.heatWeekCount, { color: Colors.blush[500] }]}>
+                          {workoutsThisWeek} {lang === 'et' ? 'sel nädalal' : 'this week'}
+                        </Text>
+                      </View>
+                      {/* Day-of-week labels */}
+                      <View style={styles.heatDowRow}>
+                        {DOW_LABELS.map((d, i) => (
+                          <Text key={i} style={[styles.heatDowLbl, { color: T.textMuted }]}>{d}</Text>
+                        ))}
+                      </View>
+                      {/* Grid rows */}
+                      <View style={styles.heatGrid}>
+                        {cells.map((cell, i) => (
+                          <View key={i} style={styles.heatCell}>
+                            {cell === null ? null : (
+                              <>
+                                <View style={[
+                                  styles.heatDot,
+                                  cell.hasWorkout
+                                    ? { backgroundColor: Colors.blush[cell.isToday ? 500 : 400] }
+                                    : { backgroundColor: T.dark ? Colors.beige[800] : Colors.beige[100] },
+                                  cell.isToday && !cell.hasWorkout && { borderWidth: 1.5, borderColor: Colors.blush[300] },
+                                ]} />
+                                <Text style={[
+                                  styles.heatDateLbl,
+                                  { color: cell.hasWorkout ? Colors.blush[600] : T.textMuted },
+                                  cell.isToday && { color: Colors.blush[500], fontFamily: Fonts.sansBold },
+                                ]}>{cell.dayNum}</Text>
+                              </>
+                            )}
+                          </View>
+                        ))}
+                      </View>
                     </View>
-                    {p.sessions.length >= 2 && p.bestWeight > 0 && (
-                      <View style={styles.sparkline}>
-                        {p.sessions.slice(-8).map((s, i, arr) => {
-                          const max = Math.max(...arr.map(x => x.weight));
-                          const h = max > 0 ? Math.max((s.weight / max) * 32, 4) : 4;
-                          const isLast = i === arr.length - 1;
+                  );
+                })()}
+
+                {/* ── Exercise progress grouped by routine catalog ── */}
+                {(() => {
+                  const tracked = progress.filter(p => p.totalSessions >= 1);
+
+                  // Build catalog buckets: routines + HYROX + catch-all
+                  type Catalog = { name: string; icon: string; items: typeof tracked };
+
+                  const HYROX_NAMES = new Set([
+                    'run (1 km)', 'skierg', 'sled push', 'sled pull',
+                    'burpee broad jump', 'rowing', 'farmer\'s carry',
+                    'sandbag lunge', 'wall ball',
+                  ]);
+
+                  const routineCatalogs: Catalog[] = routines.map(r => ({
+                    name: r.name,
+                    icon: 'folder',
+                    items: tracked.filter(p =>
+                      r.exercises.some(e => e.name.toLowerCase() === p.name.toLowerCase())
+                    ),
+                  })).filter(c => c.items.length > 0);
+
+                  const assignedNames = new Set(
+                    routineCatalogs.flatMap(c => c.items.map(p => p.name.toLowerCase()))
+                  );
+
+                  const hyroxItems = tracked.filter(p =>
+                    !assignedNames.has(p.name.toLowerCase()) &&
+                    HYROX_NAMES.has(p.name.toLowerCase())
+                  );
+                  const otherItems = tracked.filter(p =>
+                    !assignedNames.has(p.name.toLowerCase()) &&
+                    !HYROX_NAMES.has(p.name.toLowerCase())
+                  );
+
+                  const catalogs: Catalog[] = [...routineCatalogs];
+                  if (hyroxItems.length > 0) catalogs.push({ name: 'HYROX', icon: 'wave', items: hyroxItems });
+                  if (otherItems.length > 0) catalogs.push({ name: lang === 'en' ? 'Other' : 'Muu', icon: 'folder', items: otherItems });
+
+                  const renderCard = (p: typeof tracked[0]) => {
+                    // Build compact stat string: "67.5 kg · 8 reps" or "5 km · 30 min" etc.
+                    const statParts: string[] = [];
+                    if (p.bestWeight > 0) statParts.push(`${p.bestWeight} kg`);
+                    if (p.bestReps > 0)   statParts.push(`${p.bestReps} reps`);
+                    if (p.bestDistance > 0) statParts.push(`${p.bestDistance} km`);
+                    if (p.bestDuration > 0) statParts.push(`${p.bestDuration} min`);
+                    const statStr = statParts.join(' · ');
+
+                    return (
+                      <View key={p.name} style={[styles.progressCard, T.dark && { borderBottomColor: T.border }]}>
+                        {/* Single compact row: name | stat + gain | sessions */}
+                        <View style={styles.progressRow}>
+                          <View style={styles.progressNameRow}>
+                            <Text style={[styles.progressName, { color: T.text }]} numberOfLines={1}>{p.name}</Text>
+                            {p.isNew && <Text style={styles.prInline}>🏆</Text>}
+                          </View>
+                          <View style={styles.progressStatRow}>
+                            <Text style={[styles.progressStatStr, { color: T.textSec }]}>{statStr}</Text>
+                            {p.weightGainPct !== null && p.weightGainPct > 0 && (
+                              <Text style={styles.progressGain}>+{p.weightGainPct}%</Text>
+                            )}
+                            <Text style={[styles.progressMeta, { color: T.textMuted }]}>{p.totalSessions}×</Text>
+                          </View>
+                        </View>
+                        {/* Progression line: first → last weight, only when changed */}
+                        {p.sessions.length >= 2 && p.bestWeight > 0 && (() => {
+                          const slice = p.sessions.slice(-8);
+                          const first = slice[0].weight;
+                          const last  = slice[slice.length - 1].weight;
+                          const min   = Math.min(...slice.map(s => s.weight));
+                          const max   = Math.max(...slice.map(s => s.weight));
                           return (
-                            <View key={i} style={styles.sparkBarWrap}>
-                              <View style={[styles.sparkBar, { height: h, backgroundColor: isLast ? Colors.coral[400] : Colors.sky[100] }]} />
+                            <View style={styles.sparkStrip}>
+                              {slice.map((s, i, arr) => {
+                                const range = max - min;
+                                const h = range > 0
+                                  ? Math.round(4 + ((s.weight - min) / range) * 14)
+                                  : 9;
+                                const isLast = i === arr.length - 1;
+                                const prevDiff = i > 0 && s.weight !== arr[i - 1].weight;
+                                const showNum = isLast || i === 0 || prevDiff;
+                                return (
+                                  <View key={i} style={styles.sparkStripCol}>
+                                    {showNum
+                                      ? <Text style={[styles.sparkStripNum, { color: isLast ? Colors.coral[500] : T.textMuted }]}>{s.weight}</Text>
+                                      : <View style={styles.sparkStripNumPlaceholder} />
+                                    }
+                                    <View style={[
+                                      styles.sparkStripBar,
+                                      { height: h, backgroundColor: isLast ? Colors.coral[400] : Colors.sky[200] }
+                                    ]} />
+                                  </View>
+                                );
+                              })}
                             </View>
                           );
-                        })}
-                        <Text style={styles.sparkLbl}>{t('w.progress.lastsessions')} {Math.min(p.sessions.length, 8)} {t('w.progress.sessions')}</Text>
+                        })()}
                       </View>
-                    )}
-                  </View>
-                ))}
+                    );
+                  };
+
+                  return catalogs.map(catalog => {
+                    const isOpen = expandedCatalogs.has(catalog.name);
+                    const toggle = () => setExpandedCatalogs(prev => {
+                      const next = new Set(prev);
+                      isOpen ? next.delete(catalog.name) : next.add(catalog.name);
+                      return next;
+                    });
+                    const hasPR = catalog.items.some(p => p.isNew);
+                    return (
+                      <View key={catalog.name} style={styles.catalogSection}>
+                        <TouchableOpacity style={styles.catalogHeader} onPress={toggle} activeOpacity={0.7}>
+                          <Icon name={catalog.icon as any} size={11} color={Colors.blush[400]} />
+                          <Text style={[styles.catalogName, { color: T.text }]}>{catalog.name}</Text>
+                          {hasPR && !isOpen && (
+                            <Text style={styles.catalogPR}>🏆</Text>
+                          )}
+                          <Text style={[styles.catalogCount, { color: T.textMuted }]}>{catalog.items.length}</Text>
+                          <Text style={[styles.catalogChevron, { color: T.textMuted }]}>{isOpen ? '⌃' : '⌄'}</Text>
+                        </TouchableOpacity>
+                        {isOpen && (
+                          <View style={[styles.catalogBody, T.dark && { backgroundColor: T.surface, borderColor: T.border }]}>
+                            {catalog.items.map(renderCard)}
+                          </View>
+                        )}
+                      </View>
+                    );
+                  });
+                })()}
               </>
             )}
             <View style={{ height: 24 }} />
@@ -1584,7 +1741,46 @@ const styles = StyleSheet.create({
   tabBtnTxtOn: { color: Colors.cream },
   prDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.berry[400] },
 
-  // Progress stats
+  // Progress stats — compact 2×2 summary card
+  summaryCard: {
+    marginHorizontal: Spacing.xl, marginTop: 14, marginBottom: 10,
+    backgroundColor: Colors.beige[50], borderRadius: Radius.lg,
+    borderWidth: 1, borderColor: Colors.beige[100], overflow: 'hidden',
+  },
+  summaryRow:    { flexDirection: 'row' },
+  summaryCell:   { flex: 1, padding: 14, alignItems: 'flex-start' },
+  summarySep:    { width: 1, backgroundColor: Colors.beige[100] },
+  summaryDivider:{ height: 1, backgroundColor: Colors.beige[100] },
+  summaryLbl:    { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[600], marginBottom: 2 },
+  summaryVal:    { fontFamily: Fonts.serifSemiBold, fontSize: 22, color: Colors.beige[800], lineHeight: 24 },
+  summaryTrend:  { fontFamily: Fonts.sansSemiBold, fontSize: 12 },
+
+  monthBarRow:   { flexDirection: 'row', paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12, gap: 6 },
+  monthBarCol:   { flex: 1, alignItems: 'center', gap: 3 },
+  monthBarCount: { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[800] },
+  monthBarTrack: { width: '100%', height: 40, justifyContent: 'flex-end' },
+  monthBarFill:  { width: '100%', borderRadius: 3 },
+  monthBarLbl:   { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400] },
+
+  // 28-day heatmap
+  heatCard: {
+    marginHorizontal: Spacing.xl, marginBottom: 10,
+    backgroundColor: Colors.beige[50], borderRadius: Radius.lg,
+    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
+  },
+  heatHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  heatTitle:     { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[800] },
+  heatSub:       { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400] },
+  heatWeekCount: { fontFamily: Fonts.sansSemiBold, fontSize: 12 },
+  heatDowRow:    { flexDirection: 'row', marginBottom: 2 },
+  heatDowLbl:    { flex: 1, textAlign: 'center', fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.5, textTransform: 'uppercase', color: Colors.beige[400] },
+  heatGrid:      { flexDirection: 'row', flexWrap: 'wrap' },
+  heatCell:      { width: `${100/7}%` as any, height: 36, paddingVertical: 2, alignItems: 'center', justifyContent: 'center', gap: 1 },
+  heatDot:       { width: 18, height: 10, borderRadius: 3 },
+  heatDateLbl:   { fontSize: 9, fontFamily: Fonts.sansLight, textAlign: 'center', color: Colors.beige[400] },
+  heatMonthMark: { fontSize: 7, fontFamily: Fonts.sansBold, textAlign: 'center', lineHeight: 10 },
+
+  // Legacy stats (keep for non-progress use)
   statsGrid: {
     flexDirection: 'row', gap: 8, paddingHorizontal: Spacing.xl, marginTop: 14, marginBottom: 8,
   },
@@ -1620,26 +1816,61 @@ const styles = StyleSheet.create({
   chartWeekLbl: { fontFamily: Fonts.sansSemiBold, fontSize: 8, color: Colors.beige[400], marginTop: 4 },
 
   progressCard: {
-    marginHorizontal: Spacing.xl, marginBottom: 8,
-    backgroundColor: Colors.cream, borderRadius: Radius.lg,
-    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderBottomWidth: 1, borderBottomColor: Colors.beige[100],
   },
-  progressHeader:  { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  progressNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  progressName:    { fontFamily: Fonts.sansSemiBold, fontSize: 14, color: Colors.beige[800] },
-  progressMeta:    { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 2 },
+  progressRow:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  progressHeader:  { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
+  progressNameRow: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 },
+  progressName:    { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[800], flexShrink: 1 },
+  prInline:        { fontSize: 10 },
+  progressStatRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 },
+  progressStatStr: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[700] },
+  progressMeta:    { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[300] },
   prBadge:         { backgroundColor: Colors.berry[50], borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: Colors.berry[100] },
   prBadgeTxt:      { fontFamily: Fonts.sansBold, fontSize: 9, color: Colors.berry[600] },
-  progressMetrics: { flexDirection: 'row', gap: 12, marginBottom: 10 },
-  progressMetric:  { alignItems: 'center' },
-  progressMetricVal: { fontFamily: Fonts.serifSemiBold, fontSize: 20, color: Colors.beige[800] },
-  progressMetricLbl: { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[400], marginTop: 1 },
-  progressGain:    { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.coral[400], marginTop: 2 },
+  progressMetrics: { flexDirection: 'row', gap: 16, marginBottom: 4 },
+  progressMetric:  { alignItems: 'flex-start' },
+  progressMetricVal: { fontFamily: Fonts.serifSemiBold, fontSize: 14, color: Colors.beige[800] },
+  progressMetricLbl: { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[300], marginTop: 1 },
+  progressGain:    { fontFamily: Fonts.sansSemiBold, fontSize: 9, color: Colors.coral[400] },
 
-  sparkline:    { flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginTop: 4, height: 40 },
-  sparkBarWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: 32 },
-  sparkBar:     { width: '80%', borderRadius: 3 },
-  sparkLbl:     { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[200], position: 'absolute', bottom: -14, right: 0 },
+  sparkStrip:           { flexDirection: 'row', alignItems: 'flex-end', gap: 2, marginTop: 5, height: 30 },
+  sparkStripCol:        { flex: 1, alignItems: 'center', justifyContent: 'flex-end', maxWidth: 28 },
+  sparkStripBar:        { width: '100%', borderRadius: 2 },
+  sparkStripNum:        { fontFamily: Fonts.sansSemiBold, fontSize: 7, marginBottom: 2, textAlign: 'center' },
+  sparkStripNumPlaceholder: { height: 10 },
+  sparkStripLabel:      { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[400], marginLeft: 6, lineHeight: 14 },
+
+  // Legacy sparkline (kept for other uses)
+  sparkline:    { flexDirection: 'row', alignItems: 'flex-end', gap: 2, marginTop: 4, height: 44 },
+  sparkBarWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: 44 },
+  sparkBar:     { width: '85%', borderRadius: 2 },
+  sparkBarLbl:  { fontFamily: Fonts.sansSemiBold, fontSize: 7, marginBottom: 2, textAlign: 'center' },
+
+  // ── Routine catalogs ─────────────────────────────────────────────────────
+  catalogSection: { marginHorizontal: Spacing.xl, marginBottom: 16 },
+  catalogHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    marginBottom: 8,
+  },
+  catalogName: {
+    fontFamily: Fonts.sansSemiBold, fontSize: 11,
+    letterSpacing: 0.8, textTransform: 'uppercase', color: Colors.beige[700],
+    flex: 1,
+  },
+  catalogCount: {
+    fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400],
+  },
+  catalogPR: { fontSize: 11 },
+  catalogChevron: {
+    fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[400], marginLeft: 4,
+  },
+  catalogBody: {
+    borderRadius: Radius.lg, overflow: 'hidden',
+    borderWidth: 1, borderColor: Colors.beige[100],
+    backgroundColor: Colors.cream,
+  },
 
   empty:    { alignItems: 'center', paddingVertical: 40 },
   emptyTxt: { fontFamily: Fonts.sansLight, fontSize: 14, color: Colors.beige[400] },

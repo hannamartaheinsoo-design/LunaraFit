@@ -87,3 +87,36 @@ Loaded weights: `Inter_300Light`, `Inter_400Regular`, `Inter_500Medium`, `Inter_
 - Month is clamped to max 12 automatically
 - Styled with underline only (no border box) — do not add borders, keep it minimal
 - Usage: `<DatePicker value={dateString} onChange={setDateString} />`
+
+---
+
+# Seeding & Test Data
+
+**Seed script:** `convex/seed.ts` — internal mutations, run with `npx convex run seed:seedAll '{"userId":"<id>"}'`
+- `seed:listAllUsers` — lists all user IDs and profiles (temporarily extend to include `authAccounts` if you need emails)
+- `seed:seedAll` — full reseed: profile + cycle days + workouts + HYROX simulations
+- `seed:setUserPlan` — change a user's plan: `'{"userId":"...","plan":"monthly"}'`
+- Account emails are stored in `authAccounts` table (not in `profiles`). Query via internal mutation temporarily.
+- **Full routines in seed:** every workout entry must include ALL exercises from the routine, not a subset. Partial workouts make progress tracking useless.
+
+**Free plan limit:** 10 workouts per calendar month, enforced server-side in `convex/workouts.ts`. Throws `FREE_PLAN_LIMIT` error string. UI catches this and shows upgrade prompt.
+
+---
+
+# Progress Tab — workouts.tsx
+
+**Catalog grouping:** exercise progress cards are grouped by routine name (matched by `e.name.toLowerCase()`), then a HYROX bucket (hardcoded station names), then catch-all "Other". Catalogs are collapsible via `expandedCatalogs: Set<string>` state.
+
+**Stats card layout:** label above the number — label is the headline, number is supporting info. Do not revert to number-first layout.
+
+**28-day heatmap:** normalises to Mon–Sun columns. Uses `(todayDow = (getDay()+6)%7)` to pad blank cells so week rows always start on Monday.
+
+**Progression bars (sparkStripCol/sparkStripBar):** normalise bar height from `min` to `max` of the slice (not 0 to max) so small weight gains are visually obvious. Show weight labels above bars at first session, last session, and any session where weight changed.
+
+---
+
+# Cycle Screen — cycle.tsx
+
+**Calendar tap-to-log:** every calendar day cell is a `TouchableOpacity`. Tapping calls `handleDayPress(ds)` which sets the `date` state and scrolls the `ScrollView` (ref: `scrollRef`) down to y=520 so the log form comes into view. The calendar itself is display-only — all logging happens in the form below.
+
+**Selected day highlight:** `isSelected = ds === date` adds `styles.calSelected` (dark border ring) to the circle. Does not override logged/predicted/ovulation styles.

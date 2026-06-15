@@ -121,3 +121,21 @@
 **Root cause:** Wrote component from memory without checking the actual theme exports.
 **Fix applied:** Replaced with `Colors.dark` (the correct dark text token) and `Fonts.sans` (the correct body font).
 **Rule going forward:** Before using any `Colors.*` or `Fonts.*` token in a new component, grep `constants/theme.ts` to confirm it exists. Never assume token names from convention.
+
+### [2026-06-15] Seeded workouts with only 1–3 exercises per session instead of full routines
+**What happened:** Test workouts in `convex/seed.ts` each contained only a subset of the routine exercises (e.g. only Bench Press and Overhead Press for Upper Body instead of all 8 exercises). This made the Progress tab show thin data and gave false impressions of exercise coverage.
+**Root cause:** Seed was written quickly with representative exercises rather than complete routines.
+**Fix applied:** Rewrote all workout entries to include every exercise from the corresponding routine with realistic progressive weights and logged_sets.
+**Rule going forward:** When seeding workouts for a routine, always include ALL exercises from that routine. Check the `routines` table entries to confirm the full exercise list before writing seed data.
+
+### [2026-06-15] Calendar cells in cycle.tsx were display-only — no tap-to-select
+**What happened:** The cycle tracking calendar rendered day cells as `<View>` with no `onPress`. Users could not tap a past date to pre-fill the log form, making it impossible to retroactively track cycle data without manually typing the date.
+**Root cause:** Calendar was designed as a display/prediction overlay only; the form below defaulted to today with no link to the calendar.
+**Fix applied:** Replaced day `<View>` with `<TouchableOpacity>`, added `handleDayPress(ds)` which sets the date state and scrolls the form into view via `scrollRef`. Added `calSelected` style (dark border ring) to show the active selection.
+**Rule going forward:** Any calendar or date grid that sits above a log/entry form must have tap-to-select wired up. Always add `onPress` to calendar cells that correspond to loggable dates.
+
+### [2026-06-15] Progression sparkline bars normalised to 0-max instead of min-max
+**What happened:** Sparkline bars normalised bar height as `(weight / max) * barHeight`. When weights only varied by 10–20% (e.g. 55→67.5 kg), all bars appeared nearly the same height and the progression was invisible.
+**Root cause:** 0-based normalisation compresses small relative gains into a tiny visual range.
+**Fix applied:** Switched to min-max normalisation: `4 + ((weight - min) / (max - min)) * 14` so the lowest session always renders at minimum height and the highest at maximum, exaggerating the visible delta.
+**Rule going forward:** Always use min-max normalisation for sparklines showing incremental progression. 0-max is only appropriate when 0 is a meaningful baseline (e.g. session count, not weight).

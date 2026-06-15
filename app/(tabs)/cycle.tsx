@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -67,6 +67,8 @@ export default function CycleScreen() {
   const [sleepHours, setSleepHours] = useState('');
   const [digestion,  setDigestion]  = useState<Set<string>>(new Set());
 
+  const scrollRef = useRef<ScrollView>(null);
+
   const now = new Date();
   const [displayYear,  setDisplayYear]  = useState(now.getFullYear());
   const [displayMonth, setDisplayMonth] = useState(now.getMonth());
@@ -84,6 +86,12 @@ export default function CycleScreen() {
 
   const toggle = (set: Set<string>, setFn: (s: Set<string>) => void, val: string) => {
     setFn((prev) => { const n = new Set(prev); n.has(val) ? n.delete(val) : n.add(val); return n; });
+  };
+
+  const handleDayPress = (ds: string) => {
+    setDate(ds);
+    // Scroll down to the form after a short delay so the form has time to update
+    setTimeout(() => scrollRef.current?.scrollTo({ y: 520, animated: true }), 80);
   };
 
   const handleSave = async () => {
@@ -231,7 +239,7 @@ export default function CycleScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} style={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Month navigation */}
         <View style={styles.calNav}>
@@ -270,8 +278,9 @@ export default function CycleScreen() {
             const isOv       = ovDays.has(day);
             const isFert     = fertDays.has(day);
             const isToday    = day === now.getDate() && displayMonth === now.getMonth() && displayYear === now.getFullYear();
+            const isSelected = ds === date;
             return (
-              <View key={day} style={styles.calCol}>
+              <TouchableOpacity key={day} style={styles.calCol} onPress={() => handleDayPress(ds)} activeOpacity={0.7}>
                 <View style={[
                   styles.calCircle,
                   isLogged    && styles.calPeriodLogged,
@@ -280,6 +289,7 @@ export default function CycleScreen() {
                   isOv && !isLogged && !isSpotting && styles.calOv,
                   isFert && !isOv && !isLogged && !isSpotting && [styles.calFert, T.dark && { backgroundColor: T.skyBg, borderColor: T.skyBorder }],
                   isToday && styles.calToday,
+                  isSelected && !isLogged && styles.calSelected,
                 ]}>
                   <Text style={[
                     styles.calDayTxt,
@@ -289,11 +299,12 @@ export default function CycleScreen() {
                     isOv       && !isLogged && !isSpotting && { color: '#fff' },
                     isPred     && !isLogged && !isSpotting && { color: Colors.blush[T.dark ? 400 : 600] },
                     isFert     && !isOv && !isLogged && !isSpotting && { color: Colors.green[T.dark ? 200 : 800] },
+                    isSelected && !isLogged && { color: Colors.beige[800], fontFamily: Fonts.sansBold },
                   ]}>{day}</Text>
                 </View>
                 {isSpotting && !isLogged && <View style={styles.spottingDot} />}
                 {isContra && <View style={styles.contraDot} />}
-              </View>
+              </TouchableOpacity>
             );
           })}
         </View>
@@ -507,6 +518,7 @@ const styles = StyleSheet.create({
   calOv:            { backgroundColor: Colors.green[400] },
   calFert:          { backgroundColor: Colors.green[50], borderWidth: 1.5, borderColor: Colors.green[200] },
   calToday:         { shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 4, elevation: 4 },
+  calSelected:      { borderWidth: 2, borderColor: Colors.beige[600] },
 
   // Legend
   legend:  { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: Spacing.xl, marginTop: 12, marginBottom: 4 },
