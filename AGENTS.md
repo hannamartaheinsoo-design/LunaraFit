@@ -107,7 +107,14 @@ Loaded weights: `Inter_300Light`, `Inter_400Regular`, `Inter_500Medium`, `Inter_
 
 **No decorative background:** the home screen uses a plain `backgroundColor` only — no `LinearGradient`, no blob `View`s. Do not re-add decorative blobs or gradients.
 
-**Activity chart metric:** "Nädala aktiivsus" charts **total sets per day** (sum of `e.sets` across all exercises in all workouts for that date), not workout count. The peak day shows its value as a label above the dot. Do not revert to workout-count-per-day.
+**Activity chart removed — replaced by TodayCard:** The weekly area chart ("Nädala aktiivsus") was replaced with a **Today's Readiness** card (`TodayCard` component in `home.tsx`). It shows:
+- Phase-appropriate workout type pill (colour-coded per `PHASE_COLORS`)
+- 5-segment energy bar calibrated via `PHASE_ENERGY` (menstruation 0.25 → ovulation 1.0)
+- 3 actionable tips from `home.today.tips.<phaseKey>` i18n array keys
+- "Full analysis →" link to the insights tab
+- Falls back to a "add cycle data" message when `phaseKey` is null
+
+Do not re-add the area chart. Do not revert to workout-count-per-day.
 
 ---
 

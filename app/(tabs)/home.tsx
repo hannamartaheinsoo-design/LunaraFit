@@ -8,7 +8,7 @@ import Svg, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Colors, Fonts } from '../../constants/theme';
-import { useTheme } from '../../lib/useTheme';
+import { useTheme, ThemeTokens } from '../../lib/useTheme';
 import { Icon } from '../../components/ui/Icon';
 import { getCycleInfo } from '../../lib/cycle';
 import { useTranslation } from '../../lib/LangContext';
@@ -183,6 +183,99 @@ function phaseDiff(workouts: any[]): number | null {
 
 const SCREEN_W = Dimensions.get('window').width;
 
+const PHASE_ENERGY: Record<PhaseKey, number> = {
+  menstruation: 0.25,
+  follicular: 0.65,
+  ovulation: 1.0,
+  luteal: 0.45,
+};
+
+function EnergyBar({ level, color }: { level: number; color: string }) {
+  const w = SCREEN_W - 48 - 40;
+  const filled = Math.round(level * 5);
+  return (
+    <View style={{ flexDirection: 'row', gap: 5, marginTop: 4 }}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <View
+          key={i}
+          style={{
+            flex: 1, height: 5, borderRadius: 3,
+            backgroundColor: i < filled ? color : Colors.beige[100],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+function TodayCard({ phaseKey, T }: { phaseKey: PhaseKey | null; T: ThemeTokens }) {
+  const { t, tArr, lang } = useTranslation();
+  const col = phaseKey ? PHASE_COLORS[phaseKey] : DEFAULT_PHASE;
+  const energyLevel = phaseKey ? PHASE_ENERGY[phaseKey] : 0;
+
+  const trainKey = phaseKey ? `home.today.train.${phaseKey}` as any : null;
+  const tipsKey = phaseKey ? `home.today.tips.${phaseKey}` as any : null;
+  const trainLabel = trainKey ? t(trainKey) : null;
+  const tips: string[] = tipsKey ? tArr(tipsKey) : [];
+
+  return (
+    <View style={[tcStyles.card, { backgroundColor: T.surface2 }]}>
+      <View style={tcStyles.header}>
+        <Text style={[tcStyles.eyebrow, { color: T.textMuted }]}>{t('home.today.lbl' as any)}</Text>
+        {phaseKey && (
+          <View style={[tcStyles.pill, { backgroundColor: col.glow + '33', borderColor: col.glow }]}>
+            <Text style={[tcStyles.pillTxt, { color: col.ring }]}>{trainLabel}</Text>
+          </View>
+        )}
+      </View>
+
+      {!phaseKey ? (
+        <Text style={[tcStyles.empty, { color: T.textMuted }]}>{t('home.today.nophase' as any)}</Text>
+      ) : (
+        <>
+          <View style={tcStyles.energyRow}>
+            <Text style={[tcStyles.energyLbl, { color: T.textSec }]}>
+              {lang === 'en' ? 'Energy' : 'Energia'}
+            </Text>
+            <EnergyBar level={energyLevel} color={col.ring} />
+          </View>
+          <View style={tcStyles.tipList}>
+            {tips.map((tip, i) => (
+              <View key={i} style={tcStyles.tipRow}>
+                <View style={[tcStyles.tipDot, { backgroundColor: col.ring }]} />
+                <Text style={[tcStyles.tipTxt, { color: T.textSec }]}>{tip}</Text>
+              </View>
+            ))}
+          </View>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/insights')} style={tcStyles.cta}>
+            <Text style={[tcStyles.ctaTxt, { color: col.ring }]}>{t('home.today.cta' as any)}</Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </View>
+  );
+}
+
+const tcStyles = StyleSheet.create({
+  card: { marginHorizontal: 24, borderRadius: 24, padding: 20, marginBottom: 12 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  eyebrow: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase' },
+  pill: {
+    borderRadius: 999, borderWidth: 1,
+    paddingHorizontal: 10, paddingVertical: 4,
+  },
+  pillTxt: { fontFamily: Fonts.sansBold, fontSize: 11, letterSpacing: 0.2 },
+  empty: { fontFamily: Fonts.sansLight, fontSize: 13, paddingVertical: 12 },
+  energyRow: { marginBottom: 14 },
+  energyLbl: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1.1, textTransform: 'uppercase', marginBottom: 6 },
+  tipList: { gap: 9 },
+  tipRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  tipDot: { width: 6, height: 6, borderRadius: 3, flexShrink: 0 },
+  tipTxt: { fontFamily: Fonts.sansMedium, fontSize: 13, lineHeight: 18, flex: 1 },
+  cta: { marginTop: 14 },
+  ctaTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 13 },
+});
+
 function WeekDots({ workouts, weekdays }: { workouts: any[]; weekdays: string[] }) {
   const now = new Date();
   const days = Array.from({ length: 7 }, (_, i) => {
@@ -256,16 +349,6 @@ export default function HomeScreen() {
   const DAYS     = tArr('home.days');
   const MONTHS   = tArr('home.months');
   const WEEKDAYS = tArr('home.weekdays');
-
-  const chartData = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(now.getTime() - (6 - i) * 86400000);
-    const ds = d.toISOString().slice(0, 10);
-    const sets = workouts
-      .filter((w) => w.date === ds)
-      .reduce((sum: number, w: any) => sum + w.exercises.reduce((s: number, e: any) => s + (e.sets || 0), 0), 0);
-    return { value: sets, label: WEEKDAYS[(d.getDay() + 6) % 7] };
-  });
-  const totalSets7d = chartData.reduce((s, d) => s + d.value, 0);
 
   const cycleDay = ci?.day ?? 1;
   const cycleLen = ci?.cycleLength ?? 28;
@@ -363,24 +446,8 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </ScrollView>
 
-        {/* Activity chart card */}
-        <View style={[styles.card, { backgroundColor: T.surface2 }]}>
-          <View style={styles.cardHeader}>
-            <View>
-              <Text style={[styles.cardLabel, { color: T.textMuted }]}>{t('home.chart.lbl')}</Text>
-              <Text style={[styles.cardCount, { color: T.text }]}>{totalSets7d}</Text>
-            </View>
-            <Text style={[styles.cardSub2, { color: T.textSec }]}>{t('home.chart.sub')}</Text>
-          </View>
-          {workouts.length > 0 ? (
-            <AreaChart data={chartData} width={SCREEN_W - 48 - 40} height={130}
-              color1={Colors.blush[400]} color2={Colors.berry[400]} />
-          ) : (
-            <View style={styles.emptyChart}>
-              <Text style={[styles.emptyTxt, { color: T.textMuted }]}>{t('home.chart.empty')}</Text>
-            </View>
-          )}
-        </View>
+        {/* Today's readiness card */}
+        <TodayCard phaseKey={phaseKey ?? null} T={T} />
 
         {/* Phase insight */}
         {pd !== null && (
