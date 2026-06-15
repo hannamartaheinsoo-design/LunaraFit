@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
-import { useTheme } from '../../lib/useTheme';
+import { useTheme, ThemeTokens } from '../../lib/useTheme';
 import { Icon } from '../../components/ui/Icon';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
@@ -17,6 +17,8 @@ import { useTranslation } from '../../lib/LangContext';
 
 // Renders **bold** markers inline inside a Text block
 function RichText({ text, style, boldStyle }: { text: string; style?: any; boldStyle?: any }) {
+  const T = useTheme();
+  const styles = makeStyles(T);
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return (
     <Text style={style}>
@@ -30,10 +32,12 @@ function RichText({ text, style, boldStyle }: { text: string; style?: any; boldS
 }
 
 function IntensityDot({ level }: { level: TrainingTip['intensity'] }) {
+  const T = useTheme();
+  const styles = makeStyles(T);
   const { t } = useTranslation();
   const colors = {
     kerge:    Colors.green[400],
-    mõõdukas: Colors.beige[400],
+    mõõdukas: T.textMuted,
     kõrge:    Colors.blush[400],
   };
   const labels = {
@@ -52,15 +56,16 @@ function IntensityDot({ level }: { level: TrainingTip['intensity'] }) {
 function ConfidenceBadge({ level }: { level: DetectedPattern['confidence'] }) {
   const { lang } = useTranslation();
   const T = useTheme();
+  const styles = makeStyles(T);
   const labels = getConfidenceLabels(lang);
   const colors = T.dark ? {
     preliminary: { bg: T.surface2,   txt: T.textMuted  },
     emerging:    { bg: T.skyBg,      txt: Colors.green[200] },
     consistent:  { bg: T.blushBg,    txt: Colors.blush[200] },
   } : {
-    preliminary: { bg: Colors.beige[50],  txt: Colors.beige[600]  },
-    emerging:    { bg: Colors.green[50],  txt: Colors.green[700]  },
-    consistent:  { bg: Colors.blush[50],  txt: Colors.blush[700]  },
+    preliminary: { bg: T.surface2,  txt: T.textSec  },
+    emerging:    { bg: Colors.green[50],  txt: Colors.green[600]  },
+    consistent:  { bg: Colors.blush[50],  txt: Colors.blush[600]  },
   };
   const c = colors[level];
   return (
@@ -74,6 +79,7 @@ function ConfidenceBadge({ level }: { level: DetectedPattern['confidence'] }) {
 
 export default function InsightsScreen() {
   const T = useTheme();
+  const styles = makeStyles(T);
   const { lang, t } = useTranslation();
   const profile   = useQuery(api.profiles.get);
   const workouts  = useQuery(api.workouts.list) ?? [];
@@ -307,14 +313,15 @@ export default function InsightsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe:       { flex: 1, backgroundColor: Colors.cream },
+function makeStyles(T: ThemeTokens) {
+  return StyleSheet.create({
+  safe:       { flex: 1, backgroundColor: T.bg },
   topBar:     {
     paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, paddingBottom: 14,
-    borderBottomWidth: 1, borderBottomColor: Colors.beige[100],
+    borderBottomWidth: 1, borderBottomColor: T.border,
   },
-  heading:    { fontFamily: Fonts.sansBold, fontSize: 22, color: Colors.beige[800], letterSpacing: -0.3 },
-  subheading: { fontFamily: Fonts.sans, fontSize: 12, color: Colors.beige[400], marginTop: 2 },
+  heading:    { fontFamily: Fonts.sansBold, fontSize: 22, color: T.text, letterSpacing: -0.3 },
+  subheading: { fontFamily: Fonts.sans, fontSize: 12, color: T.textMuted, marginTop: 2 },
   scroll:     { flex: 1 },
 
   // Phase card — dark & bold
@@ -346,56 +353,56 @@ const styles = StyleSheet.create({
   },
   sectionLbl: {
     fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.6,
-    textTransform: 'uppercase', color: Colors.beige[600],
+    textTransform: 'uppercase', color: T.textSec,
   },
 
   // Info cards
-  infoTxt: { fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[700], lineHeight: 21, flex: 1 },
-  bold:    { fontFamily: Fonts.sansBold, color: Colors.beige[800] },
+  infoTxt: { fontFamily: Fonts.sans, fontSize: 13, color: T.textSec, lineHeight: 21, flex: 1 },
+  bold:    { fontFamily: Fonts.sansBold, color: T.text },
 
   // Hormone card — sentence-by-sentence
   hormoneCard: {
     marginHorizontal: Spacing.xl, marginBottom: 4,
-    backgroundColor: Colors.blush[50], borderRadius: Radius.md,
+    backgroundColor: T.blushBg, borderRadius: Radius.md,
     paddingHorizontal: 16, paddingTop: 4, paddingBottom: 4,
-    borderWidth: 1, borderColor: Colors.blush[100],
+    borderWidth: 1, borderColor: T.blushBorder,
     borderLeftWidth: 3, borderLeftColor: Colors.blush[400],
   },
   hormoneRow: {
     flexDirection: 'row', gap: 10, paddingVertical: 11,
-    borderBottomWidth: 1, borderBottomColor: Colors.blush[100], alignItems: 'flex-start',
+    borderBottomWidth: 1, borderBottomColor: T.blushBorder, alignItems: 'flex-start',
   },
   hormoneDot: { width: 6, height: 6, borderRadius: 2, backgroundColor: Colors.blush[400], marginTop: 8, flexShrink: 0 },
 
   // Energy card
   energyCard: {
     marginHorizontal: Spacing.xl, marginBottom: 4,
-    backgroundColor: Colors.beige[50], borderRadius: Radius.md,
-    padding: 16, borderWidth: 1, borderColor: Colors.beige[100],
-    borderLeftWidth: 3, borderLeftColor: Colors.beige[400],
+    backgroundColor: T.surface2, borderRadius: Radius.md,
+    padding: 16, borderWidth: 1, borderColor: T.border,
+    borderLeftWidth: 3, borderLeftColor: T.border2,
   },
-  energyTxt: { fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[700], lineHeight: 21 },
+  energyTxt: { fontFamily: Fonts.sans, fontSize: 13, color: T.textSec, lineHeight: 21 },
 
   // Recovery card
   recoveryCard: {
     marginHorizontal: Spacing.xl, marginBottom: 4,
-    backgroundColor: Colors.sky[50], borderRadius: Radius.md,
-    padding: 16, borderWidth: 1, borderColor: Colors.sky[100],
+    backgroundColor: T.skyBg, borderRadius: Radius.md,
+    padding: 16, borderWidth: 1, borderColor: T.skyBorder,
     borderLeftWidth: 3, borderLeftColor: Colors.sky[400],
   },
 
   // Training tip cards
   tipCard: {
     marginHorizontal: Spacing.xl, marginBottom: 6,
-    backgroundColor: Colors.cream, borderRadius: Radius.md,
-    padding: 16, borderWidth: 1, borderColor: Colors.beige[100],
-    borderLeftWidth: 3, borderLeftColor: Colors.beige[200],
+    backgroundColor: T.surface, borderRadius: Radius.md,
+    padding: 16, borderWidth: 1, borderColor: T.border,
+    borderLeftWidth: 3, borderLeftColor: T.border2,
   },
   tipHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 },
-  tipTitle:   { fontFamily: Fonts.sansBold, fontSize: 14, color: Colors.beige[800], marginBottom: 3, letterSpacing: -0.1 },
-  tipHint:    { fontFamily: Fonts.sans, fontSize: 11, color: Colors.beige[400], lineHeight: 16 },
-  tipDetail:  { fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[600], lineHeight: 20, marginTop: 12,
-                paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.beige[100] },
+  tipTitle:   { fontFamily: Fonts.sansBold, fontSize: 14, color: T.text, marginBottom: 3, letterSpacing: -0.1 },
+  tipHint:    { fontFamily: Fonts.sans, fontSize: 11, color: T.textMuted, lineHeight: 16 },
+  tipDetail:  { fontFamily: Fonts.sans, fontSize: 13, color: T.textSec, lineHeight: 20, marginTop: 12,
+                paddingTop: 12, borderTopWidth: 1, borderTopColor: T.border },
   intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   intensityDot: { width: 5, height: 5, borderRadius: 2 },
   intensityLbl: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.6 },
@@ -403,63 +410,64 @@ const styles = StyleSheet.create({
   // Wellness
   wellnessCard: {
     marginHorizontal: Spacing.xl, marginBottom: 4,
-    backgroundColor: Colors.cream, borderRadius: Radius.md,
-    paddingHorizontal: 16, borderWidth: 1, borderColor: Colors.beige[100],
+    backgroundColor: T.surface, borderRadius: Radius.md,
+    paddingHorizontal: 16, borderWidth: 1, borderColor: T.border,
   },
   wellnessRow: {
     flexDirection: 'row', gap: 12, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: Colors.beige[100], alignItems: 'flex-start',
+    borderBottomWidth: 1, borderBottomColor: T.border, alignItems: 'flex-start',
   },
   wellnessNum: {
     width: 20, height: 20, borderRadius: 4,
-    backgroundColor: Colors.beige[800], textAlign: 'center', lineHeight: 20,
-    fontFamily: Fonts.sansBold, fontSize: 10, color: Colors.cream, flexShrink: 0,
+    backgroundColor: T.text, textAlign: 'center', lineHeight: 20,
+    fontFamily: Fonts.sansBold, fontSize: 10, color: T.bg, flexShrink: 0,
   },
-  wellnessTxt: { fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[700], lineHeight: 20, flex: 1 },
+  wellnessTxt: { fontFamily: Fonts.sans, fontSize: 13, color: T.textSec, lineHeight: 20, flex: 1 },
 
   // Pattern cards
   patternCard: {
     marginHorizontal: Spacing.xl, marginBottom: 8,
-    backgroundColor: Colors.beige[50], borderRadius: Radius.sm,
-    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
-    borderLeftWidth: 3, borderLeftColor: Colors.beige[400],
+    backgroundColor: T.surface2, borderRadius: Radius.sm,
+    padding: 14, borderWidth: 1, borderColor: T.border,
+    borderLeftWidth: 3, borderLeftColor: T.border2,
   },
   patternGreen: {
-    backgroundColor: Colors.green[50], borderColor: Colors.green[100],
+    backgroundColor: T.skyBg, borderColor: T.skyBorder,
     borderLeftColor: Colors.green[400],
   },
   patternBlush: {
-    backgroundColor: Colors.blush[50], borderColor: Colors.blush[100],
+    backgroundColor: T.blushBg, borderColor: T.blushBorder,
     borderLeftColor: Colors.blush[400],
   },
   patternHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, gap: 8 },
-  patternTitle:  { fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.beige[800], flex: 1 },
-  patternBody:   { fontFamily: Fonts.sans, fontSize: 12, color: Colors.beige[600], lineHeight: 18 },
+  patternTitle:  { fontFamily: Fonts.sansBold, fontSize: 13, color: T.text, flex: 1 },
+  patternBody:   { fontFamily: Fonts.sans, fontSize: 12, color: T.textSec, lineHeight: 18 },
   confidenceBadge: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
   confidenceTxt:   { fontFamily: Fonts.sansBold, fontSize: 8, letterSpacing: 0.8 },
 
   emptyPatterns: {
     marginHorizontal: Spacing.xl, padding: 20, alignItems: 'center',
-    backgroundColor: Colors.beige[50], borderRadius: Radius.md,
-    borderWidth: 1, borderColor: Colors.beige[100],
+    backgroundColor: T.surface2, borderRadius: Radius.md,
+    borderWidth: 1, borderColor: T.border,
   },
-  emptyTxt: { fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[400], textAlign: 'center', lineHeight: 20 },
+  emptyTxt: { fontFamily: Fonts.sans, fontSize: 13, color: T.textMuted, textAlign: 'center', lineHeight: 20 },
 
   // Source & disclaimer
   sourceCard: {
     flexDirection: 'row', gap: 8, alignItems: 'flex-start',
     marginHorizontal: Spacing.xl, marginTop: 8, marginBottom: 4,
-    padding: 12, backgroundColor: Colors.beige[50],
-    borderRadius: Radius.sm, borderWidth: 1, borderColor: Colors.beige[100],
+    padding: 12, backgroundColor: T.surface2,
+    borderRadius: Radius.sm, borderWidth: 1, borderColor: T.border,
   },
-  sourceTxt: { fontFamily: Fonts.sans, fontSize: 10, color: Colors.beige[500], lineHeight: 16, flex: 1 },
+  sourceTxt: { fontFamily: Fonts.sans, fontSize: 10, color: T.textSec, lineHeight: 16, flex: 1 },
 
   disclaimer: {
     marginHorizontal: Spacing.xl, marginTop: 8,
-    padding: 14, backgroundColor: Colors.beige[50],
-    borderRadius: Radius.sm, borderWidth: 1, borderColor: Colors.beige[200],
+    padding: 14, backgroundColor: T.surface2,
+    borderRadius: Radius.sm, borderWidth: 1, borderColor: T.border2,
   },
   disclaimerHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  disclaimerTitle:  { fontFamily: Fonts.sansBold, fontSize: 11, color: Colors.beige[600], letterSpacing: 0.3 },
-  disclaimerTxt:    { fontFamily: Fonts.sans, fontSize: 11, color: Colors.beige[500], lineHeight: 17 },
-});
+  disclaimerTitle:  { fontFamily: Fonts.sansBold, fontSize: 11, color: T.textSec, letterSpacing: 0.3 },
+  disclaimerTxt:    { fontFamily: Fonts.sans, fontSize: 11, color: T.textSec, lineHeight: 17 },
+  });
+}

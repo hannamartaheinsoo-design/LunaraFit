@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
-import { useTheme } from '../../lib/useTheme';
+import { useTheme, ThemeTokens } from '../../lib/useTheme';
 import { Icon } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import { DatePicker } from '../../components/ui/DatePicker';
@@ -54,6 +54,7 @@ function ExercisePicker({
   onClose: () => void;
 }) {
   const T = useTheme();
+  const styles = makeStyles(T);
   const { t } = useTranslation();
   const [query,        setQuery]        = useState('');
   const [category,     setCategory]     = useState('all');
@@ -230,6 +231,8 @@ function SetLogger({
   onChange: (sets: ExerciseSet[]) => void;
   onRemove: () => void;
 }) {
+  const T = useTheme();
+  const styles = makeStyles(T);
   const { t } = useTranslation();
   const [raw, setRaw] = useState<RawSets>({});
 
@@ -347,7 +350,7 @@ function SetLogger({
       ))}
 
       <TouchableOpacity style={styles.addSetBtn} onPress={addSet} activeOpacity={0.7}>
-        <Icon name="plus" size={13} color={Colors.beige[800]} />
+        <Icon name="plus" size={13} color={T.textSec} />
         <Text style={styles.addSetTxt}>{t('w.ex.addset')}</Text>
       </TouchableOpacity>
     </View>
@@ -357,6 +360,7 @@ function SetLogger({
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function WorkoutsScreen() {
   const T = useTheme();
+  const styles = makeStyles(T);
   const { lang, t } = useTranslation();
   const [showBuilder, setShowBuilder]             = useState(false);
   const [showRoutineBuilder, setShowRoutineBuilder] = useState(false);
@@ -674,7 +678,7 @@ export default function WorkoutsScreen() {
               activeOpacity={0.8}
               onPress={() => { setPickerTarget('routine'); setRoutineSaveMsg(null); setShowPicker(true); }}
             >
-              <Icon name="plus" size={16} color={Colors.beige[800]} />
+              <Icon name="plus" size={16} color={T.textSec} />
               <Text style={styles.addExerciseTxt}>{t('w.ex.add')}</Text>
             </TouchableOpacity>
 
@@ -771,7 +775,7 @@ export default function WorkoutsScreen() {
               activeOpacity={0.8}
               onPress={() => { setPickerTarget('workout'); setSaveMsg(null); setShowPicker(true); }}
             >
-              <Icon name="plus" size={16} color={Colors.beige[800]} />
+              <Icon name="plus" size={16} color={T.textSec} />
               <Text style={styles.addExerciseTxt}>{t('w.ex.add')}</Text>
             </TouchableOpacity>
 
@@ -873,20 +877,13 @@ export default function WorkoutsScreen() {
         {(['log', 'routines', 'progress'] as const).map(tab => (
           <TouchableOpacity
             key={tab}
-            style={[styles.tabBtn,
-              { borderColor: T.border },
-              activeTab === tab && (T.dark
-                ? { backgroundColor: T.surface2, borderColor: T.border2 }
-                : { backgroundColor: Colors.blush[400], borderColor: Colors.blush[400] }
-              ),
-            ]}
+            style={[styles.tabBtn, activeTab === tab && styles.tabBtnOn]}
             onPress={() => setActiveTab(tab)}
             activeOpacity={0.8}
           >
             <Text style={[
               styles.tabBtnTxt,
-              { color: T.textMuted },
-              activeTab === tab && { color: T.dark ? T.text : '#fff', fontFamily: Fonts.sansBold },
+              activeTab === tab && styles.tabBtnTxtOn,
             ]}>
               {t(`w.tab.${tab}` as any)}
             </Text>
@@ -1647,15 +1644,16 @@ export default function WorkoutsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: Colors.cream },
+function makeStyles(T: ThemeTokens) {
+  return StyleSheet.create({
+  safe:    { flex: 1, backgroundColor: T.bg },
   topBar:  {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
-    borderBottomWidth: 1, borderBottomColor: Colors.beige[100],
+    borderBottomWidth: 1, borderBottomColor: T.border,
   },
-  heading:    { fontFamily: Fonts.sansBold, fontSize: 26, color: Colors.beige[800], letterSpacing: -0.5 },
-  subheading: { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.beige[400], marginTop: 3, textTransform: 'uppercase', letterSpacing: 1.5 },
+  heading:    { fontFamily: Fonts.sansBold, fontSize: 26, color: T.text, letterSpacing: -0.5 },
+  subheading: { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: T.textMuted, marginTop: 3, textTransform: 'uppercase', letterSpacing: 1.5 },
   scroll: { flex: 1 },
 
   newWorkoutBtn: {
@@ -1671,168 +1669,160 @@ const styles = StyleSheet.create({
   },
   sectionLbl: {
     fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.2,
-    textTransform: 'uppercase', color: Colors.beige[400],
+    textTransform: 'uppercase', color: T.textMuted,
   },
 
-  // Routine quick-log cards (on Log tab)
   routineLogCard: {
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: Spacing.xl, marginBottom: 8,
-    backgroundColor: Colors.blush[50], borderRadius: Radius.lg,
-    padding: 14, borderWidth: 1, borderColor: Colors.blush[100],
+    backgroundColor: T.blushBg, borderRadius: Radius.lg,
+    padding: 14, borderWidth: 1, borderColor: T.blushBorder,
   },
-  routineLogName:   { fontFamily: Fonts.sansBold, fontSize: 14, color: Colors.beige[800] },
-  routineLogEx:     { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 2 },
+  routineLogName:   { fontFamily: Fonts.sansBold, fontSize: 14, color: T.text },
+  routineLogEx:     { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted, marginTop: 2 },
   routineLogBtn:    { backgroundColor: Colors.blush[400], borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 },
-  routineLogBtnTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.cream },
+  routineLogBtnTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: '#fff' },
 
-  // "Log routine" inline button (on Routines tab inside cards)
   logRoutineInlineBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     marginTop: 10, paddingTop: 10,
-    borderTopWidth: 1, borderTopColor: Colors.beige[50],
+    borderTopWidth: 1, borderTopColor: T.border,
   },
-  logRoutineInlineTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.blush[600] },
+  logRoutineInlineTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.blush[400] },
 
-  // Routine exercise card (in routine builder)
   routineExCard: {
     marginHorizontal: Spacing.xl, marginBottom: 10,
-    backgroundColor: Colors.beige[50], borderRadius: Radius.lg,
+    backgroundColor: T.surface2, borderRadius: Radius.lg,
     paddingTop: 0, paddingBottom: 14, paddingHorizontal: 14,
-    borderWidth: 1, borderColor: Colors.beige[100],
+    borderWidth: 1, borderColor: T.border,
     overflow: 'hidden',
   },
   routineExAccent: { height: 4, backgroundColor: Colors.berry[200], marginHorizontal: -14, marginBottom: 14 },
   routineExRow:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  routineExName:   { fontFamily: Fonts.sansBold, fontSize: 14, color: Colors.beige[800] },
-  routineExCat:    { fontFamily: Fonts.sansBold, fontSize: 9, color: Colors.beige[400], marginTop: 2, textTransform: 'uppercase', letterSpacing: 1.2 },
+  routineExName:   { fontFamily: Fonts.sansBold, fontSize: 14, color: T.text },
+  routineExCat:    { fontFamily: Fonts.sansBold, fontSize: 9, color: T.textMuted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 1.2 },
   reorderCol:      { gap: 2 },
   reorderBtn:      { padding: 3 },
   reorderBtnDisabled: { opacity: 0.2 },
-  reorderArrow:    { fontFamily: Fonts.sansBold, fontSize: 11, color: Colors.beige[400] },
+  reorderArrow:    { fontFamily: Fonts.sansBold, fontSize: 11, color: T.textMuted },
 
-  // Past workout cards
   workoutCard: {
     marginHorizontal: Spacing.xl, marginBottom: 10,
-    backgroundColor: Colors.cream, borderRadius: Radius.lg,
-    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
+    backgroundColor: T.surface, borderRadius: Radius.lg,
+    padding: 14, borderWidth: 1, borderColor: T.border,
   },
   workoutHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 },
-  workoutName:   { fontFamily: Fonts.sansBold, fontSize: 15, color: Colors.beige[800] },
-  workoutMeta:   { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginTop: 3, textTransform: 'uppercase', letterSpacing: 0.5 },
+  workoutName:   { fontFamily: Fonts.sansBold, fontSize: 15, color: T.text },
+  workoutMeta:   { fontFamily: Fonts.sansLight, fontSize: 10, color: T.textMuted, marginTop: 3, textTransform: 'uppercase', letterSpacing: 0.5 },
   deleteBtn:     { padding: 4 },
   exLine:        { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
-  exName:        { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[800] },
-  exStats:       { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[600], flex: 1, textAlign: 'right' },
-  workoutFeel:   { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 8 },
+  exName:        { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.text },
+  exStats:       { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textSec, flex: 1, textAlign: 'right' },
+  workoutFeel:   { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted, marginTop: 8 },
 
-  // Tab switcher
   tabRow: {
     flexDirection: 'row', paddingHorizontal: Spacing.xl, paddingVertical: 10, gap: 8,
-    borderBottomWidth: 1, borderBottomColor: Colors.beige[50],
+    borderBottomWidth: 1, borderBottomColor: T.border,
   },
   tabBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
-    borderWidth: 1.5, borderColor: Colors.beige[100],
+    borderWidth: 1.5, borderColor: T.border,
   },
-  tabBtnOn:    { backgroundColor: Colors.beige[800], borderColor: Colors.beige[800] },
-  tabBtnTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[400] },
-  tabBtnTxtOn: { color: Colors.cream },
+  tabBtnOn:    { backgroundColor: T.text, borderColor: T.text },
+  tabBtnTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.textMuted },
+  tabBtnTxtOn: { color: T.bg },
   prDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.berry[400] },
 
-  // Progress stats — compact 2×2 summary card
   summaryCard: {
     marginHorizontal: Spacing.xl, marginTop: 14, marginBottom: 10,
-    backgroundColor: Colors.beige[50], borderRadius: Radius.lg,
-    borderWidth: 1, borderColor: Colors.beige[100], overflow: 'hidden',
+    backgroundColor: T.surface2, borderRadius: Radius.lg,
+    borderWidth: 1, borderColor: T.border, overflow: 'hidden',
   },
   summaryRow:    { flexDirection: 'row' },
   summaryCell:   { flex: 1, padding: 14, alignItems: 'flex-start' },
-  summarySep:    { width: 1, backgroundColor: Colors.beige[100] },
-  summaryDivider:{ height: 1, backgroundColor: Colors.beige[100] },
-  summaryLbl:    { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[600], marginBottom: 2 },
-  summaryVal:    { fontFamily: Fonts.serifSemiBold, fontSize: 22, color: Colors.beige[800], lineHeight: 24 },
+  summarySep:    { width: 1, backgroundColor: T.border },
+  summaryDivider:{ height: 1, backgroundColor: T.border },
+  summaryLbl:    { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.textSec, marginBottom: 2 },
+  summaryVal:    { fontFamily: Fonts.serifSemiBold, fontSize: 22, color: T.text, lineHeight: 24 },
   summaryTrend:  { fontFamily: Fonts.sansSemiBold, fontSize: 12 },
 
   monthBarRow:   { flexDirection: 'row', paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12, gap: 6 },
   monthBarCol:   { flex: 1, alignItems: 'center', gap: 3 },
-  monthBarCount: { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[800] },
+  monthBarCount: { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: T.text },
   monthBarTrack: { width: '100%', height: 40, justifyContent: 'flex-end' },
   monthBarFill:  { width: '100%', borderRadius: 3 },
-  monthBarLbl:   { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400] },
+  monthBarLbl:   { fontFamily: Fonts.sansLight, fontSize: 10, color: T.textMuted },
 
-  // 28-day heatmap
   heatCard: {
     marginHorizontal: Spacing.xl, marginBottom: 10,
-    backgroundColor: Colors.beige[50], borderRadius: Radius.lg,
-    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
+    backgroundColor: T.surface2, borderRadius: Radius.lg,
+    padding: 14, borderWidth: 1, borderColor: T.border,
   },
   heatHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  heatTitle:     { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[800] },
-  heatSub:       { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400] },
+  heatTitle:     { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: T.text },
+  heatSub:       { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted },
   heatWeekCount: { fontFamily: Fonts.sansSemiBold, fontSize: 12 },
   heatDowRow:    { flexDirection: 'row', marginBottom: 2 },
-  heatDowLbl:    { flex: 1, textAlign: 'center', fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.5, textTransform: 'uppercase', color: Colors.beige[400] },
+  heatDowLbl:    { flex: 1, textAlign: 'center', fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.5, textTransform: 'uppercase', color: T.textMuted },
   heatGrid:      { flexDirection: 'row', flexWrap: 'wrap' },
   heatCell:      { width: `${100/7}%` as any, height: 36, paddingVertical: 2, alignItems: 'center', justifyContent: 'center', gap: 1 },
   heatDot:       { width: 18, height: 10, borderRadius: 3 },
-  heatDateLbl:   { fontSize: 9, fontFamily: Fonts.sansLight, textAlign: 'center', color: Colors.beige[400] },
+  heatDateLbl:   { fontSize: 9, fontFamily: Fonts.sansLight, textAlign: 'center', color: T.textMuted },
   heatMonthMark: { fontSize: 7, fontFamily: Fonts.sansBold, textAlign: 'center', lineHeight: 10 },
 
-  // Legacy stats (keep for non-progress use)
   statsGrid: {
     flexDirection: 'row', gap: 8, paddingHorizontal: Spacing.xl, marginTop: 14, marginBottom: 8,
   },
   statCard: {
-    flex: 1, backgroundColor: Colors.sky[50], borderRadius: Radius.md,
-    padding: 12, alignItems: 'center', borderWidth: 1, borderColor: Colors.sky[100],
+    flex: 1, backgroundColor: T.skyBg, borderRadius: Radius.md,
+    padding: 12, alignItems: 'center', borderWidth: 1, borderColor: T.skyBorder,
   },
-  statVal: { fontFamily: Fonts.serifSemiBold, fontSize: 26, color: Colors.beige[800], lineHeight: 28 },
-  statLbl: { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[400], marginTop: 3, textAlign: 'center' },
+  statVal: { fontFamily: Fonts.serifSemiBold, fontSize: 26, color: T.text, lineHeight: 28 },
+  statLbl: { fontFamily: Fonts.sansLight, fontSize: 9, color: T.textMuted, marginTop: 3, textAlign: 'center' },
 
   monthCard: {
     marginHorizontal: Spacing.xl, marginBottom: 8,
-    backgroundColor: Colors.beige[50], borderRadius: Radius.md,
-    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
+    backgroundColor: T.surface2, borderRadius: Radius.md,
+    padding: 14, borderWidth: 1, borderColor: T.border,
   },
   monthRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  monthVal:   { fontFamily: Fonts.serifSemiBold, fontSize: 28, color: Colors.beige[800] },
-  monthLbl:   { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginTop: 2 },
+  monthVal:   { fontFamily: Fonts.serifSemiBold, fontSize: 28, color: T.text },
+  monthLbl:   { fontFamily: Fonts.sansLight, fontSize: 10, color: T.textMuted, marginTop: 2 },
   monthArrow: { alignItems: 'center' },
   monthTrend: { fontFamily: Fonts.sansSemiBold, fontSize: 18 },
-  monthSub:   { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[400] },
+  monthSub:   { fontFamily: Fonts.sansLight, fontSize: 9, color: T.textMuted },
 
   chartCard: {
     marginHorizontal: Spacing.xl, marginBottom: 8,
-    backgroundColor: Colors.beige[50], borderRadius: Radius.md,
-    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
+    backgroundColor: T.surface2, borderRadius: Radius.md,
+    padding: 14, borderWidth: 1, borderColor: T.border,
   },
   chartBars:    { flexDirection: 'row', alignItems: 'flex-end', height: 80, gap: 4 },
   chartCol:     { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },
   chartBarWrap: { width: '100%', height: 56, justifyContent: 'flex-end' },
   chartBar:     { width: '100%', borderRadius: 4 },
-  chartVolLbl:  { fontFamily: Fonts.sansLight, fontSize: 8, color: Colors.beige[400], marginBottom: 2 },
-  chartWeekLbl: { fontFamily: Fonts.sansSemiBold, fontSize: 8, color: Colors.beige[400], marginTop: 4 },
+  chartVolLbl:  { fontFamily: Fonts.sansLight, fontSize: 8, color: T.textMuted, marginBottom: 2 },
+  chartWeekLbl: { fontFamily: Fonts.sansSemiBold, fontSize: 8, color: T.textMuted, marginTop: 4 },
 
   progressCard: {
     paddingHorizontal: 12, paddingVertical: 8,
-    borderBottomWidth: 1, borderBottomColor: Colors.beige[100],
+    borderBottomWidth: 1, borderBottomColor: T.border,
   },
   progressRow:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   progressHeader:  { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   progressNameRow: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 },
-  progressName:    { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[800], flexShrink: 1 },
+  progressName:    { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.text, flexShrink: 1 },
   prInline:        { fontSize: 10 },
   progressStatRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 },
-  progressStatStr: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[700] },
-  progressMeta:    { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[300] },
-  prBadge:         { backgroundColor: Colors.berry[50], borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: Colors.berry[100] },
-  prBadgeTxt:      { fontFamily: Fonts.sansBold, fontSize: 9, color: Colors.berry[600] },
+  progressStatStr: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.textSec },
+  progressMeta:    { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted },
+  prBadge:         { backgroundColor: T.surface2, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: T.border },
+  prBadgeTxt:      { fontFamily: Fonts.sansBold, fontSize: 9, color: Colors.berry[400] },
   progressMetrics: { flexDirection: 'row', gap: 16, marginBottom: 4 },
   progressMetric:  { alignItems: 'flex-start' },
-  progressMetricVal: { fontFamily: Fonts.serifSemiBold, fontSize: 14, color: Colors.beige[800] },
-  progressMetricLbl: { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[300], marginTop: 1 },
+  progressMetricVal: { fontFamily: Fonts.serifSemiBold, fontSize: 14, color: T.text },
+  progressMetricLbl: { fontFamily: Fonts.sansLight, fontSize: 9, color: T.textMuted, marginTop: 1 },
   progressGain:    { fontFamily: Fonts.sansSemiBold, fontSize: 9, color: Colors.coral[400] },
 
   sparkStrip:           { flexDirection: 'row', alignItems: 'flex-end', gap: 2, marginTop: 5, height: 30 },
@@ -1840,15 +1830,13 @@ const styles = StyleSheet.create({
   sparkStripBar:        { width: '100%', borderRadius: 2 },
   sparkStripNum:        { fontFamily: Fonts.sansSemiBold, fontSize: 7, marginBottom: 2, textAlign: 'center' },
   sparkStripNumPlaceholder: { height: 10 },
-  sparkStripLabel:      { fontFamily: Fonts.sansLight, fontSize: 9, color: Colors.beige[400], marginLeft: 6, lineHeight: 14 },
+  sparkStripLabel:      { fontFamily: Fonts.sansLight, fontSize: 9, color: T.textMuted, marginLeft: 6, lineHeight: 14 },
 
-  // Legacy sparkline (kept for other uses)
   sparkline:    { flexDirection: 'row', alignItems: 'flex-end', gap: 2, marginTop: 4, height: 44 },
   sparkBarWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: 44 },
   sparkBar:     { width: '85%', borderRadius: 2 },
   sparkBarLbl:  { fontFamily: Fonts.sansSemiBold, fontSize: 7, marginBottom: 2, textAlign: 'center' },
 
-  // ── Routine catalogs ─────────────────────────────────────────────────────
   catalogSection: { marginHorizontal: Spacing.xl, marginBottom: 16 },
   catalogHeader: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -1856,27 +1844,26 @@ const styles = StyleSheet.create({
   },
   catalogName: {
     fontFamily: Fonts.sansSemiBold, fontSize: 11,
-    letterSpacing: 0.8, textTransform: 'uppercase', color: Colors.beige[700],
+    letterSpacing: 0.8, textTransform: 'uppercase', color: T.textSec,
     flex: 1,
   },
   catalogCount: {
-    fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400],
+    fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted,
   },
   catalogPR: { fontSize: 11 },
   catalogChevron: {
-    fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[400], marginLeft: 4,
+    fontFamily: Fonts.sansSemiBold, fontSize: 13, color: T.textMuted, marginLeft: 4,
   },
   catalogBody: {
     borderRadius: Radius.lg, overflow: 'hidden',
-    borderWidth: 1, borderColor: Colors.beige[100],
-    backgroundColor: Colors.cream,
+    borderWidth: 1, borderColor: T.border,
+    backgroundColor: T.surface,
   },
 
   empty:    { alignItems: 'center', paddingVertical: 40 },
-  emptyTxt: { fontFamily: Fonts.sansLight, fontSize: 14, color: Colors.beige[400] },
-  emptyHint:{ fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[200], marginTop: 6 },
+  emptyTxt: { fontFamily: Fonts.sansLight, fontSize: 14, color: T.textMuted },
+  emptyHint:{ fontFamily: Fonts.sansLight, fontSize: 12, color: T.textMuted, marginTop: 6, opacity: 0.6 },
 
-  // ── Builder ──────────────────────────────────────────────────────────────
   backBtn: { padding: 4, marginRight: 8 },
   saveHeaderBtn: {
     backgroundColor: Colors.green[400], borderRadius: 20,
@@ -1885,244 +1872,235 @@ const styles = StyleSheet.create({
   saveHeaderTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: '#fff' },
 
   dateRow:       { flexDirection: 'row', gap: 8 },
-  dateChip:      { flex: 1, paddingVertical: 11, borderRadius: Radius.md, borderWidth: 1.5, borderColor: Colors.beige[100], backgroundColor: Colors.cream, alignItems: 'center' },
-  dateChipOn:    { backgroundColor: Colors.beige[800], borderColor: Colors.beige[800] },
-  dateChipTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[600] },
-  dateChipTxtOn: { color: Colors.cream },
-  saveMsgBox:    { marginHorizontal: Spacing.xl, marginBottom: 10, padding: 10, borderRadius: Radius.md, backgroundColor: Colors.blush[50], borderWidth: 1, borderColor: Colors.blush[200] },
-  saveMsgTxt:    { fontFamily: Fonts.sans, fontSize: 13, color: Colors.blush[600], textAlign: 'center' },
+  dateChip:      { flex: 1, paddingVertical: 11, borderRadius: Radius.md, borderWidth: 1.5, borderColor: T.border, backgroundColor: T.surface, alignItems: 'center' },
+  dateChipOn:    { backgroundColor: T.text, borderColor: T.text },
+  dateChipTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: T.textSec },
+  dateChipTxtOn: { color: T.bg },
+  saveMsgBox:    { marginHorizontal: Spacing.xl, marginBottom: 10, padding: 10, borderRadius: Radius.md, backgroundColor: T.blushBg, borderWidth: 1, borderColor: T.blushBorder },
+  saveMsgTxt:    { fontFamily: Fonts.sans, fontSize: 13, color: Colors.blush[400], textAlign: 'center' },
 
   builderSection: { paddingHorizontal: Spacing.xl, marginBottom: 14 },
   fieldLbl: {
     fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1,
-    textTransform: 'uppercase', color: Colors.beige[600], marginBottom: 6,
+    textTransform: 'uppercase', color: T.textSec, marginBottom: 6,
   },
   fieldInput: {
-    borderWidth: 1.5, borderColor: Colors.beige[100], borderRadius: Radius.md,
-    backgroundColor: Colors.cream, fontFamily: Fonts.sans,
-    fontSize: 14, color: Colors.beige[800], paddingVertical: 11, paddingHorizontal: 14,
+    borderWidth: 1.5, borderColor: T.border, borderRadius: Radius.md,
+    backgroundColor: T.surface, fontFamily: Fonts.sans,
+    fontSize: 14, color: T.text, paddingVertical: 11, paddingHorizontal: 14,
   },
 
   addExerciseBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
     marginHorizontal: Spacing.xl, marginBottom: 8, padding: 16,
     borderRadius: Radius.md, borderWidth: 2,
-    borderColor: Colors.beige[100], borderStyle: 'dashed',
-    backgroundColor: Colors.beige[50],
+    borderColor: T.border, borderStyle: 'dashed',
+    backgroundColor: T.surface2,
   },
-  addExerciseTxt: { fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.beige[600], letterSpacing: 0.3 },
+  addExerciseTxt: { fontFamily: Fonts.sansBold, fontSize: 13, color: T.textSec, letterSpacing: 0.3 },
 
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: Spacing.xl, marginBottom: 14 },
-  chip:     { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1.5, borderColor: Colors.beige[200], backgroundColor: Colors.cream },
-  chipOn:   { backgroundColor: Colors.berry[50], borderColor: Colors.berry[400] },
-  chipTxt:  { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[600] },
-  chipTxtOn:{ fontFamily: Fonts.sansSemiBold, color: Colors.berry[600] },
+  chip:     { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1.5, borderColor: T.border2, backgroundColor: T.surface },
+  chipOn:   { backgroundColor: T.surface2, borderColor: Colors.berry[400] },
+  chipTxt:  { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.textSec },
+  chipTxtOn:{ fontFamily: Fonts.sansSemiBold, color: Colors.berry[400] },
 
-  // ── Set Logger ──────────────────────────────────────────────────────────
   setLogCard: {
     marginHorizontal: Spacing.xl, marginBottom: 12,
-    backgroundColor: Colors.beige[50], borderRadius: Radius.lg,
+    backgroundColor: T.surface2, borderRadius: Radius.lg,
     paddingTop: 0, paddingBottom: 14, paddingHorizontal: 14,
-    borderWidth: 1, borderColor: Colors.beige[100],
+    borderWidth: 1, borderColor: T.border,
     overflow: 'hidden',
   },
   setLogAccent:  { height: 4, backgroundColor: Colors.blush[400], marginHorizontal: -14, marginBottom: 14 },
   setLogHeader:  { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  setLogName:    { fontFamily: Fonts.sansBold, fontSize: 15, color: Colors.beige[800], letterSpacing: 0.2 },
-  setLogCat:     { fontFamily: Fonts.sansBold, fontSize: 9, color: Colors.beige[400], marginTop: 2, textTransform: 'uppercase', letterSpacing: 1.2 },
+  setLogName:    { fontFamily: Fonts.sansBold, fontSize: 15, color: T.text, letterSpacing: 0.2 },
+  setLogCat:     { fontFamily: Fonts.sansBold, fontSize: 9, color: T.textMuted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 1.2 },
   removeExBtn:   { padding: 4 },
   setColHeaders: { flexDirection: 'row', marginBottom: 6, gap: 6, alignItems: 'center' },
-  setColHdr:     { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: Colors.beige[400], flex: 1, textAlign: 'center' },
+  setColHdr:     { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: T.textMuted, flex: 1, textAlign: 'center' },
   setRow:        { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   setNumWrap:    { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.blush[400], alignItems: 'center', justifyContent: 'center' },
-  setNum:        { fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.cream },
+  setNum:        { fontFamily: Fonts.sansBold, fontSize: 13, color: '#fff' },
   setInput:      {
-    flex: 1, borderWidth: 1.5, borderColor: Colors.beige[100], borderRadius: 10,
-    backgroundColor: Colors.cream, fontFamily: Fonts.sansBold,
-    fontSize: 18, color: Colors.beige[800], paddingVertical: 10, textAlign: 'center',
+    flex: 1, borderWidth: 1.5, borderColor: T.border, borderRadius: 10,
+    backgroundColor: T.surface, fontFamily: Fonts.sansBold,
+    fontSize: 18, color: T.text, paddingVertical: 10, textAlign: 'center',
   },
   removeSetBtn:  { padding: 4 },
   addSetBtn:     { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 8, paddingLeft: 2 },
-  addSetTxt:     { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[400], letterSpacing: 0.4 },
+  addSetTxt:     { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.textMuted, letterSpacing: 0.4 },
 
-  // ── Picker Modal ────────────────────────────────────────────────────────
-  pickerSafe:    { flex: 1, backgroundColor: Colors.cream },
+  pickerSafe:    { flex: 1, backgroundColor: T.bg },
   pickerHeader:  {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl, paddingTop: 16, paddingBottom: 12,
-    borderBottomWidth: 1, borderBottomColor: Colors.beige[50],
+    borderBottomWidth: 1, borderBottomColor: T.border,
   },
-  pickerTitle:   { fontFamily: Fonts.serifSemiBold, fontSize: 20, color: Colors.beige[800] },
+  pickerTitle:   { fontFamily: Fonts.serifSemiBold, fontSize: 20, color: T.text },
   pickerClose:   { padding: 6 },
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     marginHorizontal: Spacing.xl, marginTop: 10, marginBottom: 6,
     paddingHorizontal: 14, paddingVertical: 11,
-    backgroundColor: Colors.beige[50], borderRadius: Radius.md,
-    borderWidth: 1, borderColor: Colors.beige[100],
+    backgroundColor: T.surface2, borderRadius: Radius.md,
+    borderWidth: 1, borderColor: T.border,
   },
   searchInput: {
     flex: 1, fontFamily: Fonts.sans, fontSize: 14,
-    color: Colors.beige[800], padding: 0,
+    color: T.text, padding: 0,
   },
   catScroll:        { height: 50, flexGrow: 0 },
   catScrollContent: { paddingHorizontal: Spacing.xl, gap: 8, alignItems: 'center', paddingVertical: 6 },
   catChip: {
     paddingHorizontal: 12, paddingVertical: 6, height: 34,
-    borderRadius: 20, borderWidth: 1.5, borderColor: Colors.beige[100],
-    backgroundColor: Colors.cream, justifyContent: 'center',
+    borderRadius: 20, borderWidth: 1.5, borderColor: T.border,
+    backgroundColor: T.surface, justifyContent: 'center',
   },
-  catChipOn:    { backgroundColor: Colors.beige[800], borderColor: Colors.beige[800] },
-  catChipTxt:   { fontFamily: Fonts.sans, fontSize: 12, color: Colors.beige[600] },
-  catChipTxtOn: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.cream },
+  catChipOn:    { backgroundColor: T.text, borderColor: T.text },
+  catChipTxt:   { fontFamily: Fonts.sans, fontSize: 12, color: T.textSec },
+  catChipTxtOn: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.bg },
 
   exerciseRow: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: Spacing.xl, paddingVertical: 13, backgroundColor: Colors.cream,
+    paddingHorizontal: Spacing.xl, paddingVertical: 13, backgroundColor: T.surface,
   },
   exerciseInfo:    { flex: 1 },
   exerciseNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  exerciseName:    { fontFamily: Fonts.sansSemiBold, fontSize: 14, color: Colors.beige[800] },
-  exerciseCat:     { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 2 },
-  customBadge:     { backgroundColor: Colors.blush[50], borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 },
-  customBadgeTxt:  { fontFamily: Fonts.sansBold, fontSize: 8, color: Colors.blush[600], letterSpacing: 0.5 },
-  recentBadge:     { backgroundColor: Colors.green[50], borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 },
-  recentBadgeTxt:  { fontFamily: Fonts.sansBold, fontSize: 8, color: Colors.green[600], letterSpacing: 0.5 },
-  separator:       { height: 1, backgroundColor: Colors.beige[50], marginHorizontal: Spacing.xl },
+  exerciseName:    { fontFamily: Fonts.sansSemiBold, fontSize: 14, color: T.text },
+  exerciseCat:     { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted, marginTop: 2 },
+  customBadge:     { backgroundColor: T.blushBg, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 },
+  customBadgeTxt:  { fontFamily: Fonts.sansBold, fontSize: 8, color: Colors.blush[400], letterSpacing: 0.5 },
+  recentBadge:     { backgroundColor: T.skyBg, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 },
+  recentBadgeTxt:  { fontFamily: Fonts.sansBold, fontSize: 8, color: Colors.green[400], letterSpacing: 0.5 },
+  separator:       { height: 1, backgroundColor: T.border, marginHorizontal: Spacing.xl },
 
   noResults:    { paddingHorizontal: Spacing.xl, paddingVertical: 24, alignItems: 'center' },
-  noResultsTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[400], textAlign: 'center' },
+  noResultsTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: T.textMuted, textAlign: 'center' },
 
   pickerFooter: {
     paddingHorizontal: Spacing.xl, paddingTop: 12,
-    borderTopWidth: 1, borderTopColor: Colors.beige[100],
-    backgroundColor: Colors.cream,
+    borderTopWidth: 1, borderTopColor: T.border,
+    backgroundColor: T.surface,
   },
-  customNameLbl: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginBottom: 8 },
+  customNameLbl: { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted, marginBottom: 8 },
   createRow:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
   createInput: {
-    flex: 1, borderWidth: 1.5, borderColor: Colors.beige[100], borderRadius: Radius.md,
-    fontFamily: Fonts.sans, fontSize: 14, color: Colors.beige[800],
-    paddingHorizontal: 12, paddingVertical: 10, backgroundColor: Colors.beige[50],
+    flex: 1, borderWidth: 1.5, borderColor: T.border, borderRadius: Radius.md,
+    fontFamily: Fonts.sans, fontSize: 14, color: T.text,
+    paddingHorizontal: 12, paddingVertical: 10, backgroundColor: T.surface2,
   },
   createBtn: {
-    backgroundColor: Colors.beige[800], borderRadius: Radius.md,
+    backgroundColor: T.text, borderRadius: Radius.md,
     paddingHorizontal: 16, paddingVertical: 10,
   },
-  createBtnTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.cream },
+  createBtnTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: T.bg },
 
-  // ── HYROX programme card ─────────────────────────────────────────────────
   hyroxProgramCard: {
     marginHorizontal: Spacing.xl, marginBottom: 16,
-    backgroundColor: Colors.coral[50], borderRadius: Radius.lg,
+    backgroundColor: T.dark ? '#2A1812' : Colors.coral[50], borderRadius: Radius.lg,
     padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14,
-    borderWidth: 1.5, borderColor: Colors.coral[100],
+    borderWidth: 1.5, borderColor: T.dark ? Colors.coral[800] : Colors.coral[100],
   },
   hyroxProgramIcon:   { width: 46, height: 46, borderRadius: 23, backgroundColor: Colors.coral[400], alignItems: 'center', justifyContent: 'center' },
-  hyroxProgramTitle:  { fontFamily: Fonts.sansBold, fontSize: 18, color: Colors.beige[800], letterSpacing: -0.3, marginBottom: 3 },
-  hyroxProgramDesc:   { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[500], lineHeight: 17 },
-  hyroxProgramStatus: { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.coral[600], marginTop: 5 },
+  hyroxProgramTitle:  { fontFamily: Fonts.sansBold, fontSize: 18, color: T.text, letterSpacing: -0.3, marginBottom: 3 },
+  hyroxProgramDesc:   { fontFamily: Fonts.sansLight, fontSize: 12, color: T.textSec, lineHeight: 17 },
+  hyroxProgramStatus: { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.coral[400], marginTop: 5 },
 
-  // ── HYROX goal card ──────────────────────────────────────────────────────
   hyroxGoalCard: {
     marginHorizontal: Spacing.xl, marginTop: 16, marginBottom: 12,
-    backgroundColor: Colors.cream, borderRadius: Radius.lg,
-    padding: 16, borderWidth: 1.5, borderColor: Colors.coral[200],
+    backgroundColor: T.surface, borderRadius: Radius.lg,
+    padding: 16, borderWidth: 1.5, borderColor: T.dark ? Colors.coral[800] : Colors.coral[200],
   },
   hyroxGoalCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  hyroxGoalCardTitle:  { fontFamily: Fonts.sansBold, fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', color: Colors.coral[600] },
-  hyroxGoalEditBtn:    { backgroundColor: Colors.coral[50], borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1, borderColor: Colors.coral[200] },
-  hyroxGoalEditTxt:    { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.coral[600] },
-  hyroxGoalCompName:   { fontFamily: Fonts.serifSemiBold, fontSize: 20, color: Colors.beige[800], marginBottom: 10 },
+  hyroxGoalCardTitle:  { fontFamily: Fonts.sansBold, fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', color: Colors.coral[400] },
+  hyroxGoalEditBtn:    { backgroundColor: T.dark ? '#2A1812' : Colors.coral[50], borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1, borderColor: T.dark ? Colors.coral[800] : Colors.coral[200] },
+  hyroxGoalEditTxt:    { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.coral[400] },
+  hyroxGoalCompName:   { fontFamily: Fonts.serifSemiBold, fontSize: 20, color: T.text, marginBottom: 10 },
   hyroxGoalRow:        { flexDirection: 'row', gap: 16, marginBottom: 12 },
   hyroxGoalItem:       {},
-  hyroxGoalItemLbl:    { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginBottom: 2 },
-  hyroxGoalItemVal:    { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[800] },
+  hyroxGoalItemLbl:    { fontFamily: Fonts.sansLight, fontSize: 10, color: T.textMuted, marginBottom: 2 },
+  hyroxGoalItemVal:    { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: T.text },
   hyroxTimeRow:        { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   hyroxTimeBlock:      { flex: 1 },
-  hyroxTimeLbl:        { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginBottom: 2 },
-  hyroxTimeVal:        { fontFamily: Fonts.serifSemiBold, fontSize: 28, color: Colors.beige[800] },
+  hyroxTimeLbl:        { fontFamily: Fonts.sansLight, fontSize: 10, color: T.textMuted, marginBottom: 2 },
+  hyroxTimeVal:        { fontFamily: Fonts.serifSemiBold, fontSize: 28, color: T.text },
   hyroxTimeSep:        { paddingHorizontal: 8 },
-  hyroxTimeSepTxt:     { fontFamily: Fonts.sansSemiBold, fontSize: 20, color: Colors.beige[200] },
-  hyroxGapRow:         { backgroundColor: Colors.coral[50], borderRadius: 8, padding: 10, marginBottom: 8 },
-  hyroxGapTxt:         { fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[800] },
-  hyroxPaceTxt:        { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 4 },
+  hyroxTimeSepTxt:     { fontFamily: Fonts.sansSemiBold, fontSize: 20, color: T.border2 },
+  hyroxGapRow:         { backgroundColor: T.dark ? '#2A1812' : Colors.coral[50], borderRadius: 8, padding: 10, marginBottom: 8 },
+  hyroxGapTxt:         { fontFamily: Fonts.sans, fontSize: 13, color: T.text },
+  hyroxPaceTxt:        { fontFamily: Fonts.sansLight, fontSize: 12, color: T.textMuted, marginTop: 4 },
   hyroxGoalEmpty:      { paddingVertical: 6 },
-  hyroxChallengeTitle: { fontFamily: Fonts.serifSemiBold, fontSize: 18, color: Colors.beige[800], marginBottom: 8, lineHeight: 24 },
-  hyroxChallengeDesc:  { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[600], lineHeight: 19, marginBottom: 16 },
+  hyroxChallengeTitle: { fontFamily: Fonts.serifSemiBold, fontSize: 18, color: T.text, marginBottom: 8, lineHeight: 24 },
+  hyroxChallengeDesc:  { fontFamily: Fonts.sansLight, fontSize: 13, color: T.textSec, lineHeight: 19, marginBottom: 16 },
   hyroxChallengeBtn:   { backgroundColor: Colors.coral[400], borderRadius: Radius.md, paddingVertical: 13, paddingHorizontal: 18, alignSelf: 'flex-start' },
-  hyroxChallengeBtnTxt:{ fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.cream, letterSpacing: 0.2 },
+  hyroxChallengeBtnTxt:{ fontFamily: Fonts.sansBold, fontSize: 13, color: '#fff', letterSpacing: 0.2 },
 
-  // ── Personalised plan ────────────────────────────────────────────────────
   personalPlanCard: {
     marginHorizontal: Spacing.xl, marginBottom: 12,
-    backgroundColor: Colors.cream, borderRadius: Radius.lg,
-    borderWidth: 1.5, borderColor: Colors.sky[200], overflow: 'hidden',
+    backgroundColor: T.surface, borderRadius: Radius.lg,
+    borderWidth: 1.5, borderColor: T.skyBorder, overflow: 'hidden',
   },
-  personalPlanHeader:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: Colors.sky[100] },
-  personalPlanCountdown: { fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.sky[600] },
-  personalPlanName:      { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 3 },
-  personalPlanViewBtn:   { backgroundColor: Colors.sky[50], borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1, borderColor: Colors.sky[200] },
-  personalPlanViewTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.sky[600] },
-  personalPlanFocus:     { backgroundColor: Colors.coral[50], paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.coral[100] },
-  personalPlanFocusLbl:  { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 0.5, color: Colors.coral[600], marginBottom: 3 },
-  personalPlanFocusVal:  { fontFamily: Fonts.sans, fontSize: 12, color: Colors.beige[800] },
-  personalPlanWeekTitle: { fontFamily: Fonts.sansBold, fontSize: 12, color: Colors.beige[600], paddingHorizontal: 14, paddingTop: 12, paddingBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
-  personalPlanSession:   { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: 1, borderTopColor: Colors.beige[50] },
+  personalPlanHeader:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: T.skyBorder },
+  personalPlanCountdown: { fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.sky[400] },
+  personalPlanName:      { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted, marginTop: 3 },
+  personalPlanViewBtn:   { backgroundColor: T.skyBg, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1, borderColor: T.skyBorder },
+  personalPlanViewTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.sky[400] },
+  personalPlanFocus:     { backgroundColor: T.dark ? '#2A1812' : Colors.coral[50], paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: T.dark ? Colors.coral[800] : Colors.coral[100] },
+  personalPlanFocusLbl:  { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 0.5, color: Colors.coral[400], marginBottom: 3 },
+  personalPlanFocusVal:  { fontFamily: Fonts.sans, fontSize: 12, color: T.text },
+  personalPlanWeekTitle: { fontFamily: Fonts.sansBold, fontSize: 12, color: T.textSec, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+  personalPlanSession:   { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: 1, borderTopColor: T.border },
   personalPlanDot:       { width: 8, height: 8, borderRadius: 4, marginTop: 4 },
-  personalPlanSessionDay:  { fontFamily: Fonts.sans, fontSize: 12, color: Colors.beige[600] },
-  personalPlanSessionDesc: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 2, lineHeight: 15 },
-  personalPlanSessionDur:  { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], minWidth: 36, textAlign: 'right', marginTop: 2 },
+  personalPlanSessionDay:  { fontFamily: Fonts.sans, fontSize: 12, color: T.textSec },
+  personalPlanSessionDesc: { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted, marginTop: 2, lineHeight: 15 },
+  personalPlanSessionDur:  { fontFamily: Fonts.sansLight, fontSize: 10, color: T.textMuted, minWidth: 36, textAlign: 'right', marginTop: 2 },
 
-  // ── HYROX simulation ─────────────────────────────────────────────────────
   hyroxSimSection: {
     marginHorizontal: Spacing.xl, marginBottom: 16,
-    backgroundColor: Colors.beige[800], borderRadius: Radius.lg, padding: 18,
+    backgroundColor: T.dark ? T.surface2 : Colors.beige[800], borderRadius: Radius.lg, padding: 18,
   },
   hyroxSimHeader:  { marginBottom: 14 },
-  hyroxSimTitle:   { fontFamily: Fonts.sansBold, fontSize: 18, color: Colors.cream, letterSpacing: -0.3 },
-  hyroxSimBest:    { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[200], marginTop: 4 },
+  hyroxSimTitle:   { fontFamily: Fonts.sansBold, fontSize: 18, color: T.dark ? T.text : Colors.cream, letterSpacing: -0.3 },
+  hyroxSimBest:    { fontFamily: Fonts.sansLight, fontSize: 12, color: T.dark ? T.textSec : Colors.beige[200], marginTop: 4 },
   hyroxSimBtn:     { backgroundColor: Colors.coral[400], borderRadius: Radius.md, padding: 14, alignItems: 'center' },
-  hyroxSimBtnTxt:  { fontFamily: Fonts.sansBold, fontSize: 15, color: Colors.cream, letterSpacing: 0.3 },
+  hyroxSimBtnTxt:  { fontFamily: Fonts.sansBold, fontSize: 15, color: '#fff', letterSpacing: 0.3 },
   hyroxSimCard:    {
     marginHorizontal: Spacing.xl, marginBottom: 10,
-    backgroundColor: Colors.cream, borderRadius: Radius.lg,
-    padding: 14, borderWidth: 1, borderColor: Colors.beige[100],
+    backgroundColor: T.surface, borderRadius: Radius.lg,
+    padding: 14, borderWidth: 1, borderColor: T.border,
   },
   hyroxSimCardHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  hyroxSimCardDate:      { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[600] },
-  hyroxSimCardTimeBadge: { backgroundColor: Colors.coral[50], borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: Colors.coral[200] },
-  hyroxSimCardTime:      { fontFamily: Fonts.sansBold, fontSize: 15, color: Colors.coral[600] },
+  hyroxSimCardDate:      { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: T.textSec },
+  hyroxSimCardTimeBadge: { backgroundColor: T.dark ? '#2A1812' : Colors.coral[50], borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: T.dark ? Colors.coral[800] : Colors.coral[200] },
+  hyroxSimCardTime:      { fontFamily: Fonts.sansBold, fontSize: 15, color: Colors.coral[400] },
   hyroxStationsGrid:     { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  hyroxStationChip:      { backgroundColor: Colors.beige[50], borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, borderWidth: 1, borderColor: Colors.beige[100], minWidth: 80 },
-  hyroxStationName:      { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: Colors.beige[600] },
-  hyroxStationTime:      { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.coral[600], marginTop: 2 },
+  hyroxStationChip:      { backgroundColor: T.surface2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, borderWidth: 1, borderColor: T.border, minWidth: 80 },
+  hyroxStationName:      { fontFamily: Fonts.sansSemiBold, fontSize: 10, color: T.textSec },
+  hyroxStationTime:      { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.coral[400], marginTop: 2 },
 
-  // ── Insights ─────────────────────────────────────────────────────────────
-  insightsCard:     { marginHorizontal: Spacing.xl, marginBottom: 12, backgroundColor: Colors.sky[50], borderRadius: Radius.lg, padding: 14, borderWidth: 1, borderColor: Colors.sky[100] },
+  insightsCard:     { marginHorizontal: Spacing.xl, marginBottom: 12, backgroundColor: T.skyBg, borderRadius: Radius.lg, padding: 14, borderWidth: 1, borderColor: T.skyBorder },
   insightRow:       { flexDirection: 'row', gap: 10, paddingVertical: 6 },
-  insightRowBorder: { borderTopWidth: 1, borderTopColor: Colors.sky[100] },
+  insightRowBorder: { borderTopWidth: 1, borderTopColor: T.skyBorder },
   insightDot:       { fontFamily: Fonts.sansBold, fontSize: 16, color: Colors.sky[400] },
-  insightTxt:       { flex: 1, fontFamily: Fonts.sans, fontSize: 13, color: Colors.beige[600], lineHeight: 19 },
+  insightTxt:       { flex: 1, fontFamily: Fonts.sans, fontSize: 13, color: T.textSec, lineHeight: 19 },
 
-  // ── Training plan cards ──────────────────────────────────────────────────
   planCard: {
-    width: 160, backgroundColor: Colors.cream,
+    width: 160, backgroundColor: T.surface,
     borderRadius: Radius.lg, padding: 16,
-    borderWidth: 1, borderColor: Colors.beige[100],
+    borderWidth: 1, borderColor: T.border,
   },
-  planCardWeeks:    { fontFamily: Fonts.serifSemiBold, fontSize: 40, color: Colors.beige[800], lineHeight: 42 },
-  planCardWeeksLbl: { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginBottom: 6 },
-  planCardName:     { fontFamily: Fonts.sansBold, fontSize: 13, color: Colors.beige[800], marginBottom: 4 },
-  planCardFocus:    { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginBottom: 6, lineHeight: 15 },
-  planCardSessions: { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginBottom: 12 },
-  planCardBtn:      { backgroundColor: Colors.beige[800], borderRadius: Radius.md, paddingVertical: 8, alignItems: 'center' },
-  planCardBtnTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.cream },
+  planCardWeeks:    { fontFamily: Fonts.serifSemiBold, fontSize: 40, color: T.text, lineHeight: 42 },
+  planCardWeeksLbl: { fontFamily: Fonts.sansLight, fontSize: 10, color: T.textMuted, marginBottom: 6 },
+  planCardName:     { fontFamily: Fonts.sansBold, fontSize: 13, color: T.text, marginBottom: 4 },
+  planCardFocus:    { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted, marginBottom: 6, lineHeight: 15 },
+  planCardSessions: { fontFamily: Fonts.sansLight, fontSize: 10, color: T.textMuted, marginBottom: 12 },
+  planCardBtn:      { backgroundColor: T.text, borderRadius: Radius.md, paddingVertical: 8, alignItems: 'center' },
+  planCardBtnTxt:   { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.bg },
 
-  // ── HYROX remove ────────────────────────────────────────────────────────
   hyroxRemoveBtn: { alignSelf: 'center', padding: 10 },
-  hyroxRemoveTxt: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], textDecorationLine: 'underline' },
+  hyroxRemoveTxt: { fontFamily: Fonts.sansLight, fontSize: 12, color: T.textMuted, textDecorationLine: 'underline' },
 
-  // ── inputSubLbl ──────────────────────────────────────────────────────────
-  inputSubLbl: { fontFamily: Fonts.sansLight, fontSize: 10, color: Colors.beige[400], marginBottom: 4 },
-});
+  inputSubLbl: { fontFamily: Fonts.sansLight, fontSize: 10, color: T.textMuted, marginBottom: 4 },
+  } as any);
+}

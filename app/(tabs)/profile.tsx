@@ -6,7 +6,7 @@ import { useAuth } from '../../lib/authContext';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Colors, Fonts, Spacing } from '../../constants/theme';
-import { useTheme } from '../../lib/useTheme';
+import { useTheme, ThemeTokens } from '../../lib/useTheme';
 import { Card } from '../../components/ui/Card';
 import { Icon } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
@@ -18,6 +18,7 @@ import { Lang } from '../../types';
 
 export default function ProfileScreen() {
   const T = useTheme();
+  const styles = makeStyles(T);
   const { signOut } = useAuth();
   const { lang, setLang, t } = useTranslation();
   const profile    = useQuery(api.profiles.get);
@@ -254,56 +255,58 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.cream },
-  topBar: {
-    paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
-    borderBottomWidth: 1, borderBottomColor: Colors.beige[50],
-  },
-  heading: { fontFamily: Fonts.serifSemiBold, fontSize: 26, color: Colors.beige[800] },
-  subheading: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 2 },
-  scroll: { flex: 1, paddingTop: 12 },
-  sectionLblRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: Spacing.xl, marginBottom: 10, marginTop: 20,
-  },
-  sectionLbl: {
-    fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.2,
-    textTransform: 'uppercase', color: Colors.beige[400],
-  },
-  planRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  planName: { fontFamily: Fonts.sansSemiBold, fontSize: 15, color: Colors.beige[800] },
-  planSub: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 3 },
-  langRow: { flexDirection: 'row', gap: 10 },
-  langBtn: { flex: 1 },
-  row: { flexDirection: 'row', gap: 10 },
-  half: { flex: 1 },
-  saveBtn: { marginTop: 16 },
-  toggleRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: Colors.beige[50],
-  },
-  toggleInfo: { flex: 1, gap: 2 },
-  toggleTitle: { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[800] },
-  toggleSub: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[600] },
-  folder: { marginHorizontal: Spacing.xl, marginBottom: 10 },
-  folderHead: { borderRadius: 20 },
-  sessEntry: {
-    padding: 12, borderTopWidth: 1, borderTopColor: Colors.beige[50],
-    backgroundColor: Colors.beige[50],
-  },
-  sessDate: {
-    fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase',
-    color: Colors.beige[400], marginBottom: 6,
-  },
-  exLine: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
-  exName: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[800] },
-  exStats: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[600] },
-  empty: { fontFamily: Fonts.sansLight, textAlign: 'center', padding: 20, color: Colors.beige[400], fontSize: 13 },
-  dataNote: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 14, lineHeight: 18 },
-  confirmBox: { borderWidth: 1, borderColor: '#E0A0A0', borderRadius: 10, padding: 16, backgroundColor: Colors.error.bg, marginBottom: 4 },
-  confirmTitle: { fontFamily: Fonts.sansSemiBold, fontSize: 14, color: Colors.error.text, marginBottom: 6 },
-  confirmBody: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.error.text, marginBottom: 14 },
-  confirmRow: { flexDirection: 'row', gap: 10 },
-  confirmBtn: { flex: 1 },
-});
+function makeStyles(T: ThemeTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: T.bg },
+    topBar: {
+      paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
+      borderBottomWidth: 1, borderBottomColor: T.border,
+    },
+    heading: { fontFamily: Fonts.serifSemiBold, fontSize: 26, color: T.text },
+    subheading: { fontFamily: Fonts.sansLight, fontSize: 12, color: T.textMuted, marginTop: 2 },
+    scroll: { flex: 1, paddingTop: 12 },
+    sectionLblRow: {
+      flexDirection: 'row', alignItems: 'center', gap: 6,
+      paddingHorizontal: Spacing.xl, marginBottom: 10, marginTop: 20,
+    },
+    sectionLbl: {
+      fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.2,
+      textTransform: 'uppercase', color: T.textMuted,
+    },
+    planRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    planName: { fontFamily: Fonts.sansSemiBold, fontSize: 15, color: T.text },
+    planSub: { fontFamily: Fonts.sansLight, fontSize: 12, color: T.textMuted, marginTop: 3 },
+    langRow: { flexDirection: 'row', gap: 10 },
+    langBtn: { flex: 1 },
+    row: { flexDirection: 'row', gap: 10 },
+    half: { flex: 1 },
+    saveBtn: { marginTop: 16 },
+    toggleRow: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: T.border,
+    },
+    toggleInfo: { flex: 1, gap: 2 },
+    toggleTitle: { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: T.text },
+    toggleSub: { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textSec },
+    folder: { marginHorizontal: Spacing.xl, marginBottom: 10 },
+    folderHead: { borderRadius: 20 },
+    sessEntry: {
+      padding: 12, borderTopWidth: 1, borderTopColor: T.border,
+      backgroundColor: T.surface2,
+    },
+    sessDate: {
+      fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase',
+      color: T.textMuted, marginBottom: 6,
+    },
+    exLine: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
+    exName: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.text },
+    exStats: { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textSec },
+    empty: { fontFamily: Fonts.sansLight, textAlign: 'center', padding: 20, color: T.textMuted, fontSize: 13 },
+    dataNote: { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted, marginTop: 14, lineHeight: 18 },
+    confirmBox: { borderWidth: 1, borderColor: '#E0A0A0', borderRadius: 10, padding: 16, backgroundColor: Colors.error.bg, marginBottom: 4 },
+    confirmTitle: { fontFamily: Fonts.sansSemiBold, fontSize: 14, color: Colors.error.text, marginBottom: 6 },
+    confirmBody: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.error.text, marginBottom: 14 },
+    confirmRow: { flexDirection: 'row', gap: 10 },
+    confirmBtn: { flex: 1 },
+  });
+}

@@ -3,7 +3,7 @@ import { useFocusEffect } from 'expo-router';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
-import { useTheme } from '../../lib/useTheme';
+import { useTheme, ThemeTokens } from '../../lib/useTheme';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -36,6 +36,7 @@ const CAL_H_PADDING = 16;
 
 function CatHeader({ icon, label, badge }: { icon: any; label: string; badge?: string }) {
   const T = useTheme();
+  const styles = makeStyles(T);
   return (
     <View style={styles.catHdr}>
       <Icon name={icon} size={13} color={T.textMuted} strokeWidth={1.5} />
@@ -47,6 +48,7 @@ function CatHeader({ icon, label, badge }: { icon: any; label: string; badge?: s
 
 export default function CycleScreen() {
   const T = useTheme();
+  const styles = makeStyles(T);
   const { lang, t, tArr } = useTranslation();
   const profile    = useQuery(api.profiles.get);
   const cycleDays  = useQuery(api.cycleDays.list) ?? [];
@@ -299,7 +301,7 @@ export default function CycleScreen() {
                     isOv       && !isLogged && !isSpotting && { color: '#fff' },
                     isPred     && !isLogged && !isSpotting && { color: Colors.blush[T.dark ? 400 : 600] },
                     isFert     && !isOv && !isLogged && !isSpotting && { color: Colors.green[T.dark ? 200 : 800] },
-                    isSelected && !isLogged && { color: Colors.beige[800], fontFamily: Fonts.sansBold },
+                    isSelected && !isLogged && { color: T.text, fontFamily: Fonts.sansBold },
                   ]}>{day}</Text>
                 </View>
                 {isSpotting && !isLogged && <View style={styles.spottingDot} />}
@@ -314,7 +316,7 @@ export default function CycleScreen() {
           {[
             { color: Colors.blush[600], label: t('c.legend.logged') },
             { color: T.blushBg,  label: t('c.legend.pred'), border: Colors.blush[200] },
-            { color: Colors.blush[200], label: t('c.legend.spotting'), border: Colors.blush[300] },
+            { color: Colors.blush[200], label: t('c.legend.spotting'), border: Colors.blush[200] },
             { color: Colors.green[400], label: t('c.legend.ovulation') },
             { color: Colors.green[200], label: t('c.legend.fertile') },
             { color: '#8FA8D8', label: t('c.legend.contra'), pill: true },
@@ -430,7 +432,7 @@ export default function CycleScreen() {
             </View>
             {(profile?.plan === 'free' || !profile?.plan) && (
               <View style={styles.lockOverlay}>
-                <Icon name="lock" size={22} color={Colors.beige[400]} />
+                <Icon name="lock" size={22} color={T.textMuted} />
                 <Text style={[styles.lockTxt, { color: T.textSec }]}>{t('c.sleep.lock')}</Text>
               </View>
             )}
@@ -469,14 +471,15 @@ export default function CycleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: Colors.cream },
+function makeStyles(T: ThemeTokens) {
+  return StyleSheet.create({
+  safe:    { flex: 1, backgroundColor: T.bg },
   topBar:  {
     paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
-    borderBottomWidth: 1, borderBottomColor: Colors.beige[50],
+    borderBottomWidth: 1, borderBottomColor: T.border,
   },
-  heading:    { fontFamily: Fonts.serifSemiBold, fontSize: 26, color: Colors.beige[800] },
-  subheading: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 2 },
+  heading:    { fontFamily: Fonts.serifSemiBold, fontSize: 26, color: T.text },
+  subheading: { fontFamily: Fonts.sansLight, fontSize: 12, color: T.textMuted, marginTop: 2 },
   scroll: { flex: 1 },
 
   // Month navigation
@@ -485,8 +488,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl, paddingVertical: 10,
   },
   calNavBtn:   { padding: 8 },
-  calNavArrow: { fontFamily: Fonts.serif, fontSize: 28, color: Colors.beige[600], lineHeight: 30 },
-  calNavTitle: { fontFamily: Fonts.serifSemiBold, fontSize: 18, color: Colors.beige[800] },
+  calNavArrow: { fontFamily: Fonts.serif, fontSize: 28, color: T.textSec, lineHeight: 30 },
+  calNavTitle: { fontFamily: Fonts.serifSemiBold, fontSize: 18, color: T.text },
 
   // Calendar header (E T K N R L P — once at top)
   calHRow: {
@@ -495,7 +498,7 @@ const styles = StyleSheet.create({
   calHDay: {
     width: `${100 / 7}%` as any, textAlign: 'center',
     fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1,
-    textTransform: 'uppercase', color: Colors.beige[400], paddingVertical: 6,
+    textTransform: 'uppercase', color: T.textMuted, paddingVertical: 6,
   },
 
   // Calendar grid
@@ -509,23 +512,23 @@ const styles = StyleSheet.create({
     width: 32, height: 32, borderRadius: 16,
     alignItems: 'center', justifyContent: 'center',
   },
-  calDayTxt:        { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.beige[400] },
+  calDayTxt:        { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: T.textMuted },
   calPeriodLogged:  { backgroundColor: Colors.blush[600] },
-  calPeriodPred:    { backgroundColor: Colors.blush[50], borderWidth: 1.5, borderColor: Colors.blush[200] },
-  calSpotting:      { backgroundColor: Colors.blush[50], borderWidth: 1.5, borderColor: Colors.blush[300], borderStyle: 'dashed' },
+  calPeriodPred:    { backgroundColor: T.blushBg, borderWidth: 1.5, borderColor: T.blushBorder },
+  calSpotting:      { backgroundColor: T.blushBg, borderWidth: 1.5, borderColor: Colors.blush[200], borderStyle: 'dashed' },
   spottingDot:      { width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.blush[400], marginTop: 1 },
-  contraDot:        { width: 10, height: 4, borderRadius: 2, backgroundColor: '#8FA8D8', marginTop: 1, borderWidth: 1, borderColor: Colors.beige[600] },
+  contraDot:        { width: 10, height: 4, borderRadius: 2, backgroundColor: '#8FA8D8', marginTop: 1, borderWidth: 1, borderColor: T.border2 },
   calOv:            { backgroundColor: Colors.green[400] },
-  calFert:          { backgroundColor: Colors.green[50], borderWidth: 1.5, borderColor: Colors.green[200] },
+  calFert:          { backgroundColor: T.skyBg, borderWidth: 1.5, borderColor: Colors.green[200] },
   calToday:         { shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 4, elevation: 4 },
-  calSelected:      { borderWidth: 2, borderColor: Colors.beige[600] },
+  calSelected:      { borderWidth: 2, borderColor: T.border2 },
 
   // Legend
   legend:  { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: Spacing.xl, marginTop: 12, marginBottom: 4 },
   legItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legDot:  { width: 8, height: 8, borderRadius: 4 },
-  legPill: { width: 14, height: 6, borderRadius: 3, borderWidth: 1, borderColor: Colors.beige[600] },
-  legTxt:  { fontFamily: Fonts.sans, fontSize: 10, color: Colors.beige[600] },
+  legPill: { width: 14, height: 6, borderRadius: 3, borderWidth: 1, borderColor: T.border2 },
+  legTxt:  { fontFamily: Fonts.sans, fontSize: 10, color: T.textSec },
 
   // Section label
   sectionLblRow: {
@@ -534,21 +537,21 @@ const styles = StyleSheet.create({
   },
   sectionLbl: {
     fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.2,
-    textTransform: 'uppercase', color: Colors.beige[400],
+    textTransform: 'uppercase', color: T.textMuted,
   },
 
   // Category header
   catHdr: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10, marginTop: 16 },
   catHdrTxt: {
     fontFamily: Fonts.sansSemiBold, fontSize: 11,
-    color: Colors.beige[600], textTransform: 'uppercase', letterSpacing: 0.7,
+    color: T.textSec, textTransform: 'uppercase', letterSpacing: 0.7,
   },
   proBadge:    { backgroundColor: Colors.blush[400], borderRadius: 20, paddingHorizontal: 7, paddingVertical: 2 },
   proBadgeTxt: { fontFamily: Fonts.sansBold, fontSize: 9, color: '#fff', letterSpacing: 0.4, textTransform: 'uppercase' },
 
   fieldLabel: {
     fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1,
-    textTransform: 'uppercase', color: Colors.beige[600], marginBottom: 8, marginTop: 14,
+    textTransform: 'uppercase', color: T.textSec, marginBottom: 8, marginTop: 14,
   },
   rowGap8: { flexDirection: 'row', gap: 8, marginBottom: 14 },
 
@@ -557,42 +560,43 @@ const styles = StyleSheet.create({
   chip:     {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 7, paddingHorizontal: 14,
-    borderRadius: 20, borderWidth: 1.5, borderColor: Colors.beige[100],
-    backgroundColor: Colors.cream,
+    borderRadius: 20, borderWidth: 1.5, borderColor: T.border,
+    backgroundColor: T.surface,
   },
-  chipOn:    { backgroundColor: Colors.blush[50], borderColor: Colors.blush[400] },
-  chipLbl:   { fontFamily: Fonts.sans, fontSize: 12, color: Colors.beige[600] },
-  chipLblOn: { fontFamily: Fonts.sansSemiBold, color: Colors.blush[800] },
+  chipOn:    { backgroundColor: T.blushBg, borderColor: Colors.blush[400] },
+  chipLbl:   { fontFamily: Fonts.sans, fontSize: 12, color: T.textSec },
+  chipLblOn: { fontFamily: Fonts.sansSemiBold, color: Colors.blush[T.dark ? 200 : 800] },
 
   // Sleep
   sleepSection:  { position: 'relative', marginBottom: 6 },
   lockedContent: { opacity: 0.22 },
   sleepHrsRow:   { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
-  sleepHrsLbl:   { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: Colors.beige[600] },
+  sleepHrsLbl:   { fontFamily: Fonts.sansSemiBold, fontSize: 11, color: T.textSec },
   sleepHrsInput: {
     maxWidth: 100, paddingVertical: 9, paddingHorizontal: 12,
-    borderWidth: 1.5, borderColor: Colors.beige[100], borderRadius: 9,
-    backgroundColor: Colors.cream, fontFamily: Fonts.sans, fontSize: 14,
-    color: Colors.beige[800],
+    borderWidth: 1.5, borderColor: T.border, borderRadius: 9,
+    backgroundColor: T.surface, fontFamily: Fonts.sans, fontSize: 14,
+    color: T.text,
   },
   lockOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     alignItems: 'center', justifyContent: 'center', gap: 8,
   },
-  lockTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.beige[600] },
+  lockTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.textSec },
 
   // Contraception
   contraRow:   { flexDirection: 'row', gap: 6, marginBottom: 14 },
   contraBtn:   {
     flex: 1, minHeight: 76, borderRadius: 12, borderWidth: 1.5,
-    borderColor: Colors.beige[200], backgroundColor: Colors.cream,
+    borderColor: T.border2, backgroundColor: T.surface,
     alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 6,
   },
-  contraBtnOn: { backgroundColor: Colors.blush[50], borderColor: Colors.blush[400] },
+  contraBtnOn: { backgroundColor: T.blushBg, borderColor: Colors.blush[400] },
   contraLbl:   {
     fontFamily: Fonts.sansSemiBold, fontSize: 10,
-    color: Colors.beige[500], lineHeight: 14, textAlign: 'center',
+    color: T.textSec, lineHeight: 14, textAlign: 'center',
   },
 
   saveBtn: { marginTop: 16 },
-});
+  });
+}
