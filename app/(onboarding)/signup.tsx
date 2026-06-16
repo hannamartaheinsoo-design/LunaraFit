@@ -36,11 +36,11 @@ function pwValid(pw: string) {
   return pw.length >= 8 && /[A-Z]/.test(pw) && /[a-z]/.test(pw) && /[0-9]/.test(pw) && /[^A-Za-z0-9]/.test(pw);
 }
 
-function StepBar() {
+function StepBar({ step }: { step: number }) {
   return (
     <View style={bar.row}>
-      {[0, 1, 2, 3].map((i) => (
-        <View key={i} style={[bar.seg, i === 0 ? bar.filled : bar.empty]} />
+      {Array.from({ length: 7 }).map((_, i) => (
+        <View key={i} style={[bar.seg, i <= step ? bar.filled : bar.empty]} />
       ))}
     </View>
   );
@@ -119,7 +119,7 @@ export default function SignupScreen() {
           <Text style={styles.backIcon}>‹</Text>
         </Pressable>
       </View>
-      <StepBar />
+      <StepBar step={0} />
 
       <ScrollView
         style={styles.scroll}
@@ -129,15 +129,13 @@ export default function SignupScreen() {
       >
         {/* Heading */}
         <Text style={styles.eyebrow}>
-          {flow === 'signUp' ? 'SINU KONTO' : 'TERE TAGASI'}
+          {flow === 'signUp' ? t('auth.eyebrow.signup') : t('auth.eyebrow.signin')}
         </Text>
         <Text style={styles.title}>
           {flow === 'signUp' ? t('auth.heading.signup') : t('auth.heading.signin')}
         </Text>
         <Text style={styles.subtitle}>
-          {flow === 'signUp'
-            ? 'Salvesta oma andmed ja pääse ligi kõigis seadmetes.'
-            : 'Logi sisse, et jätkata oma teekonnal.'}
+          {flow === 'signUp' ? t('auth.subtitle.signup') : t('auth.subtitle.signin')}
         </Text>
 
         {/* Social */}
@@ -207,7 +205,7 @@ export default function SignupScreen() {
               autoComplete={flow === 'signUp' ? 'new-password' : 'current-password'}
             />
             <Pressable onPress={() => setShowPw(s => !s)} hitSlop={8}>
-              <Text style={{ fontSize: 15 }}>{showPw ? '🙈' : '👁'}</Text>
+              <Icon name="eye" size={18} color={showPw ? Colors.blush[400] : Colors.beige[400]} strokeWidth={1.4} />
             </Pressable>
           </View>
           {flow === 'signUp' && (
@@ -309,7 +307,7 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 15, fontFamily: Fonts.sans, color: Colors.beige[800] },
   pwHint: {
     fontSize: 11, fontFamily: Fonts.sansLight,
-    color: Colors.beige[300], marginTop: 5, lineHeight: 16,
+    color: Colors.beige[200], marginTop: 5, lineHeight: 16,
   },
 
   errorBox: { backgroundColor: Colors.error.bg, borderRadius: Radius.sm, padding: 12, marginBottom: 12 },

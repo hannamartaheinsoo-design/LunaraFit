@@ -24,7 +24,8 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
     AsyncStorage.getItem('lf_profile').then((raw) => {
       if (raw) {
         const p = JSON.parse(raw);
-        if (p.lang === 'en' || p.lang === 'et') setLangState(p.lang);
+        const VALID: Lang[] = ['et', 'en', 'de', 'es'];
+        if (VALID.includes(p.lang)) setLangState(p.lang);
       }
     });
   }, []);

@@ -31,6 +31,9 @@ export default defineSchema({
     birth_year:       v.optional(v.number()),
     birth_month:      v.optional(v.number()),
     birth_day:        v.optional(v.number()),
+    weight_kg:        v.optional(v.number()),
+    height_cm:        v.optional(v.number()),
+    uses_birth_control: v.optional(v.boolean()),
     cycle_length:     v.number(),
     period_length:    v.number(),
     last_period_date: v.optional(v.string()),
@@ -38,6 +41,7 @@ export default defineSchema({
       v.literal("beginner"), v.literal("intermediate"), v.literal("advanced")
     )),
     plan: v.union(v.literal("free"), v.literal("monthly"), v.literal("yearly")),
+    onboarding_complete: v.optional(v.boolean()),
   }).index("by_user", ["userId"]),
 
   workouts: defineTable({

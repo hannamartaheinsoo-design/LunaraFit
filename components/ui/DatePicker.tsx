@@ -38,7 +38,7 @@ export function DatePicker({ value, onChange }: Props) {
   const yearField = (
     <Field
       label={t('date.year')}
-      hint="aaaa"
+      hint="YYYY"
       value={year}
       maxLength={4}
       T={T}

@@ -229,3 +229,21 @@
 **Root cause:** A fixed-position element is removed from document flow. Scroll containers don't know it exists and stop exactly at the viewport bottom, letting the bar overlap the final content.
 **Fix applied:** Set `paddingBottom: 130` (≥ tab bar height of 130px) on `contentContainerStyle` for every `ScrollView` and `FlatList` across all five tab screens.
 **Rule going forward:** Whenever the tab bar height changes, grep for every `contentContainerStyle` in `app/(tabs)/` and ensure `paddingBottom` matches or exceeds the bar's `height`. One screen left without it will look broken.
+
+### [2026-06-16] Navigating to a non-existent expo-router route crashes the navigator on native
+**What happened:** `home.tsx` had a quick-action chip that called `router.push('/(tabs)/progress')`. No `progress.tsx` file exists in `app/(tabs)/`. On native (Expo Go), navigating to an unregistered route throws an unhandled exception that can freeze the entire navigator — the user can no longer switch tabs or scroll.
+**Root cause:** expo-router on web silently shows a 404 page, masking the error during development. The crash only surfaces on native.
+**Fix applied:** Changed the broken route to `/(tabs)/workouts` which already contains the progress sub-tab ("Areng").
+**Rule going forward:** Every `router.push('/(tabs)/X')` call must have a corresponding `app/(tabs)/X.tsx` file. Verify route existence before linking. Never infer that a route works from web-only testing.
+
+### [2026-06-16] Using an undefined icon name renders a visible fallback glyph
+**What happened:** `home.tsx` used `<Icon name="chart" />` but the Icon component only defines: `home`, `barbell`, `moon`, `spark`, `person`. An undefined name rendered as the letter "O" on screen.
+**Root cause:** Icon names were written from memory without checking the Icon component's valid cases.
+**Fix applied:** Changed `"chart"` to `"barbell"` which is the closest match for workout progress.
+**Rule going forward:** Before using any icon name, grep `components/ui/Icon.tsx` to confirm the name is in the `case` list. Never guess icon names.
+
+### [2026-06-16] Nested horizontal ScrollView inside vertical ScrollView blocks native scroll
+**What happened:** A horizontal `ScrollView` (chip row) nested inside the vertical home screen `ScrollView` intercepted touch events on native. When a user tried to scroll down in the chip row area, the horizontal scroller consumed the gesture and the vertical scroll did not trigger.
+**Root cause:** React Native's gesture system gives priority to the inner ScrollView when both horizontal and vertical gestures could apply. On web this is invisible since mouse scroll events propagate differently.
+**Fix applied:** Replaced the horizontal `ScrollView` chip row with a plain `View` with `flexWrap: 'wrap'`. Only 4 chips are rendered so no scrolling is needed — they wrap to a second line on small screens.
+**Rule going forward:** Never nest a horizontal ScrollView inside a vertical ScrollView for a small fixed set of items. Use `flexWrap: 'wrap'` instead. If infinite scrolling is genuinely required, use `nestedScrollEnabled` and test on native explicitly.

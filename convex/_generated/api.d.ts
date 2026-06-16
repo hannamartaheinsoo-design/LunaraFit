@@ -15,6 +15,7 @@ import type * as hyrox from "../hyrox.js";
 import type * as profiles from "../profiles.js";
 import type * as routines from "../routines.js";
 import type * as seed from "../seed.js";
+import type * as seedWorkouts from "../seedWorkouts.js";
 import type * as userData from "../userData.js";
 import type * as workouts from "../workouts.js";
 
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   profiles: typeof profiles;
   routines: typeof routines;
   seed: typeof seed;
+  seedWorkouts: typeof seedWorkouts;
   userData: typeof userData;
   workouts: typeof workouts;
 }>;

@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, {
   Path, Defs, LinearGradient as SvgGradient, Stop,
-  Circle, Line, Text as SvgText, G,
+  Circle, G,
 } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -26,12 +25,22 @@ const PHASE_COLORS: Record<PhaseKey, { ring: string; glow: string; label: string
 
 const DEFAULT_PHASE = { ring: '#D9898B', glow: '#EDBABB', label: Colors.blush[600] };
 
+const PHASE_ENERGY: Record<PhaseKey, number> = {
+  menstruation: 0.25,
+  follicular: 0.65,
+  ovulation: 1.0,
+  luteal: 0.45,
+};
+
+// ─── CycleRing ────────────────────────────────────────────────────────────────
+
 function CycleRing({
-  day, total, phase, daysLeft, size = 200,
+  day, total, phase, daysLeft, size = 200, T,
 }: {
-  day: number; total: number; phase: string; daysLeft: number | null; size?: number;
+  day: number; total: number; phase: string; daysLeft: number | null; size?: number; T: ThemeTokens;
 }) {
   const { t } = useTranslation();
+  const styles = makeRingStyles(T);
   const strokeW = 10;
   const r = (size - strokeW * 2) / 2;
   const cx = size / 2;
@@ -40,10 +49,9 @@ function CycleRing({
   const progress = Math.min(day / total, 1);
   const strokeDash = circumference * progress;
   const strokeGap = circumference - strokeDash;
-  const rotation = -90;
 
   const phaseKey = (Object.keys(PHASE_COLORS) as PhaseKey[]).find((k) =>
-    phase?.toLowerCase().includes(k.replace('menstruation', 'mens').replace('follicular', 'follic'))
+    phase?.toLowerCase().includes(k.slice(0, 4))
   );
   const col = phaseKey ? PHASE_COLORS[phaseKey] : DEFAULT_PHASE;
 
@@ -65,11 +73,11 @@ function CycleRing({
         </Defs>
         <Circle
           cx={cx} cy={cy} r={r}
-          stroke={Colors.beige[100]}
+          stroke={T.border}
           strokeWidth={strokeW}
           fill="none"
         />
-        <G rotation={rotation} origin={`${cx}, ${cy}`}>
+        <G rotation={-90} origin={`${cx}, ${cy}`}>
           <Circle
             cx={cx} cy={cy} r={r}
             stroke="url(#ringGrad)"
@@ -82,13 +90,13 @@ function CycleRing({
       </Svg>
 
       <View style={{ alignItems: 'center' }}>
-        <Text style={[ringStyles.dayNum, { color: col.ring }]}>
+        <Text style={[styles.dayNum, { color: col.ring }]}>
           {day}
-          <Text style={ringStyles.dayTotal}>/{total}</Text>
+          <Text style={styles.dayTotal}>/{total}</Text>
         </Text>
-        <Text style={ringStyles.dayLabel}>{t('home.cycleday')}</Text>
+        <Text style={styles.dayLabel}>{t('home.cycleday')}</Text>
         {daysLeft !== null && (
-          <Text style={[ringStyles.daysLeft, { color: col.label }]}>
+          <Text style={[styles.daysLeft, { color: col.label }]}>
             {daysLeft} {t('home.daysleft')}
           </Text>
         )}
@@ -97,76 +105,156 @@ function CycleRing({
   );
 }
 
-const ringStyles = StyleSheet.create({
-  dayNum: { fontFamily: Fonts.sansBold, fontSize: 44, letterSpacing: -1.5, lineHeight: 50 },
-  dayTotal: { fontFamily: Fonts.sansLight, fontSize: 22, color: Colors.beige[400], letterSpacing: -0.5 },
-  dayLabel: { fontFamily: Fonts.sansLight, fontSize: 11, color: Colors.beige[400], marginTop: 1 },
-  daysLeft: { fontFamily: Fonts.sansSemiBold, fontSize: 12, marginTop: 4 },
-});
+function makeRingStyles(T: ThemeTokens) {
+  return StyleSheet.create({
+    dayNum: { fontFamily: Fonts.sansBold, fontSize: 44, letterSpacing: -1.5, lineHeight: 50 },
+    dayTotal: { fontFamily: Fonts.sansLight, fontSize: 22, color: T.textMuted, letterSpacing: -0.5 },
+    dayLabel: { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted, marginTop: 1 },
+    daysLeft: { fontFamily: Fonts.sansSemiBold, fontSize: 12, marginTop: 4 },
+  });
+}
 
-function AreaChart({ data, width, height, color1, color2 }: {
-  data: { value: number; label: string }[];
-  width: number; height: number; color1: string; color2: string;
-}) {
-  const pad = { left: 8, right: 8, top: 14, bottom: 28 };
-  const W = width - pad.left - pad.right;
-  const H = height - pad.top - pad.bottom;
-  const n = data.length;
-  const max = Math.max(...data.map((d) => d.value), 1);
-  const px = (i: number) => pad.left + (i / (n - 1)) * W;
-  const py = (v: number) => pad.top + H - (v / max) * H;
-  const points = data.map((d, i) => ({ x: px(i), y: py(d.value) }));
-  let linePath = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 1; i < points.length; i++) {
-    const cp1x = (points[i - 1].x + points[i].x) / 2;
-    linePath += ` C ${cp1x} ${points[i - 1].y}, ${cp1x} ${points[i].y}, ${points[i].x} ${points[i].y}`;
-  }
-  const areaPath = `${linePath} L ${points[n - 1].x} ${pad.top + H} L ${points[0].x} ${pad.top + H} Z`;
-  const peakIdx = data.reduce((bi, d, i) => d.value > data[bi].value ? i : bi, 0);
-  const hasPeak = data[peakIdx].value > 0;
+// ─── EnergyBar ────────────────────────────────────────────────────────────────
 
+function EnergyBar({ level, color, T }: { level: number; color: string; T: ThemeTokens }) {
+  const filled = Math.round(level * 5);
   return (
-    <Svg width={width} height={height}>
-      <Defs>
-        <SvgGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0%" stopColor={color1} stopOpacity={0.5} />
-          <Stop offset="100%" stopColor={color2} stopOpacity={0.02} />
-        </SvgGradient>
-        <SvgGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-          <Stop offset="0%" stopColor={color1} stopOpacity={0.8} />
-          <Stop offset="100%" stopColor={color2} stopOpacity={1} />
-        </SvgGradient>
-      </Defs>
-      {[0.25, 0.5, 0.75].map((f, i) => (
-        <Line key={i} x1={pad.left} y1={pad.top + H * (1 - f)} x2={pad.left + W} y2={pad.top + H * (1 - f)}
-          stroke={Colors.beige[100]} strokeWidth={1} />
+    <View style={{ flexDirection: 'row', gap: 5, marginTop: 4 }}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <View
+          key={i}
+          style={{
+            flex: 1, height: 5, borderRadius: 3,
+            backgroundColor: i < filled ? color : T.border,
+          }}
+        />
       ))}
-      <Path d={areaPath} fill="url(#areaFill)" />
-      <Path d={linePath} fill="none" stroke="url(#lineGrad)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-      {points.map((p, i) => data[i].value > 0 ? (
-        <Circle key={i} cx={p.x} cy={p.y} r={3.5} fill="#fff" stroke={color1} strokeWidth={2} />
-      ) : null)}
-      {hasPeak && (
-        <>
-          <Line x1={points[peakIdx].x} y1={points[peakIdx].y + 6} x2={points[peakIdx].x} y2={pad.top + H}
-            stroke={Colors.beige[200]} strokeWidth={1} strokeDasharray="3,3" />
-          <Circle cx={points[peakIdx].x} cy={points[peakIdx].y} r={5} fill={color1} />
-          <Circle cx={points[peakIdx].x} cy={points[peakIdx].y} r={8} fill={color1} fillOpacity={0.2} />
-          <SvgText x={points[peakIdx].x} y={points[peakIdx].y - 12} textAnchor="middle"
-            fontSize={10} fontFamily={Fonts.sansBold} fill={color1}>
-            {data[peakIdx].value}
-          </SvgText>
-        </>
-      )}
-      {data.map((d, i) => (
-        <SvgText key={i} x={px(i)} y={height - 4} textAnchor="middle"
-          fontSize={9} fontFamily={Fonts.sansBold} fill={Colors.beige[400]} letterSpacing={0.4}>
-          {d.label}
-        </SvgText>
-      ))}
-    </Svg>
+    </View>
   );
 }
+
+// ─── TodayCard ────────────────────────────────────────────────────────────────
+
+function TodayCard({ phaseKey, T }: { phaseKey: PhaseKey | null; T: ThemeTokens }) {
+  const { t, tArr, lang } = useTranslation();
+  const styles = makeTcStyles(T);
+  const col = phaseKey ? PHASE_COLORS[phaseKey] : DEFAULT_PHASE;
+  const energyLevel = phaseKey ? PHASE_ENERGY[phaseKey] : 0;
+
+  const trainKey = phaseKey ? `home.today.train.${phaseKey}` as any : null;
+  const tipsKey  = phaseKey ? `home.today.tips.${phaseKey}` as any  : null;
+  const trainLabel = trainKey ? t(trainKey) : null;
+  const tips: string[] = tipsKey ? tArr(tipsKey) : [];
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.header}>
+        <Text style={styles.eyebrow}>{t('home.today.lbl' as any)}</Text>
+        {phaseKey && (
+          <View style={[styles.pill, { backgroundColor: col.glow + '33', borderColor: col.glow }]}>
+            <Text style={[styles.pillTxt, { color: col.ring }]}>{trainLabel}</Text>
+          </View>
+        )}
+      </View>
+
+      {!phaseKey ? (
+        <Text style={styles.empty}>{t('home.today.nophase' as any)}</Text>
+      ) : (
+        <>
+          <View style={styles.energyRow}>
+            <Text style={styles.energyLbl}>
+              {lang === 'en' ? 'Energy' : 'Energia'}
+            </Text>
+            <EnergyBar level={energyLevel} color={col.ring} T={T} />
+          </View>
+          <View style={styles.tipList}>
+            {tips.map((tip, i) => (
+              <View key={i} style={styles.tipRow}>
+                <View style={[styles.tipDot, { backgroundColor: col.ring }]} />
+                <Text style={styles.tipTxt}>{tip}</Text>
+              </View>
+            ))}
+          </View>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/insights')} style={styles.cta}>
+            <Text style={[styles.ctaTxt, { color: col.ring }]}>{t('home.today.cta' as any)}</Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </View>
+  );
+}
+
+function makeTcStyles(T: ThemeTokens) {
+  return StyleSheet.create({
+    card: { marginHorizontal: 24, borderRadius: 24, padding: 20, marginBottom: 12, backgroundColor: T.surface2 },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+    eyebrow: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase', color: T.textMuted },
+    pill: { borderRadius: 999, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 4 },
+    pillTxt: { fontFamily: Fonts.sansBold, fontSize: 11, letterSpacing: 0.2 },
+    empty: { fontFamily: Fonts.sansLight, fontSize: 13, paddingVertical: 12, color: T.textMuted },
+    energyRow: { marginBottom: 14 },
+    energyLbl: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1.1, textTransform: 'uppercase', marginBottom: 6, color: T.textSec },
+    tipList: { gap: 9 },
+    tipRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    tipDot: { width: 6, height: 6, borderRadius: 3, flexShrink: 0 },
+    tipTxt: { fontFamily: Fonts.sansMedium, fontSize: 13, lineHeight: 18, flex: 1, color: T.textSec },
+    cta: { marginTop: 14 },
+    ctaTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 13 },
+  });
+}
+
+// ─── WeekDots ─────────────────────────────────────────────────────────────────
+
+function WeekDots({ workouts, weekdays, T }: { workouts: any[]; weekdays: string[]; T: ThemeTokens }) {
+  const styles = makeWdStyles(T);
+  const now = new Date();
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(now.getTime() - (6 - i) * 86400000);
+    const ds = d.toISOString().slice(0, 10);
+    const label = weekdays[(d.getDay() + 6) % 7];
+    const done = workouts.some((w) => w.date === ds);
+    const isToday = i === 6;
+    return { label, done, isToday };
+  });
+
+  return (
+    <View style={styles.row}>
+      {days.map((d, i) => (
+        <View key={i} style={styles.col}>
+          <Text style={styles.label}>{d.label}</Text>
+          <View style={[
+            styles.dot,
+            d.done && styles.dotDone,
+            d.isToday && !d.done && styles.dotToday,
+          ]}>
+            {d.done && (
+              <Svg width={10} height={10} viewBox="0 0 10 10">
+                <Path d="M2 5.5 L4 7.5 L8 3" stroke="#fff" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              </Svg>
+            )}
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function makeWdStyles(T: ThemeTokens) {
+  return StyleSheet.create({
+    row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 28, marginBottom: 20 },
+    col: { alignItems: 'center', gap: 6 },
+    label: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.8, color: T.textMuted, textTransform: 'uppercase' },
+    dot: {
+      width: 28, height: 28, borderRadius: 14,
+      backgroundColor: T.surface2, borderWidth: 1.5, borderColor: T.border,
+      alignItems: 'center', justifyContent: 'center',
+    },
+    dotDone: { backgroundColor: Colors.blush[400], borderColor: Colors.blush[400] },
+    dotToday: { borderColor: Colors.blush[400], borderWidth: 2 },
+  });
+}
+
+// ─── HomeScreen ───────────────────────────────────────────────────────────────
 
 function phaseDiff(workouts: any[]): number | null {
   const avg = (ws: any[]) => {
@@ -181,149 +269,73 @@ function phaseDiff(workouts: any[]): number | null {
   return la ? ((fa - la) / la) * 100 : null;
 }
 
-const SCREEN_W = Dimensions.get('window').width;
+function makeStyles(T: ThemeTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: T.bg },
 
-const PHASE_ENERGY: Record<PhaseKey, number> = {
-  menstruation: 0.25,
-  follicular: 0.65,
-  ovulation: 1.0,
-  luteal: 0.45,
-};
+    topBar: {
+      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+      paddingHorizontal: 24, paddingVertical: 12,
+    },
+    logo: { fontFamily: Fonts.sansBold, fontSize: 18, letterSpacing: -0.3, color: T.textSec },
+    logoAccent: { color: Colors.blush[400] },
+    avatar: {
+      width: 36, height: 36, borderRadius: 18,
+      backgroundColor: Colors.blush[100], borderWidth: 1.5, borderColor: Colors.blush[200],
+      alignItems: 'center', justifyContent: 'center',
+    },
+    avatarText: { fontFamily: Fonts.sansBold, fontSize: 15, color: Colors.blush[600] },
 
-function EnergyBar({ level, color }: { level: number; color: string }) {
-  const w = SCREEN_W - 48 - 40;
-  const filled = Math.round(level * 5);
-  return (
-    <View style={{ flexDirection: 'row', gap: 5, marginTop: 4 }}>
-      {Array.from({ length: 5 }, (_, i) => (
-        <View
-          key={i}
-          style={{
-            flex: 1, height: 5, borderRadius: 3,
-            backgroundColor: i < filled ? color : Colors.beige[100],
-          }}
-        />
-      ))}
-    </View>
-  );
-}
+    scroll: { flex: 1 },
+    scrollContent: { paddingBottom: 130 },
 
-function TodayCard({ phaseKey, T }: { phaseKey: PhaseKey | null; T: ThemeTokens }) {
-  const { t, tArr, lang } = useTranslation();
-  const col = phaseKey ? PHASE_COLORS[phaseKey] : DEFAULT_PHASE;
-  const energyLevel = phaseKey ? PHASE_ENERGY[phaseKey] : 0;
+    greeting: { paddingHorizontal: 24, paddingBottom: 12, paddingTop: 2 },
+    dateLabel: {
+      fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.6,
+      textTransform: 'uppercase', color: T.textMuted, marginBottom: 5,
+    },
+    greetLine: { fontFamily: Fonts.sansBold, fontSize: 28, color: T.text, lineHeight: 34, letterSpacing: -0.4 },
+    greetName: { color: Colors.blush[400] },
 
-  const trainKey = phaseKey ? `home.today.train.${phaseKey}` as any : null;
-  const tipsKey = phaseKey ? `home.today.tips.${phaseKey}` as any : null;
-  const trainLabel = trainKey ? t(trainKey) : null;
-  const tips: string[] = tipsKey ? tArr(tipsKey) : [];
+    heroSection: { alignItems: 'center', paddingTop: 4, paddingBottom: 6 },
+    phaseLabel: { alignItems: 'center', marginTop: 14, marginBottom: 8 },
+    phaseEyebrow: {
+      fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1.8,
+      textTransform: 'uppercase', color: T.textMuted, marginBottom: 4,
+    },
+    phaseName: { fontFamily: Fonts.sansBold, fontSize: 20, letterSpacing: -0.4, lineHeight: 24, marginBottom: 5 },
+    phaseDesc: { fontFamily: Fonts.sansLight, fontSize: 12.5, color: T.textMuted, lineHeight: 18, textAlign: 'center', paddingHorizontal: 40 },
 
-  return (
-    <View style={[tcStyles.card, { backgroundColor: T.surface2 }]}>
-      <View style={tcStyles.header}>
-        <Text style={[tcStyles.eyebrow, { color: T.textMuted }]}>{t('home.today.lbl' as any)}</Text>
-        {phaseKey && (
-          <View style={[tcStyles.pill, { backgroundColor: col.glow + '33', borderColor: col.glow }]}>
-            <Text style={[tcStyles.pillTxt, { color: col.ring }]}>{trainLabel}</Text>
-          </View>
-        )}
-      </View>
+    statRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 24, marginBottom: 16 },
+    statTile: { flex: 1, borderRadius: 20, padding: 14, backgroundColor: T.surface2 },
+    statTilePink: { flex: 1, borderRadius: 20, padding: 14, backgroundColor: Colors.blush[50] },
+    statVal: { fontFamily: Fonts.sansBold, fontSize: 26, lineHeight: 30, letterSpacing: -0.5, marginTop: 8, marginBottom: 2, color: T.text },
+    statLbl: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1.1, textTransform: 'uppercase', color: T.textMuted },
+    statSub: { fontFamily: Fonts.sansLight, fontSize: 10, marginTop: 1, color: T.textSec },
 
-      {!phaseKey ? (
-        <Text style={[tcStyles.empty, { color: T.textMuted }]}>{t('home.today.nophase' as any)}</Text>
-      ) : (
-        <>
-          <View style={tcStyles.energyRow}>
-            <Text style={[tcStyles.energyLbl, { color: T.textSec }]}>
-              {lang === 'en' ? 'Energy' : 'Energia'}
-            </Text>
-            <EnergyBar level={energyLevel} color={col.ring} />
-          </View>
-          <View style={tcStyles.tipList}>
-            {tips.map((tip, i) => (
-              <View key={i} style={tcStyles.tipRow}>
-                <View style={[tcStyles.tipDot, { backgroundColor: col.ring }]} />
-                <Text style={[tcStyles.tipTxt, { color: T.textSec }]}>{tip}</Text>
-              </View>
-            ))}
-          </View>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/insights')} style={tcStyles.cta}>
-            <Text style={[tcStyles.ctaTxt, { color: col.ring }]}>{t('home.today.cta' as any)}</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    </View>
-  );
-}
+    chipRow: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 24, gap: 8, marginBottom: 16 },
+    chip: {
+      flexDirection: 'row', alignItems: 'center', gap: 6,
+      paddingVertical: 10, paddingHorizontal: 16, borderRadius: 999,
+    },
+    chipPrimary: { backgroundColor: T.text },
+    chipTxtLight: { fontFamily: Fonts.sansBold, fontSize: 12, color: T.bg, letterSpacing: 0.1 },
+    chipTxt: { fontFamily: Fonts.sansBold, fontSize: 12, letterSpacing: 0.1 },
 
-const tcStyles = StyleSheet.create({
-  card: { marginHorizontal: 24, borderRadius: 24, padding: 20, marginBottom: 12 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  eyebrow: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase' },
-  pill: {
-    borderRadius: 999, borderWidth: 1,
-    paddingHorizontal: 10, paddingVertical: 4,
-  },
-  pillTxt: { fontFamily: Fonts.sansBold, fontSize: 11, letterSpacing: 0.2 },
-  empty: { fontFamily: Fonts.sansLight, fontSize: 13, paddingVertical: 12 },
-  energyRow: { marginBottom: 14 },
-  energyLbl: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1.1, textTransform: 'uppercase', marginBottom: 6 },
-  tipList: { gap: 9 },
-  tipRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  tipDot: { width: 6, height: 6, borderRadius: 3, flexShrink: 0 },
-  tipTxt: { fontFamily: Fonts.sansMedium, fontSize: 13, lineHeight: 18, flex: 1 },
-  cta: { marginTop: 14 },
-  ctaTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 13 },
-});
+    card: { marginHorizontal: 24, borderRadius: 24, padding: 20, marginBottom: 12, backgroundColor: T.surface2 },
+    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 },
+    cardLabel: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 2, color: Colors.blush[400] },
 
-function WeekDots({ workouts, weekdays }: { workouts: any[]; weekdays: string[] }) {
-  const now = new Date();
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(now.getTime() - (6 - i) * 86400000);
-    const ds = d.toISOString().slice(0, 10);
-    const label = weekdays[(d.getDay() + 6) % 7];
-    const done = workouts.some((w) => w.date === ds);
-    const isToday = i === 6;
-    return { label, done, isToday };
+    insightBig: { fontFamily: Fonts.sansBold, fontSize: 38, letterSpacing: -0.5, lineHeight: 42, marginBottom: 5 },
+    insightDesc: { fontFamily: Fonts.sansLight, fontSize: 13, lineHeight: 20, color: T.textSec },
+    insightLink: { marginTop: 10 },
+    insightLinkTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 13, color: Colors.blush[400] },
   });
-
-  return (
-    <View style={wdStyles.row}>
-      {days.map((d, i) => (
-        <View key={i} style={wdStyles.col}>
-          <Text style={wdStyles.label}>{d.label}</Text>
-          <View style={[
-            wdStyles.dot,
-            d.done && wdStyles.dotDone,
-            d.isToday && !d.done && wdStyles.dotToday,
-          ]}>
-            {d.done && (
-              <Svg width={10} height={10} viewBox="0 0 10 10">
-                <Path d="M2 5.5 L4 7.5 L8 3" stroke="#fff" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-              </Svg>
-            )}
-          </View>
-        </View>
-      ))}
-    </View>
-  );
 }
-
-const wdStyles = StyleSheet.create({
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 28, marginBottom: 20 },
-  col: { alignItems: 'center', gap: 6 },
-  label: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.8, color: Colors.sky[400], textTransform: 'uppercase' },
-  dot: {
-    width: 28, height: 28, borderRadius: 14,
-    backgroundColor: Colors.sky[50], borderWidth: 1.5, borderColor: Colors.sky[100],
-    alignItems: 'center', justifyContent: 'center',
-  },
-  dotDone: { backgroundColor: Colors.sky[400], borderColor: Colors.sky[400] },
-  dotToday: { borderColor: Colors.sky[400], borderWidth: 2 },
-});
 
 export default function HomeScreen() {
   const T = useTheme();
+  const styles = makeStyles(T);
   const { lang, t, tArr } = useTranslation();
   const profile = useQuery(api.profiles.get);
   const workouts = useQuery(api.workouts.list) ?? [];
@@ -363,7 +375,7 @@ export default function HomeScreen() {
   const daysUntilPeriod = ci ? cycleLen - cycleDay + 1 : null;
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: T.bg }]} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
 
       {/* Top bar */}
       <View style={styles.topBar}>
@@ -388,7 +400,7 @@ export default function HomeScreen() {
 
         {/* Hero — cycle ring + phase name */}
         <View style={styles.heroSection}>
-          <CycleRing day={cycleDay} total={cycleLen} phase={phaseName} daysLeft={daysLeft} size={190} />
+          <CycleRing day={cycleDay} total={cycleLen} phase={phaseName} daysLeft={daysLeft} size={190} T={T} />
           <View style={styles.phaseLabel}>
             <Text style={styles.phaseEyebrow}>{t('home.phase.eye').toUpperCase()}</Text>
             <Text style={[styles.phaseName, { color: col.ring }]}>{phaseName || '—'}</Text>
@@ -397,18 +409,18 @@ export default function HomeScreen() {
         </View>
 
         {/* Week dots */}
-        <WeekDots workouts={workouts} weekdays={WEEKDAYS} />
+        <WeekDots workouts={workouts} weekdays={WEEKDAYS} T={T} />
 
         {/* Stat tiles */}
         <View style={styles.statRow}>
-          <View style={[styles.statTile, { backgroundColor: Colors.sky[50] }]}>
-            <Icon name="barbell" size={14} color={Colors.sky[400]} strokeWidth={1.5} />
-            <Text style={[styles.statLbl, { color: Colors.sky[600] }]}>{t('home.stat.workouts')}</Text>
-            <Text style={[styles.statVal, { color: Colors.sky[600] }]}>{recentCount}</Text>
-            <Text style={[styles.statSub, { color: Colors.sky[400] }]}>{t('home.stat.workouts.sub')}</Text>
+          <View style={styles.statTile}>
+            <Icon name="barbell" size={14} color={T.textMuted} strokeWidth={1.5} />
+            <Text style={styles.statVal}>{recentCount}</Text>
+            <Text style={styles.statLbl}>{t('home.stat.workouts')}</Text>
+            <Text style={styles.statSub}>{t('home.stat.workouts.sub')}</Text>
           </View>
           <TouchableOpacity
-            style={[styles.statTile, { backgroundColor: Colors.blush[50] }]}
+            style={styles.statTilePink}
             onPress={() => router.push('/(tabs)/cycle')} activeOpacity={0.8}
           >
             <Icon name="moon" size={14} color={Colors.blush[400]} strokeWidth={1.5} />
@@ -418,18 +430,18 @@ export default function HomeScreen() {
               {daysUntilPeriod != null ? t('home.stat.period.sub') : t('home.stat.period.none')}
             </Text>
           </TouchableOpacity>
-          <View style={[styles.statTile, { backgroundColor: T.surface2 }]}>
-            <Icon name="spark" size={14} color={streak > 0 ? Colors.coral[400] : Colors.beige[400]} strokeWidth={1.5} />
-            <Text style={[styles.statLbl, { color: T.textMuted }]}>{t('home.stat.streak')}</Text>
+          <View style={styles.statTile}>
+            <Icon name="spark" size={14} color={streak > 0 ? Colors.coral[400] : T.textMuted} strokeWidth={1.5} />
             <Text style={[styles.statVal, { color: streak > 0 ? Colors.coral[600] : T.text }]}>{streak > 0 ? streak : '—'}</Text>
-            <Text style={[styles.statSub, { color: T.textSec }]}>{t('home.stat.streak.sub')}</Text>
+            <Text style={styles.statLbl}>{t('home.stat.streak')}</Text>
+            <Text style={styles.statSub}>{t('home.stat.streak.sub')}</Text>
           </View>
         </View>
 
-        {/* Quick actions */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+        {/* Quick-action chips — plain flex row, no nested ScrollView (avoids blocking vertical scroll on native) */}
+        <View style={styles.chipRow}>
           <TouchableOpacity style={[styles.chip, styles.chipPrimary]} onPress={() => router.push('/(tabs)/workouts')} activeOpacity={0.85}>
-            <Icon name="barbell" size={12} color="#fff" strokeWidth={1.5} />
+            <Icon name="barbell" size={12} color={T.bg} strokeWidth={1.5} />
             <Text style={styles.chipTxtLight}>{t('home.quick.workout')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.chip, { backgroundColor: Colors.blush[100] }]} onPress={() => router.push('/(tabs)/cycle')} activeOpacity={0.85}>
@@ -440,29 +452,29 @@ export default function HomeScreen() {
             <Icon name="spark" size={12} color={Colors.sky[600]} strokeWidth={1.5} />
             <Text style={[styles.chipTxt, { color: Colors.sky[600] }]}>{t('home.quick.insights')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.chip, { backgroundColor: Colors.coral[50] }]} onPress={() => router.push('/(tabs)/progress')} activeOpacity={0.85}>
-            <Icon name="chart" size={12} color={Colors.coral[600]} strokeWidth={1.5} />
-            <Text style={[styles.chipTxt, { color: Colors.coral[600] }]}>{t('home.quick.progress') ?? 'Progress'}</Text>
+          <TouchableOpacity style={[styles.chip, { backgroundColor: Colors.coral[50] }]} onPress={() => router.push('/(tabs)/workouts')} activeOpacity={0.85}>
+            <Icon name="barbell" size={12} color={Colors.coral[600]} strokeWidth={1.5} />
+            <Text style={[styles.chipTxt, { color: Colors.coral[600] }]}>{lang === 'en' ? 'Progress' : 'Areng'}</Text>
           </TouchableOpacity>
-        </ScrollView>
+        </View>
 
         {/* Today's readiness card */}
         <TodayCard phaseKey={phaseKey ?? null} T={T} />
 
         {/* Phase insight */}
         {pd !== null && (
-          <View style={[styles.card, { backgroundColor: T.surface2 }]}>
+          <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Text style={[styles.cardLabel, { color: Colors.sky[400] }]}>{t('ins.patterns')}</Text>
+              <Text style={styles.cardLabel}>{t('ins.patterns')}</Text>
             </View>
             <Text style={[styles.insightBig, { color: Colors.sky[600] }]}>
               {pd >= 0 ? '+' : ''}{pd.toFixed(1)}%
             </Text>
-            <Text style={[styles.insightDesc, { color: T.textSec }]}>
+            <Text style={styles.insightDesc}>
               {lang === 'en' ? 'avg weight in follicular vs luteal phase' : 'follikulaar vs luteaalfaas, keskmine raskus'}
             </Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/insights')} style={styles.insightLink}>
-              <Text style={[styles.insightLinkTxt, { color: Colors.sky[600] }]}>
+              <Text style={styles.insightLinkTxt}>
                 {lang === 'en' ? 'Full analysis →' : 'Täielik analüüs →'}
               </Text>
             </TouchableOpacity>
@@ -474,69 +486,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1 },
-
-  topBar: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 24, paddingVertical: 12,
-  },
-  logo: { fontFamily: Fonts.sansBold, fontSize: 18, letterSpacing: -0.3, color: Colors.beige[600] },
-  logoAccent: { color: Colors.blush[400] },
-  avatar: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: Colors.blush[100], borderWidth: 1.5, borderColor: Colors.blush[200],
-    alignItems: 'center', justifyContent: 'center',
-  },
-  avatarText: { fontFamily: Fonts.sansBold, fontSize: 15, color: Colors.blush[600] },
-
-  scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 130 },
-
-  greeting: { paddingHorizontal: 24, paddingBottom: 12, paddingTop: 2 },
-  dateLabel: {
-    fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.6,
-    textTransform: 'uppercase', color: Colors.sky[400], marginBottom: 5,
-  },
-  greetLine: { fontFamily: Fonts.sansBold, fontSize: 28, color: Colors.beige[800], lineHeight: 34, letterSpacing: -0.4 },
-  greetName: { color: Colors.blush[400] },
-
-  heroSection: { alignItems: 'center', paddingTop: 4, paddingBottom: 6 },
-  phaseLabel: { alignItems: 'center', marginTop: 14, marginBottom: 8 },
-  phaseEyebrow: {
-    fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1.8,
-    textTransform: 'uppercase', color: Colors.sky[400], marginBottom: 4,
-  },
-  phaseName: { fontFamily: Fonts.sansBold, fontSize: 20, letterSpacing: -0.4, lineHeight: 24, marginBottom: 5 },
-  phaseDesc: { fontFamily: Fonts.sansLight, fontSize: 12.5, color: Colors.beige[400], lineHeight: 18, textAlign: 'center', paddingHorizontal: 40 },
-
-  statRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 24, marginBottom: 16 },
-  statTile: { flex: 1, borderRadius: 20, padding: 14 },
-  statVal: { fontFamily: Fonts.sansBold, fontSize: 26, lineHeight: 30, letterSpacing: -0.5, marginTop: 2, marginBottom: 2 },
-  statLbl: { fontFamily: Fonts.sansMedium, fontSize: 11, letterSpacing: 0.2, marginTop: 8 },
-  statSub: { fontFamily: Fonts.sansLight, fontSize: 10, marginTop: 1 },
-
-  chipRow: { paddingHorizontal: 24, gap: 8, marginBottom: 16, flexDirection: 'row' },
-  chip: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingVertical: 10, paddingHorizontal: 16, borderRadius: 999,
-  },
-  chipPrimary: { backgroundColor: Colors.beige[800] },
-  chipTxtLight: { fontFamily: Fonts.sansBold, fontSize: 12, color: '#fff', letterSpacing: 0.1 },
-  chipTxt: { fontFamily: Fonts.sansBold, fontSize: 12, letterSpacing: 0.1 },
-
-  card: { marginHorizontal: 24, borderRadius: 24, padding: 20, marginBottom: 12 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 },
-  cardLabel: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 2 },
-  cardCount: { fontFamily: Fonts.sansBold, fontSize: 30, letterSpacing: -0.5, lineHeight: 34 },
-  cardSub2: { fontFamily: Fonts.sansLight, fontSize: 12, paddingTop: 6 },
-
-  emptyChart: { height: 100, alignItems: 'center', justifyContent: 'center' },
-  emptyTxt: { fontFamily: Fonts.sansLight, fontSize: 13 },
-
-  insightBig: { fontFamily: Fonts.sansBold, fontSize: 38, letterSpacing: -0.5, lineHeight: 42, marginBottom: 5 },
-  insightDesc: { fontFamily: Fonts.sansLight, fontSize: 13, lineHeight: 20 },
-  insightLink: { marginTop: 10 },
-  insightLinkTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 13 },
-});

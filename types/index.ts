@@ -1,4 +1,4 @@
-export type Lang = 'et' | 'en';
+export type Lang = 'et' | 'en' | 'de' | 'es';
 
 export type Plan = 'free' | 'monthly' | 'yearly';
 

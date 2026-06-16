@@ -4,10 +4,16 @@
     {
       "name": "expo-web",
       "runtimeExecutable": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
-      "runtimeArgs": ["node_modules/.bin/expo", "start", "--web", "--port", "19006"],
+      "runtimeArgs": ["node_modules/.bin/expo", "start", "--web", "--port", "19006", "--clear"],
       "port": 19006,
       "autoPort": false,
       "viewport": { "width": 375, "height": 812 }
+    },
+    {
+      "name": "convex-dev",
+      "runtimeExecutable": "/opt/homebrew/bin/node",
+      "runtimeArgs": ["node_modules/.bin/convex", "dev"],
+      "port": 3210
     }
   ]
 }

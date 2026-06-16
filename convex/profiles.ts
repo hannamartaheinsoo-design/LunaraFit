@@ -17,6 +17,9 @@ export const upsert = mutation({
     birth_year: v.optional(v.number()),
     birth_month: v.optional(v.number()),
     birth_day: v.optional(v.number()),
+    weight_kg: v.optional(v.number()),
+    height_cm: v.optional(v.number()),
+    uses_birth_control: v.optional(v.boolean()),
     cycle_length: v.optional(v.number()),
     period_length: v.optional(v.number()),
     last_period_date: v.optional(v.string()),
@@ -24,6 +27,7 @@ export const upsert = mutation({
       v.literal("beginner"), v.literal("intermediate"), v.literal("advanced")
     )),
     plan: v.optional(v.union(v.literal("free"), v.literal("monthly"), v.literal("yearly"))),
+    onboarding_complete: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);

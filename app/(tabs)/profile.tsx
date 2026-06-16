@@ -218,7 +218,11 @@ export default function ProfileScreen() {
         {/* Account */}
         <View style={[styles.sectionLblRow, { marginTop: 20 }]}><Icon name="person" size={12} color={T.textMuted} /><Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('prof.signout')}</Text></View>
         <Card>
-          <Button variant="outline" fullWidth onPress={async () => { await signOut(); router.replace('/(auth)/login' as any); }}>
+          <Button variant="outline" fullWidth onPress={async () => {
+            try { await signOut(); } catch (_) {}
+            if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('ob_preview');
+            router.replace('/(auth)/login' as any);
+          }}>
             {t('prof.signout')}
           </Button>
         </Card>
