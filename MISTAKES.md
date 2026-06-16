@@ -200,6 +200,30 @@
 **Fix applied:** Removed `borderWidth` from the base StyleSheet entry and set all four border sides explicitly in the inline style object: `borderTopWidth, borderRightWidth, borderBottomWidth, borderLeftWidth` each with their own `*Color`.
 **Rule going forward:** When using a coloured left accent strip (3px) on a card that also needs a thin border (1px) on other sides, always set all four borders explicitly. Never mix `borderWidth` shorthand with a single-side override.
 
+### [2026-06-16] Preview screenshots taken at desktop viewport instead of phone size
+**What happened:** All preview screenshots during UI review sessions rendered at a wide desktop viewport (~655px wide), making layout issues at phone width invisible and giving a false impression of how the app looks on device.
+**Root cause:** `preview_start` defaults to desktop viewport. `preview_resize` was never called before `preview_screenshot`.
+**Fix applied:** Added `viewport: { width: 375, height: 812 }` to `.claude/launch.json` and added a mandatory rule to AGENTS.md. Memory saved. `preview_resize(preset="mobile")` must be called before every screenshot.
+**Rule going forward:** Always call `preview_resize(preset="mobile")` before any `preview_screenshot`. The viewport resets on reload — resize every time. This is a phone app; desktop screenshots are meaningless.
+
+### [2026-06-16] Wrong phase key "menstrual" stored in seed data instead of "menstruation"
+**What happened:** `convex/seed.ts` stored `phase: "menstrual"` for several workouts. The i18n lookup key is `phase.lbl.menstruation`, so `phase.lbl.menstrual` resolved to `undefined` and the raw key string was rendered on screen.
+**Root cause:** Typed the phase key from memory without checking the `CyclePhase` type (`'menstruation' | 'follicular' | 'ovulation' | 'luteal' | 'unknown'`).
+**Fix applied:** Fixed seed data to use `"menstruation"`. Added `phase.lbl.menstrual` fallback key to i18n for any already-stored records.
+**Rule going forward:** Phase keys must match the `CyclePhase` union exactly. Always check `types/index.ts` before writing phase strings in seed data or anywhere else.
+
+### [2026-06-16] Duplicate + icon on "Add exercise" button
+**What happened:** The "Add exercise" button showed two `+` signs — one from `<Icon name="plus">` in JSX and one from the i18n string `'+ Lisa harjutus'` / `'+ Add exercise'`.
+**Root cause:** The i18n string was written with a leading `+` before the Icon component was added to the button.
+**Fix applied:** Removed the leading `+` from both i18n strings.
+**Rule going forward:** When a button uses `<Icon name="plus">` to render a plus, never include `+` in the label string. The icon IS the plus.
+
+### [2026-06-16] `borderTopWidth: 1` on a `<Text>` component renders as a double line on RN web
+**What happened:** The expanded detail section in Insights training cards used `tipDetail` style with `borderTopWidth: 1` applied to a `<Text>` (via `RichText`). On RN web this rendered as two visible lines instead of one divider.
+**Root cause:** RN web renders `<Text>` as an inline `<span>`. A border on an inline element can stack or double-render unexpectedly.
+**Fix applied:** Replaced the border on `<Text>` with a dedicated `<View style={styles.tipDivider}>` with `borderTopWidth: 1` above the `<RichText>`.
+**Rule going forward:** Never put `borderTopWidth`/`borderBottomWidth` on a `<Text>` component for use as a visual divider. Always use a dedicated `<View>` with height 0 and the border applied to it.
+
 ### [2026-06-16] Fixed tab bar hides bottom content on all screens
 **What happened:** After setting `position: 'fixed'` on the web tab bar, the last items on every scroll screen were hidden under the bar. Only the screen that already had a large `paddingBottom` (insights, with 100px) was partially safe; all others (home: 24px, workouts: 8px, cycle/profile: none) had content cut off.
 **Root cause:** A fixed-position element is removed from document flow. Scroll containers don't know it exists and stop exactly at the viewport bottom, letting the bar overlap the final content.

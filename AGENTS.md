@@ -23,6 +23,7 @@ This project uses **Convex** as the backend and **`@convex-dev/auth`** for authe
 - Start backend: `PATH="/opt/homebrew/bin:$PATH" npx convex dev` (node is at `/opt/homebrew/bin/node`)
 - Start frontend: `PATH="/opt/homebrew/bin:$PATH" npx expo start --web --port 19006`
 - The `preview_start` tool uses `.claude/launch.json` — port must match (currently 19006)
+- **Always call `preview_resize(preset="mobile")` before any `preview_screenshot`** — the app is phone-only (375×812). The viewport does not persist across reloads; resize every time.
 - Convex URL is in `.env.local` as `EXPO_PUBLIC_CONVEX_URL`
 - Auth providers: email/password (works), Google + Apple (need `AUTH_GOOGLE_ID/SECRET`, `AUTH_APPLE_ID/SECRET` env vars)
 - Backend files: `convex/schema.ts`, `convex/auth.ts`, `convex/profiles.ts`, `convex/workouts.ts`, `convex/cycleDays.ts`, `convex/userData.ts`

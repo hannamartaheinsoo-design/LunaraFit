@@ -6,7 +6,8 @@
       "runtimeExecutable": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
       "runtimeArgs": ["node_modules/.bin/expo", "start", "--web", "--port", "19006"],
       "port": 19006,
-      "autoPort": false
+      "autoPort": false,
+      "viewport": { "width": 375, "height": 812 }
     }
   ]
 }
