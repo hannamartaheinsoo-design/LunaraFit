@@ -280,11 +280,14 @@ export default function InsightsScreen() {
                       </View>
                     </View>
                     {openTip === `tip-${i}` && (
-                      <RichText
-                        text={tip.detail}
-                        style={[styles.tipDetail, { color: T.textSec, borderTopColor: T.border }]}
-                        boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }}
-                      />
+                      <>
+                        <View style={[styles.tipDivider, { borderTopColor: T.border }]} />
+                        <RichText
+                          text={tip.detail}
+                          style={[styles.tipDetail, { color: T.textSec }]}
+                          boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }}
+                        />
+                      </>
                     )}
                   </TouchableOpacity>
                 );
@@ -494,7 +497,8 @@ function makeStyles(T: ThemeTokens) {
   tipHeader:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   tipTitle:       { fontFamily: Fonts.sansBold, fontSize: 15, color: T.text, marginBottom: 4, letterSpacing: -0.1 },
   tipHint:        { fontFamily: Fonts.sans, fontSize: 13, color: T.textMuted, lineHeight: 19 },
-  tipDetail:      { fontFamily: Fonts.sans, fontSize: 14, color: T.textSec, lineHeight: 22, marginTop: 14, paddingTop: 14, borderTopWidth: 1 },
+  tipDivider:     { borderTopWidth: 1, marginTop: 14 },
+  tipDetail:      { fontFamily: Fonts.sans, fontSize: 14, color: T.textSec, lineHeight: 22, marginTop: 12 },
   intensityPill:  { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
   intensityPillTxt: { fontFamily: Fonts.sansBold, fontSize: 9, color: '#fff', letterSpacing: 0.4, textTransform: 'uppercase' },
   // keep these for ConfidenceBadge (still uses intensityRow/Dot internally via old IntensityDot — not used now)

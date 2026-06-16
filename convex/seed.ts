@@ -201,7 +201,7 @@ export const seedAll = internalMutation({
       },
       // ── May 24 — Glutes & quads (menstrual) ──────────────────────────────────
       {
-        date: "2026-05-24", name: "Glutes & quads", phase: "menstrual",
+        date: "2026-05-24", name: "Glutes & quads", phase: "menstruation",
         feel: ["Energiline", "Motiveeritud"], notes: "",
         exercises: [
           { exercise_id: "treadmill",           name: "Treadmill Walking",     category: "cardio",    sets: 1, reps: 1,  weight_kg: 0,
@@ -222,7 +222,7 @@ export const seedAll = internalMutation({
       },
       // ── May 28 — Hamstrings & lower back (menstrual) ──────────────────────────
       {
-        date: "2026-05-28", name: "Hamstrings & lower back", phase: "menstrual",
+        date: "2026-05-28", name: "Hamstrings & lower back", phase: "menstruation",
         feel: ["Kerge", "Väsinud"], notes: "",
         exercises: [
           { exercise_id: "treadmill",         name: "Treadmill Walking",       category: "cardio",    sets: 1, reps: 1,  weight_kg: 0,
@@ -478,7 +478,7 @@ export const seedAll = internalMutation({
         ],
       },
       {
-        date: "2026-05-29", name: "HYROX Simulation", phase: "menstrual",
+        date: "2026-05-29", name: "HYROX Simulation", phase: "menstruation",
         feel: ["Tugev", "Energiline"], notes: "Palju parem! Wall Ball oli lihtsam.",
         exercises: [
           { exercise_id: "hyrox-run",           name: "Run (1 km)",         category: "hyrox", sets: 1, reps: 1, weight_kg: 0, logged_sets: [{ duration_min: 5.9,  distance_km: 1 }] },

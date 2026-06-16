@@ -948,34 +948,31 @@ export default function WorkoutsScreen() {
               </View>
             ) : (
               workouts.slice(0, 30).map(w => (
-                <View key={w._id} style={[styles.workoutCard, T.dark && { backgroundColor: T.surface, borderColor: T.border }]}>
+                <View key={w._id} style={styles.workoutCard}>
                   <View style={styles.workoutHeader}>
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.workoutName, { color: T.text }]}>{w.name}</Text>
                       <Text style={[styles.workoutMeta, { color: T.textMuted }]}>
                         {formatDate(w.date)} · {getPhaseLabel(w.phase as any, lang)}
                       </Text>
+                      <Text style={[styles.workoutName, { color: T.text }]}>{w.name}</Text>
                     </View>
                     <TouchableOpacity onPress={() => handleDeleteWorkout(w._id)} style={styles.deleteBtn}>
                       <Icon name="trash" size={16} color={Colors.error.text} />
                     </TouchableOpacity>
                   </View>
                   {w.exercises.map((e, i) => (
-                    <View key={i} style={[styles.exLine, T.dark && { borderBottomColor: T.border }]}>
-                      <Text style={[styles.exName, { color: T.textSec }]}>{e.name}</Text>
-                      <Text style={[styles.exStats, { color: T.textMuted }]}>
-                        {e.logged_sets?.length ? (
-                          e.logged_sets.map(s => {
-                            const parts = [];
-                            if (s.reps)         parts.push(`${s.reps}×`);
-                            if (s.weight_kg)    parts.push(`${s.weight_kg}kg`);
-                            if (s.duration_min) parts.push(`${s.duration_min}min`);
-                            if (s.distance_km)  parts.push(`${s.distance_km}km`);
-                            return parts.join(' ');
-                          }).filter(Boolean).join(' / ')
-                        ) : (
-                          `${e.sets}×${e.reps}${e.weight_kg ? ` · ${e.weight_kg}kg` : ''}`
-                        )}
+                    <View key={i} style={styles.exLine}>
+                      <Text style={styles.exName}>{e.name}</Text>
+                      <Text style={styles.exStats}>
+                        {(() => {
+                          const parts: string[] = [];
+                          if (e.sets && e.reps) parts.push(`${e.sets}×${e.reps}`);
+                          else if (e.sets)      parts.push(`${e.sets} sets`);
+                          if (e.weight_kg)      parts.push(`${e.weight_kg} kg`);
+                          if (e.duration_min)   parts.push(`${e.duration_min} min`);
+                          if (e.distance_km)    parts.push(`${e.distance_km} km`);
+                          return parts.join(' · ');
+                        })()}
                       </Text>
                     </View>
                   ))}
@@ -1707,18 +1704,18 @@ function makeStyles(T: ThemeTokens) {
   reorderArrow:    { fontFamily: Fonts.sansBold, fontSize: 11, color: T.textMuted },
 
   workoutCard: {
-    marginHorizontal: Spacing.xl, marginBottom: 10,
-    backgroundColor: T.surface, borderRadius: Radius.lg,
-    padding: 14, borderWidth: 1, borderColor: T.border,
+    marginHorizontal: Spacing.xl, marginBottom: 0,
+    backgroundColor: T.surface2, borderTopWidth: 1, borderTopColor: T.border,
+    paddingHorizontal: 14, paddingTop: 16, paddingBottom: 14,
   },
-  workoutHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 },
-  workoutName:   { fontFamily: Fonts.sansBold, fontSize: 15, color: T.text },
-  workoutMeta:   { fontFamily: Fonts.sansLight, fontSize: 10, color: T.textMuted, marginTop: 3, textTransform: 'uppercase', letterSpacing: 0.5 },
+  workoutHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
+  workoutName:   { fontFamily: Fonts.sansBold, fontSize: 15, color: T.text, marginTop: 1 },
+  workoutMeta:   { fontFamily: Fonts.sansBold, fontSize: 10, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 0.8 },
   deleteBtn:     { padding: 4 },
   exLine:        { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
-  exName:        { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.text },
-  exStats:       { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textSec, flex: 1, textAlign: 'right' },
-  workoutFeel:   { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted, marginTop: 8 },
+  exName:        { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: T.text, flex: 1, flexShrink: 1, marginRight: 8 },
+  exStats:       { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textSec, flexShrink: 0 },
+  workoutFeel:   { fontFamily: Fonts.sansLight, fontSize: 11, color: T.textMuted, marginTop: 6 },
 
   tabRow: {
     flexDirection: 'row', paddingHorizontal: Spacing.xl, paddingVertical: 10, gap: 8,
@@ -1923,7 +1920,8 @@ function makeStyles(T: ThemeTokens) {
   setNumWrap:    { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.blush[400], alignItems: 'center', justifyContent: 'center' },
   setNum:        { fontFamily: Fonts.sansBold, fontSize: 13, color: '#fff' },
   setInput:      {
-    flex: 1, borderWidth: 1.5, borderColor: T.border, borderRadius: 10,
+    flex: 1, minWidth: 0, flexShrink: 1,
+    borderWidth: 1.5, borderColor: T.border, borderRadius: 10,
     backgroundColor: T.surface, fontFamily: Fonts.sansBold,
     fontSize: 18, color: T.text, paddingVertical: 10, textAlign: 'center',
   },

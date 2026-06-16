@@ -312,14 +312,14 @@ function WeekDots({ workouts, weekdays }: { workouts: any[]; weekdays: string[] 
 const wdStyles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 28, marginBottom: 20 },
   col: { alignItems: 'center', gap: 6 },
-  label: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.8, color: Colors.beige[400], textTransform: 'uppercase' },
+  label: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.8, color: Colors.sky[400], textTransform: 'uppercase' },
   dot: {
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: Colors.beige[50], borderWidth: 1.5, borderColor: Colors.beige[100],
+    backgroundColor: Colors.sky[50], borderWidth: 1.5, borderColor: Colors.sky[100],
     alignItems: 'center', justifyContent: 'center',
   },
-  dotDone: { backgroundColor: Colors.blush[400], borderColor: Colors.blush[400] },
-  dotToday: { borderColor: Colors.blush[300], borderWidth: 2 },
+  dotDone: { backgroundColor: Colors.sky[400], borderColor: Colors.sky[400] },
+  dotToday: { borderColor: Colors.sky[400], borderWidth: 2 },
 });
 
 export default function HomeScreen() {
@@ -401,27 +401,27 @@ export default function HomeScreen() {
 
         {/* Stat tiles */}
         <View style={styles.statRow}>
-          <View style={[styles.statTile, { backgroundColor: T.surface2 }]}>
-            <Icon name="barbell" size={14} color={Colors.beige[400]} strokeWidth={1.5} />
-            <Text style={[styles.statVal, { color: T.text }]}>{recentCount}</Text>
-            <Text style={[styles.statLbl, { color: T.textMuted }]}>{t('home.stat.workouts')}</Text>
-            <Text style={[styles.statSub, { color: T.textSec }]}>{t('home.stat.workouts.sub')}</Text>
+          <View style={[styles.statTile, { backgroundColor: Colors.sky[50] }]}>
+            <Icon name="barbell" size={14} color={Colors.sky[400]} strokeWidth={1.5} />
+            <Text style={[styles.statLbl, { color: Colors.sky[600] }]}>{t('home.stat.workouts')}</Text>
+            <Text style={[styles.statVal, { color: Colors.sky[600] }]}>{recentCount}</Text>
+            <Text style={[styles.statSub, { color: Colors.sky[400] }]}>{t('home.stat.workouts.sub')}</Text>
           </View>
           <TouchableOpacity
             style={[styles.statTile, { backgroundColor: Colors.blush[50] }]}
             onPress={() => router.push('/(tabs)/cycle')} activeOpacity={0.8}
           >
             <Icon name="moon" size={14} color={Colors.blush[400]} strokeWidth={1.5} />
-            <Text style={[styles.statVal, { color: Colors.blush[600] }]}>{daysUntilPeriod ?? '—'}</Text>
             <Text style={[styles.statLbl, { color: Colors.blush[400] }]}>{t('home.stat.period')}</Text>
+            <Text style={[styles.statVal, { color: Colors.blush[600] }]}>{daysUntilPeriod ?? '—'}</Text>
             <Text style={[styles.statSub, { color: Colors.blush[400] }]}>
               {daysUntilPeriod != null ? t('home.stat.period.sub') : t('home.stat.period.none')}
             </Text>
           </TouchableOpacity>
           <View style={[styles.statTile, { backgroundColor: T.surface2 }]}>
             <Icon name="spark" size={14} color={streak > 0 ? Colors.coral[400] : Colors.beige[400]} strokeWidth={1.5} />
-            <Text style={[styles.statVal, { color: streak > 0 ? Colors.coral[600] : T.text }]}>{streak > 0 ? streak : '—'}</Text>
             <Text style={[styles.statLbl, { color: T.textMuted }]}>{t('home.stat.streak')}</Text>
+            <Text style={[styles.statVal, { color: streak > 0 ? Colors.coral[600] : T.text }]}>{streak > 0 ? streak : '—'}</Text>
             <Text style={[styles.statSub, { color: T.textSec }]}>{t('home.stat.streak.sub')}</Text>
           </View>
         </View>
@@ -453,16 +453,16 @@ export default function HomeScreen() {
         {pd !== null && (
           <View style={[styles.card, { backgroundColor: T.surface2 }]}>
             <View style={styles.cardHeader}>
-              <Text style={[styles.cardLabel, { color: Colors.blush[400] }]}>{t('ins.patterns')}</Text>
+              <Text style={[styles.cardLabel, { color: Colors.sky[400] }]}>{t('ins.patterns')}</Text>
             </View>
-            <Text style={[styles.insightBig, { color: pd >= 0 ? Colors.sky[600] : Colors.blush[400] }]}>
+            <Text style={[styles.insightBig, { color: Colors.sky[600] }]}>
               {pd >= 0 ? '+' : ''}{pd.toFixed(1)}%
             </Text>
             <Text style={[styles.insightDesc, { color: T.textSec }]}>
               {lang === 'en' ? 'avg weight in follicular vs luteal phase' : 'follikulaar vs luteaalfaas, keskmine raskus'}
             </Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/insights')} style={styles.insightLink}>
-              <Text style={[styles.insightLinkTxt, { color: Colors.blush[400] }]}>
+              <Text style={[styles.insightLinkTxt, { color: Colors.sky[600] }]}>
                 {lang === 'en' ? 'Full analysis →' : 'Täielik analüüs →'}
               </Text>
             </TouchableOpacity>
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
   greeting: { paddingHorizontal: 24, paddingBottom: 12, paddingTop: 2 },
   dateLabel: {
     fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.6,
-    textTransform: 'uppercase', color: Colors.beige[400], marginBottom: 5,
+    textTransform: 'uppercase', color: Colors.sky[400], marginBottom: 5,
   },
   greetLine: { fontFamily: Fonts.sansBold, fontSize: 28, color: Colors.beige[800], lineHeight: 34, letterSpacing: -0.4 },
   greetName: { color: Colors.blush[400] },
@@ -506,15 +506,15 @@ const styles = StyleSheet.create({
   phaseLabel: { alignItems: 'center', marginTop: 14, marginBottom: 8 },
   phaseEyebrow: {
     fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1.8,
-    textTransform: 'uppercase', color: Colors.beige[400], marginBottom: 4,
+    textTransform: 'uppercase', color: Colors.sky[400], marginBottom: 4,
   },
   phaseName: { fontFamily: Fonts.sansBold, fontSize: 20, letterSpacing: -0.4, lineHeight: 24, marginBottom: 5 },
   phaseDesc: { fontFamily: Fonts.sansLight, fontSize: 12.5, color: Colors.beige[400], lineHeight: 18, textAlign: 'center', paddingHorizontal: 40 },
 
   statRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 24, marginBottom: 16 },
   statTile: { flex: 1, borderRadius: 20, padding: 14 },
-  statVal: { fontFamily: Fonts.sansBold, fontSize: 26, lineHeight: 30, letterSpacing: -0.5, marginTop: 8, marginBottom: 2 },
-  statLbl: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 1.1, textTransform: 'uppercase' },
+  statVal: { fontFamily: Fonts.sansBold, fontSize: 26, lineHeight: 30, letterSpacing: -0.5, marginTop: 2, marginBottom: 2 },
+  statLbl: { fontFamily: Fonts.sansMedium, fontSize: 11, letterSpacing: 0.2, marginTop: 8 },
   statSub: { fontFamily: Fonts.sansLight, fontSize: 10, marginTop: 1 },
 
   chipRow: { paddingHorizontal: 24, gap: 8, marginBottom: 16, flexDirection: 'row' },
