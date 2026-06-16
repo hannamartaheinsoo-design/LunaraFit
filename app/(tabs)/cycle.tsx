@@ -241,7 +241,7 @@ export default function CycleScreen() {
         </View>
       </View>
 
-      <ScrollView ref={scrollRef} style={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 130 }}>
 
         {/* Month navigation */}
         <View style={styles.calNav}>

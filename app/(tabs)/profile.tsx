@@ -113,7 +113,7 @@ export default function ProfileScreen() {
         <Text style={[styles.heading, { color: T.text }]}>{t('prof.heading')}</Text>
         <Text style={[styles.subheading, { color: T.textMuted }]}>{t('prof.sub')}</Text>
       </View>
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 130 }}>
 
         {/* Plan card */}
         <View style={styles.sectionLblRow}><Icon name="star" size={12} color={T.textMuted} /><Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('prof.plan.lbl')}</Text></View>

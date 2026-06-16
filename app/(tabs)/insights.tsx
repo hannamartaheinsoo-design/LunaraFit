@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from 'expo-router';
 import { Colors, Fonts, Spacing, Radius } from '../../constants/theme';
 import { useTheme, ThemeTokens } from '../../lib/useTheme';
 import { Icon } from '../../components/ui/Icon';
@@ -77,6 +76,8 @@ function ConfidenceBadge({ level }: { level: DetectedPattern['confidence'] }) {
   );
 }
 
+type InsightTab = 'body' | 'training' | 'wellbeing' | 'patterns';
+
 export default function InsightsScreen() {
   const T = useTheme();
   const styles = makeStyles(T);
@@ -85,6 +86,7 @@ export default function InsightsScreen() {
   const workouts  = useQuery(api.workouts.list) ?? [];
   const cycleDays = useQuery(api.cycleDays.list) ?? [];
   const [openTip, setOpenTip] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<InsightTab>('body');
 
   const ci = getCycleInfo(
     profile?.last_period_date ?? null,
@@ -95,7 +97,6 @@ export default function InsightsScreen() {
   const phaseKey = ci?.phaseKey ?? 'unknown';
   const insight  = getPhaseInsights(lang)[phaseKey];
 
-  // In dark mode, override the hardcoded light phase card colors
   const phaseAccent =
     phaseKey === 'menstruation' ? Colors.blush[400] :
     phaseKey === 'follicular'   ? Colors.green[400]  :
@@ -115,24 +116,27 @@ export default function InsightsScreen() {
     accent: insight.colors.accent,
   };
   const patterns = detectPatterns(workouts, cycleDays, lang);
-  const CONFIDENCE_LABELS = getConfidenceLabels(lang);
   const DISCLAIMER = getDisclaimer(lang);
-
   const hasData  = workouts.length > 0 || cycleDays.length > 0;
+
+  const tabs: { key: InsightTab; label: string; icon: string }[] = [
+    { key: 'body',      label: t('ins.tab.body'),      icon: 'spark'   },
+    { key: 'training',  label: t('ins.tab.training'),  icon: 'barbell' },
+    { key: 'wellbeing', label: t('ins.tab.wellbeing'), icon: 'leaf'    },
+    { key: 'patterns',  label: t('ins.tab.patterns'),  icon: 'eye'     },
+  ];
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: T.bg }]} edges={['top']}>
       <View style={[styles.topBar, { borderBottomColor: T.border }]}>
-        <View>
-          <Text style={[styles.heading, { color: T.text }]}>{t('ins.heading')}</Text>
-          <Text style={[styles.subheading, { color: T.textMuted }]}>{t('ins.sub')}</Text>
-        </View>
+        <Text style={[styles.heading, { color: T.text }]}>{t('ins.heading')}</Text>
+        <Text style={[styles.subheading, { color: T.textMuted }]}>{t('ins.sub')}</Text>
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 48 }}>
+        contentContainerStyle={{ paddingBottom: 130 }}>
 
-        {/* ── Current Phase Hero ── */}
+        {/* ── Phase Hero ── */}
         <View style={[styles.phaseCard, { backgroundColor: PC.bg, borderColor: PC.border, borderWidth: T.dark ? 1 : 1.5 }]}>
           <View style={styles.phaseCardTop}>
             <View style={{ flex: 1 }}>
@@ -148,165 +152,254 @@ export default function InsightsScreen() {
             )}
           </View>
           <View style={[styles.taglineRow, { borderTopColor: PC.border }]}>
-            <Text style={[styles.phaseTagline, { color: PC.accent }]}>
-              {insight.tagline}
-            </Text>
+            <Text style={[styles.phaseTagline, { color: PC.accent }]}>{insight.tagline}</Text>
           </View>
-          {insight.overview ? (
-            <RichText
-              text={insight.overview}
-              style={[styles.phaseOverview, { color: PC.sub }]}
-              boldStyle={{ fontFamily: Fonts.sansBold, color: PC.text }}
-            />
-          ) : null}
         </View>
 
-        {/* ── Hormone Context ── */}
-        {insight.hormoneContext ? (
-          <>
-            <View style={styles.sectionRow}>
-              <Icon name="spark" size={12} color={T.textMuted} />
-              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.hormone')}</Text>
-            </View>
-            <View style={[styles.hormoneCard, { backgroundColor: T.blushBg, borderColor: T.blushBorder, borderLeftColor: Colors.blush[400] }]}>
-              {insight.hormoneContext.split('. ').filter(Boolean).map((sentence, i, arr) => (
-                <View key={i} style={[styles.hormoneRow, { borderBottomColor: T.blushBorder }, i === arr.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]}>
-                  <View style={styles.hormoneDot} />
-                  <RichText text={sentence.endsWith('.') ? sentence : sentence + '.'} style={[styles.infoTxt, { color: T.textSec }]} boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }} />
-                </View>
-              ))}
-            </View>
-          </>
-        ) : null}
-
-        {/* ── Energy Pattern ── */}
-        {insight.energyPattern ? (
-          <>
-            <View style={styles.sectionRow}>
-              <Icon name="energized" size={12} color={T.textMuted} />
-              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.energy')}</Text>
-            </View>
-            <View style={[styles.energyCard, { backgroundColor: T.surface2, borderColor: T.border, borderLeftColor: T.border2 }]}>
-              <RichText text={insight.energyPattern} style={[styles.energyTxt, { color: T.textSec }]} boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }} />
-            </View>
-          </>
-        ) : null}
-
-        {/* ── Training Recommendations ── */}
-        {insight.trainingFocus.length > 0 ? (
-          <>
-            <View style={styles.sectionRow}>
-              <Icon name="barbell" size={12} color={T.textMuted} />
-              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.training')}</Text>
-            </View>
-            {insight.trainingFocus.map((tip, i) => (
+        {/* ── Tab bar ── */}
+        <View style={styles.tabBarRow}>
+          {tabs.map(tab => {
+            const active = activeTab === tab.key;
+            return (
               <TouchableOpacity
-                key={i}
-                style={[styles.tipCard, { backgroundColor: T.surface, borderColor: T.border, borderLeftColor: T.border }]}
-                activeOpacity={0.8}
-                onPress={() => setOpenTip(openTip === `tip-${i}` ? null : `tip-${i}`)}
+                key={tab.key}
+                style={[
+                  styles.tabPill,
+                  { borderColor: T.border, backgroundColor: active ? T.text : T.surface },
+                ]}
+                onPress={() => setActiveTab(tab.key)}
+                activeOpacity={0.75}
               >
-                <View style={styles.tipHeader}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.tipTitle, { color: T.text }]}>{tip.title}</Text>
-                    {openTip !== `tip-${i}` && (
-                      <Text style={[styles.tipHint, { color: T.textMuted }]} numberOfLines={1}>{tip.detail.replace(/\*\*/g, '')}</Text>
-                    )}
-                  </View>
-                  <View style={{ alignItems: 'flex-end', gap: 4 }}>
-                    <IntensityDot level={tip.intensity} />
-                    <Icon name="chevr" size={13} color={T.border2} />
-                  </View>
-                </View>
-                {openTip === `tip-${i}` && (
-                  <RichText text={tip.detail} style={[styles.tipDetail, { color: T.textSec, borderTopColor: T.border }]} boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }} />
-                )}
+                <Text style={[styles.tabLabel, { color: active ? T.bg : T.textSec }]}>{tab.label}</Text>
               </TouchableOpacity>
-            ))}
-          </>
-        ) : null}
+            );
+          })}
+        </View>
 
-        {/* ── Recovery Note ── */}
-        {insight.recoveryNote ? (
-          <>
-            <View style={styles.sectionRow}>
-              <Icon name="moon" size={12} color={T.textMuted} />
-              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.recovery')}</Text>
-            </View>
-            <View style={[styles.recoveryCard, { backgroundColor: T.skyBg, borderColor: T.skyBorder, borderLeftColor: Colors.sky[400] }]}>
-              <RichText text={insight.recoveryNote} style={[styles.infoTxt, { color: T.textSec }]} boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }} />
-            </View>
-          </>
-        ) : null}
+        {/* ══ BODY TAB ══ */}
+        {activeTab === 'body' && (
+          <View style={styles.tabContent}>
+            {/* Plain text — RichText inline-bold causes web spacing gaps in overview paragraph */}
+            {insight.overview ? (
+              <Text style={[styles.overviewTxt, { color: T.textSec }]}>
+                {insight.overview.replace(/\*\*/g, '')}
+              </Text>
+            ) : null}
 
-        {/* ── Wellness Tips ── */}
-        {insight.wellnessTips.length > 0 ? (
-          <>
-            <View style={styles.sectionRow}>
-              <Icon name="leaf" size={12} color={T.textMuted} />
-              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.wellness')}</Text>
-            </View>
-            <View style={[styles.wellnessCard, { backgroundColor: T.surface, borderColor: T.border }]}>
-              {insight.wellnessTips.map((tip, i) => (
-                <View key={i} style={[styles.wellnessRow, { borderBottomColor: T.border }, i === insight.wellnessTips.length - 1 && { borderBottomWidth: 0 }]}>
-                  <Text style={[styles.wellnessNum, { backgroundColor: T.text, color: T.bg }]}>{i + 1}</Text>
-                  <RichText text={tip} style={[styles.wellnessTxt, { color: T.textSec }]} boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }} />
+            {/* Hormone chips */}
+            {insight.hormoneChips.length > 0 ? (
+              <View style={[styles.infoCard, { backgroundColor: T.blushBg, borderColor: T.blushBorder }]}>
+                <View style={styles.infoCardHeader}>
+                  <Icon name="spark" size={13} color={Colors.blush[400]} />
+                  <Text style={[styles.infoCardTitle, { color: T.text }]}>{t('ins.hormone')}</Text>
                 </View>
-              ))}
-            </View>
-          </>
-        ) : null}
-
-        {/* ── Personal Patterns ── */}
-        {patterns.length > 0 ? (
-          <>
-            <View style={styles.sectionRow}>
-              <Icon name="eye" size={12} color={T.textMuted} />
-              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.patterns')}</Text>
-            </View>
-            {patterns.map(p => (
-              <View key={p.id} style={[
-                styles.patternCard,
-                { backgroundColor: T.surface2, borderColor: T.border, borderLeftColor: T.border2 },
-                p.color === 'green' && { backgroundColor: T.skyBg, borderColor: T.skyBorder, borderLeftColor: Colors.green[400] },
-                p.color === 'blush' && { backgroundColor: T.blushBg, borderColor: T.blushBorder, borderLeftColor: Colors.blush[400] },
-              ]}>
-                <View style={styles.patternHeader}>
-                  <Text style={[styles.patternTitle, { color: T.text }]}>{p.title}</Text>
-                  <ConfidenceBadge level={p.confidence} />
+                <View style={styles.chipWrap}>
+                  {insight.hormoneChips.map((chip, i) => (
+                    <View key={i} style={[styles.chip, { backgroundColor: T.blushBg, borderColor: T.blushBorder }]}>
+                      <Text style={[styles.chipTxt, { color: T.text }]}>{chip}</Text>
+                    </View>
+                  ))}
                 </View>
-                <Text style={[styles.patternBody, { color: T.textSec }]}>{p.body}</Text>
               </View>
-            ))}
-          </>
-        ) : hasData ? null : (
-          <>
-            <View style={styles.sectionRow}>
-              <Icon name="eye" size={12} color={T.textMuted} />
-              <Text style={[styles.sectionLbl, { color: T.textSec }]}>{t('ins.patterns')}</Text>
-            </View>
-            <View style={[styles.emptyPatterns, { backgroundColor: T.surface2, borderColor: T.border }]}>
-              <Text style={[styles.emptyTxt, { color: T.textMuted }]}>{t('ins.patterns.empty')}</Text>
-            </View>
-          </>
+            ) : null}
+
+            {/* Energy bar chart — absolute-positioned bars avoid RN-web flex-stretch issue */}
+            {insight.energySummary ? (
+              <View style={[styles.infoCard, { backgroundColor: T.surface, borderColor: T.border }]}>
+                <View style={styles.infoCardHeader}>
+                  <Icon name="energized" size={13} color={T.textMuted} />
+                  <Text style={[styles.infoCardTitle, { color: T.text }]}>{t('ins.energy')}</Text>
+                </View>
+                <View style={styles.arcRow}>
+                  {[0, 1, 2, 3, 4, 5].map(i => {
+                    const e0 = insight.energyArc[0];
+                    const e1 = insight.energyArc[1];
+                    const level = e0 + (e1 - e0) * (i / 5);
+                    const barH = Math.max(5, Math.round(level * 44));
+                    return (
+                      <View key={i} style={styles.arcBarWrap}>
+                        <View style={[styles.arcBar, {
+                          height: barH,
+                          backgroundColor: phaseAccent,
+                          opacity: 0.2 + level * 0.8,
+                        }]} />
+                      </View>
+                    );
+                  })}
+                </View>
+                <View style={styles.arcLabels}>
+                  <Text style={[styles.arcLbl, { color: T.textMuted }]}>{t('ins.arc.early')}</Text>
+                  <Text style={[styles.arcLbl, { color: T.textMuted }]}>{t('ins.arc.late')}</Text>
+                </View>
+                <Text style={[styles.arcSummary, { color: T.textSec }]}>{insight.energySummary}</Text>
+              </View>
+            ) : null}
+          </View>
         )}
 
-        {/* ── Research Source ── */}
-        {insight.researchContext ? (
-          <View style={[styles.sourceCard, { backgroundColor: T.surface2, borderColor: T.border }]}>
-            <Icon name="eye" size={11} color={T.textMuted} />
-            <Text style={[styles.sourceTxt, { color: T.textMuted }]}>{insight.researchContext}</Text>
-          </View>
-        ) : null}
+        {/* ══ TRAINING TAB ══ */}
+        {activeTab === 'training' && (() => {
+          const intensityColors = {
+            kerge:    { bg: T.skyBg,   border: T.skyBorder,   accent: Colors.green[400], label: Colors.green[600] },
+            mõõdukas: { bg: T.surface, border: T.border,      accent: T.border2,         label: T.textMuted        },
+            kõrge:    { bg: T.blushBg, border: T.blushBorder, accent: Colors.blush[400], label: Colors.blush[600]  },
+          };
+          return (
+            <View style={styles.tabContent}>
+              {insight.trainingFocus.length > 0 ? insight.trainingFocus.map((tip, i) => {
+                const ic = intensityColors[tip.intensity];
+                return (
+                  <TouchableOpacity
+                    key={i}
+                    style={[styles.tipCard, {
+                      backgroundColor: ic.bg,
+                      // Explicit per-side borders eliminate the double-border RN-web bug
+                      // (borderWidth:1 + borderLeftWidth:3 stacks on web instead of overriding)
+                      borderTopWidth: 1,    borderTopColor:    ic.border,
+                      borderRightWidth: 1,  borderRightColor:  ic.border,
+                      borderBottomWidth: 1, borderBottomColor: ic.border,
+                      borderLeftWidth: 3,   borderLeftColor:   ic.accent,
+                    }]}
+                    activeOpacity={0.8}
+                    onPress={() => setOpenTip(openTip === `tip-${i}` ? null : `tip-${i}`)}
+                  >
+                    <View style={styles.tipHeader}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.tipTitle, { color: T.text }]}>{tip.title}</Text>
+                        {openTip !== `tip-${i}` && (
+                          <Text style={[styles.tipHint, { color: T.textMuted }]} numberOfLines={2}>
+                            {tip.detail.replace(/\*\*/g, '')}
+                          </Text>
+                        )}
+                      </View>
+                      <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                        <View style={[styles.intensityPill, { backgroundColor: ic.accent }]}>
+                          <Text style={styles.intensityPillTxt}>{tip.intensity === 'kerge' ? t('ins.intensity.kerge') : tip.intensity === 'kõrge' ? t('ins.intensity.kõrge') : t('ins.intensity.mõõdukas')}</Text>
+                        </View>
+                        <Icon name="chevr" size={13} color={T.border2} />
+                      </View>
+                    </View>
+                    {openTip === `tip-${i}` && (
+                      <RichText
+                        text={tip.detail}
+                        style={[styles.tipDetail, { color: T.textSec, borderTopColor: T.border }]}
+                        boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }}
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              }) : (
+                <View style={[styles.emptyCard, { backgroundColor: T.surface2, borderColor: T.border }]}>
+                  <Text style={[styles.emptyTxt, { color: T.textMuted }]}>{t('ins.patterns.empty')}</Text>
+                </View>
+              )}
+            </View>
+          );
+        })()}
 
-        {/* ── Disclaimer ── */}
-        <View style={[styles.disclaimer, { backgroundColor: T.surface2, borderColor: T.border2 }]}>
-          <View style={styles.disclaimerHeader}>
-            <Icon name="lock" size={13} color={T.textMuted} />
-            <Text style={[styles.disclaimerTitle, { color: T.textSec }]}>{t('ins.note')}</Text>
+        {/* ══ WELLBEING TAB ══ */}
+        {activeTab === 'wellbeing' && (
+          <View style={styles.tabContent}>
+            {/* Recovery — full-width coloured card */}
+            {insight.recoveryNote ? (
+              <View style={[styles.infoCard, { backgroundColor: T.skyBg, borderColor: T.skyBorder }]}>
+                <View style={styles.infoCardHeader}>
+                  <Icon name="moon" size={13} color={Colors.sky[400] ?? T.textMuted} />
+                  <Text style={[styles.infoCardTitle, { color: T.text }]}>{t('ins.recovery')}</Text>
+                </View>
+                <RichText
+                  text={insight.recoveryNote}
+                  style={[styles.bodyTxt, { color: T.textSec }]}
+                  boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }}
+                />
+              </View>
+            ) : null}
+
+            {/* Wellness tips — each as its own mini card with accent stripe */}
+            {insight.wellnessTips.length > 0 ? (
+              <>
+                <View style={styles.wellnessSectionLabel}>
+                  <Icon name="leaf" size={12} color={T.textMuted} />
+                  <Text style={[styles.wellnessSectionTxt, { color: T.textSec }]}>{t('ins.wellness')}</Text>
+                </View>
+                {insight.wellnessTips.map((tip, i) => {
+                  // 4 equally-weighted tones from different palettes — no alarming pink, no de-emphasised gray
+                  const accentColors = [Colors.green[400], Colors.blush[200], Colors.sky[200], Colors.coral[200]];
+                  const accent = accentColors[i % accentColors.length];
+                  return (
+                    <View key={i} style={[styles.wellnessTipCard, {
+                      backgroundColor: T.surface,
+                      borderTopWidth: 1,    borderTopColor:    T.border,
+                      borderRightWidth: 1,  borderRightColor:  T.border,
+                      borderBottomWidth: 1, borderBottomColor: T.border,
+                      borderLeftWidth: 3,   borderLeftColor:   accent,
+                    }]}>
+                      <View style={[styles.wellnessBadge, { backgroundColor: accent }]}>
+                        <Text style={styles.wellnessBadgeTxt}>{i + 1}</Text>
+                      </View>
+                      <RichText
+                        text={tip}
+                        style={[styles.bodyTxt, { color: T.textSec }]}
+                        boldStyle={{ fontFamily: Fonts.sansBold, color: T.text }}
+                      />
+                    </View>
+                  );
+                })}
+              </>
+            ) : null}
           </View>
-          <Text style={[styles.disclaimerTxt, { color: T.textMuted }]}>{DISCLAIMER}</Text>
-        </View>
+        )}
+
+        {/* ══ PATTERNS TAB ══ */}
+        {activeTab === 'patterns' && (
+          <View style={styles.tabContent}>
+            {patterns.length > 0 ? patterns.map(p => {
+              // Each color tier gets a clearly distinct background + metric box + text
+              const cardBg     = T.dark ? T.surface2
+                : p.color === 'green' ? Colors.green[50]  : p.color === 'blush' ? Colors.blush[50]  : T.surface2;
+              const cardBorder = T.dark ? T.border
+                : p.color === 'green' ? Colors.green[200] : p.color === 'blush' ? Colors.blush[200] : T.border;
+              const metricBg   = T.dark ? T.surface
+                : p.color === 'green' ? Colors.green[100] : p.color === 'blush' ? Colors.blush[100] : T.surface;
+              const metricColor = T.dark ? T.text
+                : p.color === 'green' ? Colors.green[600] : p.color === 'blush' ? Colors.blush[600] : T.text;
+              return (
+                <View key={p.id} style={[styles.patternCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                  <View style={styles.patternRow}>
+                    {/* Left: big metric with its own tinted box */}
+                    <View style={[styles.patternMetricBox, { backgroundColor: metricBg, borderRightColor: cardBorder }]}>
+                      <Text style={[styles.patternMetric, { color: metricColor }]}>{p.metric}</Text>
+                    </View>
+                    {/* Right: title + subtext + badge */}
+                    <View style={styles.patternInfo}>
+                      <Text style={[styles.patternTitle, { color: T.text }]}>{p.title}</Text>
+                      <Text style={[styles.patternSubtext, { color: T.textMuted }]}>{p.subtext}</Text>
+                      <View style={{ marginTop: 8 }}>
+                        <ConfidenceBadge level={p.confidence} />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              );
+            }) : (
+              <View style={[styles.emptyCard, { backgroundColor: T.surface2, borderColor: T.border }]}>
+                <Text style={[styles.emptyTxt, { color: T.textMuted }]}>{t('ins.patterns.empty')}</Text>
+              </View>
+            )}
+
+            {/* Research source + disclaimer — collapsed into one quiet row */}
+            <View style={[styles.disclaimer, { backgroundColor: T.surface2, borderColor: T.border, marginTop: 8 }]}>
+              <View style={styles.disclaimerHeader}>
+                <Icon name="lock" size={12} color={T.textMuted} />
+                <Text style={[styles.disclaimerTitle, { color: T.textSec }]}>{t('ins.note')}</Text>
+              </View>
+              <Text style={[styles.disclaimerTxt, { color: T.textMuted }]}>{DISCLAIMER}</Text>
+              {insight.researchContext ? (
+                <Text style={[styles.disclaimerTxt, { color: T.textMuted, marginTop: 6, opacity: 0.7 }]}>{insight.researchContext}</Text>
+              ) : null}
+            </View>
+          </View>
+        )}
 
       </ScrollView>
     </SafeAreaView>
@@ -323,12 +416,12 @@ function makeStyles(T: ThemeTokens) {
   heading:    { fontFamily: Fonts.sansBold, fontSize: 22, color: T.text, letterSpacing: -0.3 },
   subheading: { fontFamily: Fonts.sans, fontSize: 12, color: T.textMuted, marginTop: 2 },
   scroll:     { flex: 1 },
+  bold:       { fontFamily: Fonts.sansBold, color: T.text },
 
-  // Phase card — dark & bold
+  // Phase hero card
   phaseCard: {
-    margin: Spacing.xl, marginBottom: 8,
+    margin: Spacing.xl, marginBottom: 0,
     borderRadius: Radius.md, padding: 20,
-    borderWidth: 0,
     overflow: 'hidden',
   },
   phaseCardTop:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
@@ -342,132 +435,106 @@ function makeStyles(T: ThemeTokens) {
   },
   phaseDaysN:    { fontFamily: Fonts.sansBold, fontSize: 30, lineHeight: 32, textAlign: 'center' },
   phaseDaysLbl:  { fontFamily: Fonts.sans, fontSize: 9, textAlign: 'center', marginTop: 2, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.7 },
-  taglineRow:    { borderTopWidth: 1, paddingTop: 12, marginBottom: 10, borderTopColor: 'rgba(255,255,255,0.2)' },
+  taglineRow:    { borderTopWidth: 1, paddingTop: 12, borderTopColor: 'rgba(255,255,255,0.2)' },
   phaseTagline:  { fontFamily: Fonts.sansBold, fontSize: 14, letterSpacing: 0.2 },
-  phaseOverview: { fontFamily: Fonts.sans, fontSize: 13, lineHeight: 21, marginTop: 2, opacity: 0.85 },
 
-  // Section label
-  sectionRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: Spacing.xl, marginBottom: 8, marginTop: 18,
+  // Tab bar — fixed row, all 4 pills always visible
+  tabBarRow: {
+    flexDirection: 'row', marginTop: 16,
+    paddingHorizontal: Spacing.xl, gap: 6,
   },
-  sectionLbl: {
-    fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.6,
-    textTransform: 'uppercase', color: T.textSec,
+  tabBarScroll:   { flexGrow: 0, marginTop: 16 },
+  tabBarContent:  { paddingHorizontal: Spacing.xl, gap: 8, flexDirection: 'row' },
+  tabPill: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 8, borderRadius: 20, borderWidth: 1,
   },
+  tabLabel: { fontFamily: Fonts.sansMedium, fontSize: 12 },
 
-  // Info cards
-  infoTxt: { fontFamily: Fonts.sans, fontSize: 13, color: T.textSec, lineHeight: 21, flex: 1 },
-  bold:    { fontFamily: Fonts.sansBold, color: T.text },
+  // Tab content wrapper
+  tabContent: { paddingTop: 16 },
 
-  // Hormone card — sentence-by-sentence
-  hormoneCard: {
-    marginHorizontal: Spacing.xl, marginBottom: 4,
-    backgroundColor: T.blushBg, borderRadius: Radius.md,
-    paddingHorizontal: 16, paddingTop: 4, paddingBottom: 4,
-    borderWidth: 1, borderColor: T.blushBorder,
-    borderLeftWidth: 3, borderLeftColor: Colors.blush[400],
-  },
-  hormoneRow: {
-    flexDirection: 'row', gap: 10, paddingVertical: 11,
-    borderBottomWidth: 1, borderBottomColor: T.blushBorder, alignItems: 'flex-start',
-  },
-  hormoneDot: { width: 6, height: 6, borderRadius: 2, backgroundColor: Colors.blush[400], marginTop: 8, flexShrink: 0 },
-
-  // Energy card
-  energyCard: {
-    marginHorizontal: Spacing.xl, marginBottom: 4,
-    backgroundColor: T.surface2, borderRadius: Radius.md,
-    padding: 16, borderWidth: 1, borderColor: T.border,
-    borderLeftWidth: 3, borderLeftColor: T.border2,
-  },
-  energyTxt: { fontFamily: Fonts.sans, fontSize: 13, color: T.textSec, lineHeight: 21 },
-
-  // Recovery card
-  recoveryCard: {
-    marginHorizontal: Spacing.xl, marginBottom: 4,
-    backgroundColor: T.skyBg, borderRadius: Radius.md,
-    padding: 16, borderWidth: 1, borderColor: T.skyBorder,
-    borderLeftWidth: 3, borderLeftColor: Colors.sky[400],
+  // Overview text (body tab intro)
+  overviewTxt: {
+    fontFamily: Fonts.sans, fontSize: 14, lineHeight: 22,
+    color: T.textSec, marginHorizontal: Spacing.xl, marginBottom: 16,
   },
 
-  // Training tip cards
+  // Unified info card (replaces hormoneCard / energyCard / recoveryCard / wellnessCard)
+  infoCard: {
+    marginHorizontal: Spacing.xl, marginBottom: 12,
+    borderRadius: Radius.md, padding: 18,
+    borderWidth: 1,
+  },
+  infoCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
+  infoCardTitle:  { fontFamily: Fonts.sansBold, fontSize: 14, color: T.text },
+
+  // Chip grid (hormone section)
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  chip:     { borderRadius: 20, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 5 },
+  chipTxt:  { fontFamily: Fonts.sansMedium, fontSize: 12, color: T.text },
+
+  // Energy bars — absolute-positioned inside relative wrapper to fix RN-web flex-stretch
+  arcRow:     { flexDirection: 'row', gap: 5, height: 48, marginBottom: 6 },
+  arcBarWrap: { flex: 1, height: 48, position: 'relative' },
+  arcBar:     { position: 'absolute', bottom: 0, left: 0, right: 0, borderRadius: 4 },
+  arcLabels:  { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  arcLbl:     { fontFamily: Fonts.sans, fontSize: 10, color: T.textMuted },
+  arcSummary: { fontFamily: Fonts.sans, fontSize: 13, lineHeight: 20, color: T.textSec },
+
+  // Bullet rows
+  bulletRow:  { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  bodyTxt:    { fontFamily: Fonts.sans, fontSize: 14, lineHeight: 22, color: T.textSec, flex: 1 },
+
+  // Training tip cards — borders set explicitly inline to avoid RN-web double-border
   tipCard: {
-    marginHorizontal: Spacing.xl, marginBottom: 6,
-    backgroundColor: T.surface, borderRadius: Radius.md,
-    padding: 16, borderWidth: 1, borderColor: T.border,
-    borderLeftWidth: 3, borderLeftColor: T.border2,
+    marginHorizontal: Spacing.xl, marginBottom: 10,
+    borderRadius: Radius.md, padding: 18,
   },
-  tipHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 },
-  tipTitle:   { fontFamily: Fonts.sansBold, fontSize: 14, color: T.text, marginBottom: 3, letterSpacing: -0.1 },
-  tipHint:    { fontFamily: Fonts.sans, fontSize: 11, color: T.textMuted, lineHeight: 16 },
-  tipDetail:  { fontFamily: Fonts.sans, fontSize: 13, color: T.textSec, lineHeight: 20, marginTop: 12,
-                paddingTop: 12, borderTopWidth: 1, borderTopColor: T.border },
+  tipHeader:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
+  tipTitle:       { fontFamily: Fonts.sansBold, fontSize: 15, color: T.text, marginBottom: 4, letterSpacing: -0.1 },
+  tipHint:        { fontFamily: Fonts.sans, fontSize: 13, color: T.textMuted, lineHeight: 19 },
+  tipDetail:      { fontFamily: Fonts.sans, fontSize: 14, color: T.textSec, lineHeight: 22, marginTop: 14, paddingTop: 14, borderTopWidth: 1 },
+  intensityPill:  { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
+  intensityPillTxt: { fontFamily: Fonts.sansBold, fontSize: 9, color: '#fff', letterSpacing: 0.4, textTransform: 'uppercase' },
+  // keep these for ConfidenceBadge (still uses intensityRow/Dot internally via old IntensityDot — not used now)
   intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  intensityDot: { width: 5, height: 5, borderRadius: 2 },
-  intensityLbl: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.6 },
+  intensityDot: { width: 6, height: 6, borderRadius: 3 },
+  intensityLbl: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 0.6 },
 
-  // Wellness
-  wellnessCard: {
-    marginHorizontal: Spacing.xl, marginBottom: 4,
-    backgroundColor: T.surface, borderRadius: Radius.md,
-    paddingHorizontal: 16, borderWidth: 1, borderColor: T.border,
-  },
-  wellnessRow: {
-    flexDirection: 'row', gap: 12, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: T.border, alignItems: 'flex-start',
-  },
-  wellnessNum: {
-    width: 20, height: 20, borderRadius: 4,
-    backgroundColor: T.text, textAlign: 'center', lineHeight: 20,
-    fontFamily: Fonts.sansBold, fontSize: 10, color: T.bg, flexShrink: 0,
-  },
-  wellnessTxt: { fontFamily: Fonts.sans, fontSize: 13, color: T.textSec, lineHeight: 20, flex: 1 },
-
-  // Pattern cards
-  patternCard: {
+  // Wellbeing individual tip cards
+  wellnessSectionLabel: { flexDirection: 'row', alignItems: 'center', gap: 6, marginHorizontal: Spacing.xl, marginBottom: 10 },
+  wellnessSectionTxt:   { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase', color: T.textSec },
+  wellnessTipCard: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
     marginHorizontal: Spacing.xl, marginBottom: 8,
-    backgroundColor: T.surface2, borderRadius: Radius.sm,
-    padding: 14, borderWidth: 1, borderColor: T.border,
-    borderLeftWidth: 3, borderLeftColor: T.border2,
+    padding: 14, borderRadius: Radius.md,
   },
-  patternGreen: {
-    backgroundColor: T.skyBg, borderColor: T.skyBorder,
-    borderLeftColor: Colors.green[400],
-  },
-  patternBlush: {
-    backgroundColor: T.blushBg, borderColor: T.blushBorder,
-    borderLeftColor: Colors.blush[400],
-  },
-  patternHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, gap: 8 },
-  patternTitle:  { fontFamily: Fonts.sansBold, fontSize: 13, color: T.text, flex: 1 },
-  patternBody:   { fontFamily: Fonts.sans, fontSize: 12, color: T.textSec, lineHeight: 18 },
-  confidenceBadge: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
-  confidenceTxt:   { fontFamily: Fonts.sansBold, fontSize: 8, letterSpacing: 0.8 },
+  wellnessBadge:    { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
+  wellnessBadgeTxt: { fontFamily: Fonts.sansBold, fontSize: 11, color: '#fff' },
 
-  emptyPatterns: {
-    marginHorizontal: Spacing.xl, padding: 20, alignItems: 'center',
-    backgroundColor: T.surface2, borderRadius: Radius.md,
-    borderWidth: 1, borderColor: T.border,
+  // Pattern cards — metric-first layout
+  patternCard: {
+    marginHorizontal: Spacing.xl, marginBottom: 10,
+    borderRadius: Radius.md, borderWidth: 1, overflow: 'hidden',
   },
-  emptyTxt: { fontFamily: Fonts.sans, fontSize: 13, color: T.textMuted, textAlign: 'center', lineHeight: 20 },
+  patternRow:       { flexDirection: 'row', alignItems: 'stretch' },
+  patternMetricBox: { width: 80, alignItems: 'center', justifyContent: 'center', paddingVertical: 18, borderRightWidth: 1 },
+  patternMetric:    { fontFamily: Fonts.sansBold, fontSize: 22, letterSpacing: -0.5, textAlign: 'center' },
+  patternInfo:      { flex: 1, padding: 14 },
+  patternTitle:     { fontFamily: Fonts.sansBold, fontSize: 13, color: T.text, lineHeight: 18, marginBottom: 4 },
+  patternSubtext:   { fontFamily: Fonts.sans, fontSize: 12, color: T.textMuted, lineHeight: 17 },
+  confidenceBadge:  { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'flex-start' },
+  confidenceTxt:    { fontFamily: Fonts.sansBold, fontSize: 8, letterSpacing: 0.8 },
 
-  // Source & disclaimer
-  sourceCard: {
-    flexDirection: 'row', gap: 8, alignItems: 'flex-start',
-    marginHorizontal: Spacing.xl, marginTop: 8, marginBottom: 4,
-    padding: 12, backgroundColor: T.surface2,
-    borderRadius: Radius.sm, borderWidth: 1, borderColor: T.border,
-  },
-  sourceTxt: { fontFamily: Fonts.sans, fontSize: 10, color: T.textSec, lineHeight: 16, flex: 1 },
+  // Empty state
+  emptyCard: { marginHorizontal: Spacing.xl, padding: 28, alignItems: 'center', borderRadius: Radius.md, borderWidth: 1 },
+  emptyTxt:  { fontFamily: Fonts.sans, fontSize: 14, color: T.textMuted, textAlign: 'center', lineHeight: 21 },
 
-  disclaimer: {
-    marginHorizontal: Spacing.xl, marginTop: 8,
-    padding: 14, backgroundColor: T.surface2,
-    borderRadius: Radius.sm, borderWidth: 1, borderColor: T.border2,
-  },
-  disclaimerHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  // Disclaimer (patterns tab — combined with source)
+  disclaimer:       { marginHorizontal: Spacing.xl, padding: 14, borderRadius: Radius.sm, borderWidth: 1 },
+  disclaimerHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   disclaimerTitle:  { fontFamily: Fonts.sansBold, fontSize: 11, color: T.textSec, letterSpacing: 0.3 },
-  disclaimerTxt:    { fontFamily: Fonts.sans, fontSize: 11, color: T.textSec, lineHeight: 17 },
+  disclaimerTxt:    { fontFamily: Fonts.sans, fontSize: 11, color: T.textMuted, lineHeight: 17 },
   });
 }

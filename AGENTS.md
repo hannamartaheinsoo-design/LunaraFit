@@ -186,3 +186,23 @@ Palette maps: `{ 50, 100, 200, 400, 600, 800 }` — indices 300, 500, 700 do NOT
 **Calendar tap-to-log:** every calendar day cell is a `TouchableOpacity`. Tapping calls `handleDayPress(ds)` which sets the `date` state and scrolls the `ScrollView` (ref: `scrollRef`) down to y=520 so the log form comes into view. The calendar itself is display-only — all logging happens in the form below.
 
 **Selected day highlight:** `isSelected = ds === date` adds `styles.calSelected` (dark border ring) to the circle. Does not override logged/predicted/ovulation styles.
+
+---
+
+# Insights Screen — insights.tsx
+
+**Tab structure:** Insights uses 4 equal-width pill tabs (Body | Training | Wellbeing | Patterns) rendered as a non-scrollable `flexDirection: 'row'` with `flex: 1` on each pill. Do NOT use a horizontal ScrollView for these tabs — all 4 must be visible at once on a 375px viewport.
+
+**Body tab — data model:**
+- `PhaseInsight` now has `hormoneChips: string[]` (compact chip labels), `energySummary: string` (one-liner), and `energyArc: [number, number]` (energy level 0–1 at phase start and end).
+- Hormone section renders chips in a wrapping flex row instead of bullet sentences.
+- Energy section renders 6 bottom-aligned bars using `position: 'absolute', bottom: 0` inside each `position: 'relative'` wrapper — this is the only approach that works in RN web for variable-height bottom-aligned bars.
+
+**Patterns tab — data model:**
+- `DetectedPattern` now has `metric: string` (large callout number, e.g. "+2%") and `subtext: string` (one context line). Pattern cards show metric left, title + subtext + confidence badge right.
+- The long `body` string is kept in the data but not rendered in the UI (retained for future use).
+
+**Web tab bar — `_layout.tsx`:**
+- The tab bar uses `position: 'fixed', bottom: 0, left: 0, right: 0` on web only (via `Platform.OS === 'web'` spread).
+- Current web height: `130px`, paddingBottom: `60px`.
+- All `ScrollView` / `FlatList` `contentContainerStyle` across all tab screens must have `paddingBottom: 130` to prevent content hiding under the fixed bar. If tab bar height changes, update all five screens.

@@ -20,7 +20,10 @@ export interface PhaseInsight {
   tagline: string;
   overview: string;
   hormoneContext: string;
+  hormoneChips: string[];          // compact chip labels — same info as hormoneContext
   energyPattern: string;
+  energySummary: string;           // one-liner for energy arc label
+  energyArc: [number, number];     // energy level at start and end of phase, 0–1
   trainingFocus: TrainingTip[];
   recoveryNote: string;
   wellnessTips: string[];
@@ -48,9 +51,12 @@ const PHASE_INSIGHTS_ET: Record<CyclePhase, PhaseInsight> = {
       'Östrogeen ja progesteroon on mõlemad madalal. FSH hakkab aeglaselt tõusma, ' +
       'valmistades keha ette järgmiseks faasiks. Mayo Clinic märgib, et hormonaalsed kõikumised võivad ' +
       'mõjutada valu tajumist ja energiataset.',
+    hormoneChips: ['Östrogeen ↓ madal', 'Progesteroon ↓ madal', 'FSH tõuseb', 'Krampe võib esineda', 'Meeleolu kõigub', 'Valu tundlikkus ↑'],
     energyPattern:
       'Energia on sageli madalam, eriti esimestel päevadel. See on individuaalne — mõned naised ' +
       'treenivad sel ajal normaalselt, teised vajavad rohkem puhkust. Kuula oma keha.',
+    energySummary: 'Sageli madalam — eriti esimesed päevad · mõned treenivad normaalselt',
+    energyArc: [0.25, 0.45],
     trainingFocus: [
       {
         title: 'Kerge kardio',
@@ -97,9 +103,12 @@ const PHASE_INSIGHTS_ET: Record<CyclePhase, PhaseInsight> = {
     hormoneContext:
       'Östrogeen tõuseb progressiivselt. PubMedi uuringud (Sung et al., 2014) viitavad, et ' +
       'östrogeenil võib olla anaboolne efekt. Kortisool on suhteliselt madal, mis toetab paremat taastumist.',
+    hormoneChips: ['Östrogeen ↑ tõuseb', 'Kortisool ↓ madal', 'Anaboolne efekt', 'Teravam fookus', 'Kiirem taastumine', 'Neuromuskulaarne jõudlus ↑'],
     energyPattern:
       'Energia kipub olema kõrgem. Motivatsioon treenida võib kasvada. Neuromuskulaarne jõudlus ' +
       'võib paraneda koos östrogeeni tõusuga — kuid varieerub inimeseti oluliselt.',
+    energySummary: 'Tõusev — motivatsioon ja jõudlus paranevad koos östrogeeniga',
+    energyArc: [0.6, 0.85],
     trainingFocus: [
       {
         title: 'Jõutreening',
@@ -144,9 +153,12 @@ const PHASE_INSIGHTS_ET: Record<CyclePhase, PhaseInsight> = {
       'Östrogeeni tipp ja LH tõus. Testosterooni tase võib veidi tõusta. Oluline märkus: uuringud ' +
       '(Hewett et al.) viitavad, et östrogeeni kõrge tase võib mõjutada sidemete lõtvust — ' +
       'pöörake tähelepanu tehnikale.',
+    hormoneChips: ['Östrogeen ↑ tipp', 'LH tõus', 'Testosteroon ↑ veidi', 'Enesekindlus ↑', 'Sidemed lõtvamad', 'Tehnika eriti oluline'],
     energyPattern:
       'Energia on tsükli tipphetkel. Paljud naised kogevad suuremat enesekindlust, ' +
       'selgemat mõtlemist ja paremat füüsilist jõudlust.',
+    energySummary: 'Tsükli kõrgeim — suurim enesekindlus, selgeim mõtlemine, parim jõudlus',
+    energyArc: [0.9, 1.0],
     trainingFocus: [
       {
         title: 'Isiklikud rekordid',
@@ -193,9 +205,12 @@ const PHASE_INSIGHTS_ET: Record<CyclePhase, PhaseInsight> = {
     hormoneContext:
       'Progesteroon on domineeriv. See tõstab kehatemperatuuri (~0.2–0.5°C), kiirendab ainevahetust ' +
       'ja võib mõjutada hingamist. Östrogeeni langus tsükli lõpus on seotud PMS-sümptomitega (Mayo Clinic).',
+    hormoneChips: ['Progesteroon ↑ domineeriv', '+0.2–0.5°C kehatemp', 'Ainevahetus kiirem', 'Kardio raskem', 'Östrogeen ↓ lõpus', 'Puhitus · isud · meeleolu ↓'],
     energyPattern:
       'Energia varieerub. Varajases luteaalfaasis võib olla veel hea energia, kuid hilises luteaalfaasis ' +
       'kogevad paljud naised väsimust ja aeglasemat taastumist.',
+    energySummary: 'Varieeruv — alguses tugev · lõpus väsimus ja aeglasem taastumine',
+    energyArc: [0.65, 0.3],
     trainingFocus: [
       {
         title: 'Mõõdukas jõutreening',
@@ -240,7 +255,10 @@ const PHASE_INSIGHTS_ET: Record<CyclePhase, PhaseInsight> = {
     overview:
       'Tsükliandmete lisamisel saad isikupärastatud ülevaateid, mis põhinevad sinu logitud andmetel.',
     hormoneContext: '',
+    hormoneChips: [],
     energyPattern: '',
+    energySummary: '',
+    energyArc: [0.5, 0.5],
     trainingFocus: [],
     recoveryNote: '',
     wellnessTips: [],
@@ -261,8 +279,11 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     hormoneContext:
       '**Estrogen and progesterone** are at their lowest. **FSH** begins rising to prepare your next cycle. ' +
       'These hormonal dips drive cramps, fatigue and mood shifts — **biology, not weakness.**',
+    hormoneChips: ['Estrogen ↓ low', 'Progesterone ↓ low', 'FSH rising', 'Cramps likely', 'Mood may shift', 'Pain sensitivity ↑'],
     energyPattern:
       '**Energy is often lower**, especially in the first days. Some women train normally, others need more rest — **both are fine.**',
+    energySummary: 'Often lower — especially first days · both rest and training are valid',
+    energyArc: [0.25, 0.45],
     trainingFocus: [
       {
         title: 'Light cardio',
@@ -304,8 +325,11 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     hormoneContext:
       '**Estrogen** is climbing — making you feel sharper, stronger and more driven. It may also have a mild **muscle-building effect.** ' +
       '**Cortisol** is relatively low, so your body **recovers better** between sessions.',
+    hormoneChips: ['Estrogen ↑ rising', 'Cortisol ↓ low', 'Muscle-building effect', 'Sharper focus', 'Faster recovery', 'Neuromuscular output ↑'],
     energyPattern:
       '**Energy tends to be higher** and motivation to train increases. Neuromuscular performance may improve with rising estrogen.',
+    energySummary: 'Rising — motivation and performance improve with estrogen',
+    energyArc: [0.6, 0.85],
     trainingFocus: [
       {
         title: 'Strength training',
@@ -346,8 +370,11 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     hormoneContext:
       '**Estrogen** peaks and **LH** surges to trigger ovulation. **Testosterone** rises slightly — boosting drive and confidence. ' +
       'High estrogen can make **ligaments slightly looser**, so warm-up and technique **matter more than ever.**',
+    hormoneChips: ['Estrogen ↑ peak', 'LH surge', 'Testosterone ↑ slightly', 'Confidence ↑', 'Ligaments looser', 'Technique matters more'],
     energyPattern:
       '**Energy is at its peak** — confidence is high, thinking feels clearer, and **physical output improves.**',
+    energySummary: 'Cycle peak — highest confidence, clearest thinking, best output',
+    energyArc: [0.9, 1.0],
     trainingFocus: [
       {
         title: 'Personal records',
@@ -389,8 +416,11 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     hormoneContext:
       '**Progesterone** raises body temperature slightly (~0.5°C), speeds metabolism and makes cardio feel harder. ' +
       'Toward the end, both hormones drop — causing **mood dips, bloating and cravings. Normal and temporary.**',
+    hormoneChips: ['Progesterone ↑ dominant', '+0.5°C body temp', 'Metabolism faster', 'Cardio feels harder', 'Estrogen ↓ late', 'Mood dips · bloating · cravings'],
     energyPattern:
       '**Energy varies.** Early in this phase you may feel strong. Later, **fatigue and slower recovery** are common — cardio may feel harder too.',
+    energySummary: 'Varies — strong early · fatigue and slower recovery build late',
+    energyArc: [0.65, 0.3],
     trainingFocus: [
       {
         title: 'Moderate strength',
@@ -428,7 +458,10 @@ const PHASE_INSIGHTS_EN: Record<CyclePhase, PhaseInsight> = {
     tagline: 'Add cycle data to see your personal patterns.',
     overview: 'Adding cycle data gives you personalised insights based on your own logged data.',
     hormoneContext: '',
+    hormoneChips: [],
     energyPattern: '',
+    energySummary: '',
+    energyArc: [0.5, 0.5],
     trainingFocus: [],
     recoveryNote: '',
     wellnessTips: [],
@@ -451,6 +484,8 @@ export interface DetectedPattern {
   type: 'strength' | 'energy' | 'mood' | 'recovery' | 'general';
   title: string;
   body: string;
+  metric: string;   // large callout number/value shown prominently
+  subtext: string;  // one short context line below the title
   confidence: 'preliminary' | 'emerging' | 'consistent';
   color: 'blush' | 'green' | 'beige';
 }
@@ -491,14 +526,18 @@ export function detectPatterns(
       id: 'strength-phase',
       type: 'strength',
       title: isEn
-        ? `Workouts feel stronger in the ${stronger}`
-        : `Treeningud tunduvad ${stronger} tugevamad`,
+        ? `Stronger in the ${stronger}`
+        : `Tugevam ${stronger}`,
       body: isEn
         ? `Based on your ${wCount} logged workouts, average weights in the ${stronger} are ~${abs}% higher. ` +
           `This aligns with research suggesting hormonal changes may influence performance — but individual variation is large. ` +
           `${confidence === 'preliminary' ? 'Log more workouts to make the pattern clearer.' : ''}`
         : `Sinu ${wCount} logitud treeningkorra põhjal on keskmised tõsteraskused ${stronger} ~${abs}% kõrgemad. ` +
           `${confidence === 'preliminary' ? 'Logi rohkem treeninguid, et muster selgemaks muutuks.' : ''}`,
+      metric: `${diff >= 0 ? '+' : '−'}${abs}%`,
+      subtext: isEn
+        ? `avg weight · ${wCount} workouts logged`
+        : `keskmine raskus · ${wCount} treeningkorda`,
       confidence,
       color: diff >= 0 ? 'green' : 'beige',
     });
@@ -514,10 +553,12 @@ export function detectPatterns(
     patterns.push({
       id: 'workout-frequency',
       type: 'general',
-      title: isEn ? `Most workouts logged during ${lbl}` : `Kõige rohkem treeninguid ${lbl}`,
+      title: isEn ? `Most active in ${lbl}` : `Kõige aktiivsem ${lbl}`,
       body: isEn
         ? `${maxPhase[1]} workouts during ${lbl} — your most active phase. This may reflect energy changes or simply your schedule — both are normal.`
         : `Kokku ${maxPhase[1]} treeningkorda ${lbl} — see on sinu kõige aktiivsem faas.`,
+      metric: `${maxPhase[1]}`,
+      subtext: isEn ? 'workouts · your most active phase' : 'treeningkorda · kõige aktiivsem faas',
       confidence: 'emerging',
       color: 'beige',
     });
@@ -532,12 +573,14 @@ export function detectPatterns(
     patterns.push({
       id: 'mood-overall',
       type: 'mood',
-      title: isEn
-        ? `${pct}% of logged days with good or great mood`
-        : `${pct}% logitud päevadest hea või suurepärane tuju`,
+      title: isEn ? 'Days with good or great mood' : 'Hea või suurepärase tujuga päevad',
       body: isEn
         ? `Over ${totalMoodDays} days, you rated your mood positively ${goodMoodDays} times. Tracking mood alongside cycle data helps identify personal patterns over time.`
         : `${totalMoodDays} päeva jooksul hindasid sa tuju ${goodMoodDays} korral positiivselt.`,
+      metric: `${pct}%`,
+      subtext: isEn
+        ? `${goodMoodDays} of ${totalMoodDays} logged days`
+        : `${goodMoodDays} / ${totalMoodDays} logitud päevast`,
       confidence: totalMoodDays >= 10 ? 'emerging' : 'preliminary',
       color: pct >= 60 ? 'green' : 'beige',
     });
@@ -557,6 +600,10 @@ export function detectPatterns(
       body: isEn
         ? `${highEnergyDays} days of high energy logged, ${lowEnergyDays} days of low energy. Tracking energy across your cycle helps plan intense workouts for high-energy periods.`
         : `${highEnergyDays} päeval logisid kõrget energiat, ${lowEnergyDays} päeval madalat.`,
+      metric: dominantHigh ? `${highEnergyDays}↑` : `${lowEnergyDays}↓`,
+      subtext: isEn
+        ? `${highEnergyDays} high · ${lowEnergyDays} low energy days`
+        : `${highEnergyDays} kõrge · ${lowEnergyDays} madal energiapäeva`,
       confidence: 'preliminary',
       color: dominantHigh ? 'green' : 'beige',
     });

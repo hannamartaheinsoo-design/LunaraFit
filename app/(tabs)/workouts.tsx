@@ -151,7 +151,7 @@ function ExercisePicker({
           keyExtractor={item => item.id}
           keyboardShouldPersistTaps="handled"
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: 8 }}
+          contentContainerStyle={{ paddingBottom: 130 }}
           ListEmptyComponent={
             query ? (
               <View style={styles.noResults}>
@@ -600,7 +600,7 @@ export default function WorkoutsScreen() {
         </View>
 
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 130 }}>
 
             {/* Routine name */}
             <View style={styles.builderSection}>
@@ -710,7 +710,7 @@ export default function WorkoutsScreen() {
         </View>
 
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 130 }}>
 
             {/* Date quick select */}
             <View style={styles.builderSection}>
@@ -892,7 +892,7 @@ export default function WorkoutsScreen() {
         ))}
       </View>
 
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 130 }}>
 
         {/* ── LOG TAB ── */}
         {activeTab === 'log' && (
@@ -1377,7 +1377,7 @@ export default function WorkoutsScreen() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 130 }}>
 
             {/* Goal card */}
             <View style={styles.hyroxGoalCard}>

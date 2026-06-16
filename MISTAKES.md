@@ -187,3 +187,21 @@
 **Root cause:** The Edit tool applies an exact-string replacement to the file on disk. If the surrounding file content drifts between the Read and the Edit (or if the replacement collapses enough lines), the result can inadvertently match a different baseline version. Unstaged changes have no safety net.
 **Fix applied:** Recovered the CycleRing version from `git stash@{0}` which happened to contain it. Rewrote the file from the stash snapshot.
 **Rule going forward:** Before making any edit to a file that has unstaged local modifications, commit or stash those changes first. Always run `git diff HEAD -- <file>` before editing to understand what is at risk. Never assume an Edit is atomic with respect to local-only content.
+
+### [2026-06-16] RichText inline bold causes spacing gaps in paragraph text on RN web
+**What happened:** Using `<RichText>` for the overview paragraph in the Insights Body tab rendered bold spans with visible extra whitespace between them and the surrounding text, e.g. "**Progesterone rises**   and energy may shift." — a noticeable gap appeared after each bold span.
+**Root cause:** React Native Web renders inline `<Text>` children inside a parent `<Text>` with an implicit space. When bold text is split into a nested `<Text>` component, the inline-block rendering in HTML adds spacing that doesn't match native RN.
+**Fix applied:** Stripped `**` markers with `.replace(/\*\*/g, '')` and rendered the overview as a plain `<Text>` instead of `<RichText>`.
+**Rule going forward:** Use `<RichText>` only for short sentences or bullet points where bold emphasis is needed on a keyword. Never use it for full multi-sentence paragraphs — strip the markers and render plain `<Text>` instead.
+
+### [2026-06-16] `borderWidth: 1` + `borderLeftWidth: 3` override stacks visually as a double border on RN web
+**What happened:** Training tip cards used `borderWidth: 1` in `StyleSheet.create` and then `borderLeftWidth: 3` in an inline style override. On RN web this rendered as a visible double line on the left edge — the 1px card border plus the 3px accent strip appeared stacked rather than replaced.
+**Root cause:** RN web CSS merge may not cleanly override `borderWidth` shorthand with a single-side `borderLeftWidth`. Both rules end up applied simultaneously.
+**Fix applied:** Removed `borderWidth` from the base StyleSheet entry and set all four border sides explicitly in the inline style object: `borderTopWidth, borderRightWidth, borderBottomWidth, borderLeftWidth` each with their own `*Color`.
+**Rule going forward:** When using a coloured left accent strip (3px) on a card that also needs a thin border (1px) on other sides, always set all four borders explicitly. Never mix `borderWidth` shorthand with a single-side override.
+
+### [2026-06-16] Fixed tab bar hides bottom content on all screens
+**What happened:** After setting `position: 'fixed'` on the web tab bar, the last items on every scroll screen were hidden under the bar. Only the screen that already had a large `paddingBottom` (insights, with 100px) was partially safe; all others (home: 24px, workouts: 8px, cycle/profile: none) had content cut off.
+**Root cause:** A fixed-position element is removed from document flow. Scroll containers don't know it exists and stop exactly at the viewport bottom, letting the bar overlap the final content.
+**Fix applied:** Set `paddingBottom: 130` (≥ tab bar height of 130px) on `contentContainerStyle` for every `ScrollView` and `FlatList` across all five tab screens.
+**Rule going forward:** Whenever the tab bar height changes, grep for every `contentContainerStyle` in `app/(tabs)/` and ensure `paddingBottom` matches or exceeds the bar's `height`. One screen left without it will look broken.

@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
   avatarText: { fontFamily: Fonts.sansBold, fontSize: 15, color: Colors.blush[600] },
 
   scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 24 },
+  scrollContent: { paddingBottom: 130 },
 
   greeting: { paddingHorizontal: 24, paddingBottom: 12, paddingTop: 2 },
   dateLabel: {

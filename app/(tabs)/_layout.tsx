@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import { Platform } from 'react-native';
 import { Colors, Fonts } from '../../constants/theme';
 import { Icon } from '../../components/ui/Icon';
 import { useTranslation } from '../../lib/LangContext';
@@ -26,6 +26,15 @@ export default function TabLayout() {
           paddingBottom: 24,
           paddingTop: 10,
           height: 80,
+          // On web: pin to bottom and add safe-area-style breathing room
+          ...(Platform.OS === 'web' ? {
+            position: 'fixed' as any,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            paddingBottom: 60,
+            height: 130,
+          } : {}),
         },
         tabBarActiveTintColor: T.text,
         tabBarInactiveTintColor: T.textMuted,
