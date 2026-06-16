@@ -10,6 +10,7 @@ import { Icon } from '../../components/ui/Icon';
 import { Input } from '../../components/ui/Input';
 import { useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+
 import { useTranslation } from '../../lib/LangContext';
 
 function StepBar({ step, total }: { step: number; total: number }) {
@@ -69,11 +70,9 @@ export default function NameScreen() {
       {/* Nav */}
       <Animated.View style={a0}>
         <View style={styles.navRow}>
-          {navigation.canGoBack() && (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
-              <Text style={styles.backIcon}>‹</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity onPress={() => router.replace('/(onboarding)/signup' as any)} style={styles.backBtn} hitSlop={12}>
+            <Text style={styles.backIcon}>‹</Text>
+          </TouchableOpacity>
         </View>
         <StepBar step={1} total={7} />
       </Animated.View>
@@ -126,7 +125,7 @@ export default function NameScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.cream },
+  root: { flex: 1, backgroundColor: Colors.sky[50] },
 
   navRow: {
     flexDirection: 'row', alignItems: 'center',
@@ -157,14 +156,14 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: Fonts.sansLight, fontSize: 17,
-    color: Colors.beige[400], lineHeight: 26, marginBottom: 40,
+    color: Colors.beige[600], lineHeight: 26, marginBottom: 40,
   },
 
   footer: { paddingHorizontal: 24, paddingBottom: 48, paddingTop: 12 },
   ctaBtn: {
-    height: 60, borderRadius: 999, backgroundColor: Colors.beige[800],
+    height: 60, borderRadius: 999, backgroundColor: Colors.blush[400],
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: Colors.beige[800], shadowOffset: { width: 0, height: 8 },
+    shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.28, shadowRadius: 16, elevation: 8,
   },
   ctaBtnText: { fontFamily: Fonts.sansBold, fontSize: 17, color: '#fff', letterSpacing: 0.2 },

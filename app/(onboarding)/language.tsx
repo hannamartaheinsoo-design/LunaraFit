@@ -6,9 +6,12 @@ import { Colors, Fonts } from '../../constants/theme';
 import { useTranslation } from '../../lib/LangContext';
 
 const { width: W, height: H } = Dimensions.get('window');
-const D  = W * 1.58;
-const OX = -(D - W) / 2;
-const OY = (H - D) / 2;
+
+const D   = W * 1.3;
+const OX  = -(D - W) / 2;
+const OY  = (H - D) / 2;
+const ARC_TOP = (OY + D / 2 - Math.sqrt((D / 2) ** 2 - (W / 2) ** 2)) / H;
+const ARC_BOT = 1 - ARC_TOP;
 
 const LANGS = [
   { code: 'et' as const, flag: '🇪🇪', name: 'Eesti' },
@@ -40,13 +43,23 @@ export default function LanguageScreen() {
 
   return (
     <View style={styles.root}>
-      {/* Same ombre gradient */}
+      {/* Background gradient */}
       <LinearGradient
-        colors={['#D4607C', '#EFA8BC', '#F8E4EB', '#FAFAFA', '#FAFAFA', '#E0C0F0', '#A870C0']}
+        colors={['#7A9AB0', '#7A9AB0', '#F0F4F8', '#FFFFFF', '#FFFFFF', '#F0F4F8', '#7A9AB0']}
         locations={[0, 0.14, 0.30, 0.44, 0.56, 0.82, 1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFill}
+      />
+
+      {/* Outer halo: fades from transparent → white at circle boundary */}
+      <LinearGradient
+        colors={['transparent', 'rgba(255,255,255,0.5)', '#ffffff', '#ffffff', 'rgba(255,255,255,0.5)', 'transparent']}
+        locations={[0, ARC_TOP - 0.06, ARC_TOP + 0.01, ARC_BOT - 0.01, ARC_BOT + 0.06, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
       />
 
       {/* Back button floats above gradient */}
@@ -54,7 +67,7 @@ export default function LanguageScreen() {
         <Text style={styles.backIcon}>‹</Text>
       </TouchableOpacity>
 
-      {/* Same white oval — content inside */}
+      {/* Solid white oval */}
       <View style={[styles.oval, { width: D, height: D, borderRadius: D / 2, left: OX, top: OY }]}>
         <View style={styles.inner}>
 
@@ -112,10 +125,7 @@ const styles = StyleSheet.create({
   oval: {
     position: 'absolute',
     backgroundColor: '#ffffff',
-    shadowColor: '#B060A0',
-    shadowOpacity: 0.08,
-    shadowRadius: 60,
-    shadowOffset: { width: 0, height: 0 },
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -127,22 +137,22 @@ const styles = StyleSheet.create({
 
   heading: {
     fontFamily: Fonts.sansBold,
-    fontSize: 32,
+    fontSize: 28,
     color: Colors.beige[800],
     letterSpacing: -0.8,
-    marginBottom: 36,
+    marginBottom: 24,
     textAlign: 'center',
   },
 
-  list: { width: '100%', gap: 10, marginBottom: 44 },
+  list: { width: '100%', gap: 8, marginBottom: 32 },
 
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 18,
+    gap: 14,
+    paddingVertical: 11,
+    paddingHorizontal: 16,
+    borderRadius: 14,
     backgroundColor: 'rgba(255,255,255,0.0)',
     borderWidth: 1.5,
     borderColor: 'rgba(200,170,190,0.28)',
@@ -152,13 +162,13 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(212,96,124,0.32)',
   },
 
-  flag: { fontSize: 24 },
+  flag: { fontSize: 20 },
 
   name: {
     flex: 1,
     fontFamily: Fonts.sansMedium,
-    fontSize: 15,
-    color: Colors.beige[500] ?? Colors.beige[400],
+    fontSize: 14,
+    color: Colors.beige[400],
     letterSpacing: 0.1,
   },
   nameActive: {
@@ -181,15 +191,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 999,
-    backgroundColor: 'rgba(212,96,124,0.09)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(212,96,124,0.22)',
+    backgroundColor: Colors.blush[400],
   },
   pillTxt: {
     fontFamily: Fonts.sansMedium,
     fontSize: 12,
     letterSpacing: 1.8,
-    color: Colors.blush[600],
+    color: '#ffffff',
     textTransform: 'uppercase',
   },
 });

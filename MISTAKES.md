@@ -242,6 +242,24 @@
 **Fix applied:** Changed `"chart"` to `"barbell"` which is the closest match for workout progress.
 **Rule going forward:** Before using any icon name, grep `components/ui/Icon.tsx` to confirm the name is in the `case` list. Never guess icon names.
 
+### [2026-06-16] Circle gradient clip edge visible when gradient stops don't reach transparent before arc boundary
+**What happened:** A LinearGradient inside a circular View (borderRadius = D/2) faded from transparent at position 0 to white at position 0.14. The circle's arc crossed the screen at ~11% from the top/bottom of the oval, so the gradient was already semi-opaque at the clip boundary — creating a visible hard arc line.
+**Root cause:** Gradient stop positions were chosen without calculating where the circle's arc actually intersects the screen edges. The clip line is only invisible when the gradient is fully transparent at that intersection point.
+**Fix applied:** Moved the outer halo gradient to a full-screen layer behind the solid white oval, aligning transparent→white stops to the calculated arc position (`ARC_TOP = (OY + D/2 - sqrt((D/2)² - (W/2)²)) / H`).
+**Rule going forward:** When fading a circular clip shape into a background, always calculate the arc's screen intersection coordinates and ensure the gradient reaches fully transparent before that point. Use a full-screen overlay gradient behind a solid shape rather than trying to fade inside the clipped shape.
+
+### [2026-06-16] `router.back()` silently fails on web when there is no navigation history
+**What happened:** A back button on the name screen used `router.back()`. When the screen was the first in the stack (e.g. direct URL load or post-auth redirect), `back()` did nothing — pressing the button had no visible effect.
+**Root cause:** `router.back()` requires browser history to exist. On web, if the user arrived via `router.replace()` or a direct URL, there is no history entry to go back to.
+**Fix applied:** Replaced `router.back()` with `router.replace('/(onboarding)/signup')` to navigate explicitly regardless of history state.
+**Rule going forward:** Never use `router.back()` in onboarding screens. Always use `router.replace('<explicit-previous-route>')` so navigation works whether or not history exists.
+
+### [2026-06-16] Signup screen's own useEffect bounced users back to name when navigating back
+**What happened:** The name screen's back button navigated to signup via `router.replace`. But signup mounted its own `useEffect` watching `isAuthenticated`, which immediately fired (user was still authenticated + not onboarded) and called `router.replace('/(onboarding)/name')` — sending the user straight back.
+**Root cause:** The post-auth redirect useEffect in signup ran unconditionally on mount, treating any authenticated user as having just signed in.
+**Fix applied:** Added a `didSignIn` ref (default `false`) to signup. The redirect useEffect only fires when `didSignIn.current === true`. The ref is set to `true` just before calling `signIn()`, and reset to `false` on sign-in error.
+**Rule going forward:** Post-auth redirect useEffects in auth screens must be gated on a ref that tracks whether the user actively signed in during this screen mount. Never redirect based solely on `isAuthenticated` state — the screen may be revisited by navigating back while the user is already authenticated.
+
 ### [2026-06-16] Nested horizontal ScrollView inside vertical ScrollView blocks native scroll
 **What happened:** A horizontal `ScrollView` (chip row) nested inside the vertical home screen `ScrollView` intercepted touch events on native. When a user tried to scroll down in the chip row area, the horizontal scroller consumed the gesture and the vertical scroll did not trigger.
 **Root cause:** React Native's gesture system gives priority to the inner ScrollView when both horizontal and vertical gestures could apply. On web this is invisible since mouse scroll events propagate differently.

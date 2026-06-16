@@ -8,8 +8,8 @@ import { useTranslation } from '../../lib/LangContext';
 
 const CARDS = [
   { icon: 'moon'    as const, keyTitle: 'overview.card1.title', keyBody: 'overview.card1.body', grad: [Colors.blush[200], Colors.blush[400]] as const },
-  { icon: 'barbell' as const, keyTitle: 'overview.card2.title', keyBody: 'overview.card2.body', grad: [Colors.sky[200],   Colors.sky[400]]   as const },
-  { icon: 'spark'   as const, keyTitle: 'overview.card3.title', keyBody: 'overview.card3.body', grad: [Colors.berry[200], Colors.berry[400]] as const },
+  { icon: 'barbell' as const, keyTitle: 'overview.card2.title', keyBody: 'overview.card2.body', grad: [Colors.blush[200], Colors.blush[400]] as const },
+  { icon: 'spark'   as const, keyTitle: 'overview.card3.title', keyBody: 'overview.card3.body', grad: [Colors.blush[200], Colors.blush[400]] as const },
 ] as const;
 
 function useFade(delay: number) {
@@ -33,7 +33,7 @@ export default function OverviewScreen() {
 
   return (
     <View style={styles.root}>
-      <LinearGradient colors={['#F5ECEA', '#EFE4E0', '#FAFAFA']} locations={[0, 0.45, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+      <LinearGradient colors={[Colors.sky[50], Colors.sky[50], '#FFFFFF']} locations={[0, 0.45, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
 
       <Animated.View style={a0}>
         <View style={styles.navRow}>
@@ -72,7 +72,7 @@ export default function OverviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.cream },
+  root: { flex: 1, backgroundColor: Colors.sky[50] },
   navRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center' },
   backIcon: { fontSize: 24, color: Colors.beige[600], lineHeight: 28, marginTop: -2 },
@@ -93,9 +93,9 @@ const styles = StyleSheet.create({
   cardText: { fontFamily: Fonts.sansLight, fontSize: 13.5, color: Colors.beige[400], lineHeight: 20 },
   footer: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 44 },
   ctaBtn: {
-    height: 58, borderRadius: 999, backgroundColor: Colors.beige[800],
+    height: 58, borderRadius: 999, backgroundColor: Colors.blush[400],
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: Colors.beige[800], shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 8,
+    shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 8,
   },
   ctaBtnText: { fontFamily: Fonts.sansBold, fontSize: 16, color: '#fff', letterSpacing: 0.2 },
 });

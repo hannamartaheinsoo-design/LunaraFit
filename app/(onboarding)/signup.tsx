@@ -65,10 +65,12 @@ export default function SignupScreen() {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState<string | null>(null);
+  // Only redirect if user actively signed in during this screen mount
+  const didSignIn = React.useRef(false);
 
-  // Redirect once auth state settles after sign-in
+  // Redirect only after a fresh sign-in on this screen, not when navigating back
   useEffect(() => {
-    if (!isReady || !isAuthenticated) return;
+    if (!isReady || !isAuthenticated || !didSignIn.current) return;
     if (isOnboarded) {
       router.replace('/(tabs)/home' as any);
     } else {
@@ -86,6 +88,7 @@ export default function SignupScreen() {
     if (flow === 'signUp' && !pwValid(password)) { setError(t('auth.err.password')); return; }
     setError('');
     setLoading('email');
+    didSignIn.current = true;
     try {
       const fd = new FormData();
       fd.append('email', email.trim().toLowerCase());
@@ -93,6 +96,7 @@ export default function SignupScreen() {
       fd.append('flow', flow);
       await signIn('password', fd);
     } catch (e: any) {
+      didSignIn.current = false;
       setError(e?.message ?? t('auth.err.generic'));
     } finally {
       setLoading(null);
@@ -102,6 +106,7 @@ export default function SignupScreen() {
   async function signInWith(provider: 'google' | 'apple') {
     setLoading(provider);
     setError('');
+    didSignIn.current = true;
     try {
       await signIn(provider);
       // useEffect above handles redirect once isAuthenticated settles
@@ -147,7 +152,7 @@ export default function SignupScreen() {
           >
             {loading === 'google'
               ? <ActivityIndicator size="small" color={Colors.beige[400]} />
-              : <><GoogleIcon /><Text style={styles.socialBtnTxt}>{t('auth.google')}</Text></>}
+              : <><View style={styles.socialIcon}><GoogleIcon /></View><Text style={styles.socialBtnTxt}>{t('auth.google')}</Text></>}
           </Pressable>
           <Pressable
             style={[styles.socialBtn, styles.socialBtnApple]}
@@ -156,7 +161,7 @@ export default function SignupScreen() {
           >
             {loading === 'apple'
               ? <ActivityIndicator size="small" color="#fff" />
-              : <><AppleIcon /><Text style={[styles.socialBtnTxt, { color: '#fff' }]}>{t('auth.apple')}</Text></>}
+              : <><View style={styles.socialIcon}><AppleIcon /></View><Text style={[styles.socialBtnTxt, { color: '#fff' }]}>{t('auth.apple')}</Text></>}
           </Pressable>
         </View>
 
@@ -177,7 +182,7 @@ export default function SignupScreen() {
               value={email}
               onChangeText={v => { setEmail(v); setError(''); }}
               placeholder={t('auth.email.ph')}
-              placeholderTextColor={Colors.beige[200]}
+              placeholderTextColor={Colors.beige[400]}
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
@@ -194,18 +199,18 @@ export default function SignupScreen() {
         <View style={styles.field}>
           <Text style={styles.fieldLabel}>{t('auth.password.lbl')}</Text>
           <View style={styles.inputRow}>
-            <Icon name="lock" size={16} color={Colors.beige[400]} />
+            <Icon name="lock" size={16} color={Colors.beige[600]} />
             <TextInput
               style={styles.input}
               value={password}
               onChangeText={v => { setPassword(v); setError(''); }}
               placeholder={t('auth.password.ph')}
-              placeholderTextColor={Colors.beige[200]}
+              placeholderTextColor={Colors.beige[400]}
               secureTextEntry={!showPw}
               autoComplete={flow === 'signUp' ? 'new-password' : 'current-password'}
             />
             <Pressable onPress={() => setShowPw(s => !s)} hitSlop={8}>
-              <Icon name="eye" size={18} color={showPw ? Colors.blush[400] : Colors.beige[400]} strokeWidth={1.4} />
+              <Icon name="eye" size={18} color={showPw ? Colors.blush[400] : Colors.beige[600]} strokeWidth={1.4} />
             </Pressable>
           </View>
           {flow === 'signUp' && (
@@ -251,7 +256,7 @@ export default function SignupScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.cream },
+  root: { flex: 1, backgroundColor: Colors.sky[50] },
   navRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingTop: 56, paddingBottom: 14,
@@ -276,21 +281,23 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: Fonts.sansLight, fontSize: 15,
-    color: Colors.beige[400], lineHeight: 22, marginBottom: 28,
+    color: Colors.beige[600], lineHeight: 22, marginBottom: 28,
   },
 
-  socialRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
+  socialRow: { flexDirection: 'column', gap: 10, marginBottom: 20 },
   socialBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, paddingVertical: 13, borderRadius: Radius.md, borderWidth: 1.5,
+    alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 13, borderRadius: Radius.md, borderWidth: 1.5,
+    position: 'relative',
   },
+  socialIcon: { position: 'absolute', left: 16 },
   socialBtnGoogle: { borderColor: '#DADCE0', backgroundColor: '#fff' },
   socialBtnApple: { borderColor: '#000', backgroundColor: '#000' },
-  socialBtnTxt: { fontSize: 13, fontFamily: Fonts.sansMedium, color: Colors.beige[800] },
+  socialBtnTxt: { fontSize: 12, fontFamily: Fonts.sansMedium, color: Colors.beige[800], textAlign: 'center' },
 
   divider: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   divLine: { flex: 1, height: 1, backgroundColor: Colors.beige[100] },
-  divTxt: { marginHorizontal: 12, fontSize: 12, fontFamily: Fonts.sansLight, color: Colors.beige[400] },
+  divTxt: { marginHorizontal: 12, fontSize: 12, fontFamily: Fonts.sansLight, color: Colors.beige[600] },
 
   field: { marginBottom: 14 },
   fieldLabel: {
@@ -307,7 +314,7 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 15, fontFamily: Fonts.sans, color: Colors.beige[800] },
   pwHint: {
     fontSize: 11, fontFamily: Fonts.sansLight,
-    color: Colors.beige[200], marginTop: 5, lineHeight: 16,
+    color: Colors.beige[400], marginTop: 5, lineHeight: 16,
   },
 
   errorBox: { backgroundColor: Colors.error.bg, borderRadius: Radius.sm, padding: 12, marginBottom: 12 },
@@ -318,7 +325,7 @@ const styles = StyleSheet.create({
 
   footer: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 44 },
   ctaBtn: {
-    height: 58, borderRadius: 999, backgroundColor: Colors.beige[800],
+    height: 58, borderRadius: 999, backgroundColor: Colors.blush[400],
     alignItems: 'center', justifyContent: 'center',
   },
   ctaBtnLoading: { opacity: 0.7 },

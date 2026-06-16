@@ -167,18 +167,26 @@ Palette maps: `{ 50, 100, 200, 400, 600, 800 }` — indices 300, 500, 700 do NOT
 
 # Onboarding Flow — routing & auth
 
-**Onboarding screens:** `app/(onboarding)/` — welcome → signup → name → fitness → plan
+**Onboarding screens:** `app/(onboarding)/` — welcome → language → overview → signup → name → birthdate → …
 
-**Auth is step 2 of onboarding** (not a pre-gate). Unauthenticated users land on `welcome`, pick language, then proceed to `signup` to create/sign-in. The `/(auth)/login` route still exists but is no longer the primary entry point.
+**Auth is step 4 of onboarding** (not a pre-gate). Unauthenticated users land on `welcome`, pick language, see the overview, then proceed to `signup` to create/sign-in. The `/(auth)/login` route still exists but is no longer the primary entry point.
 
 **NavigationController routing (in `_layout.tsx`):**
 - unauthenticated → `/(onboarding)/welcome`
 - authenticated + not onboarded (no `profile.name`) → `/(onboarding)/name`
 - authenticated + onboarded → `/(tabs)/home`
 
-**Post-auth redirect rule:** Any screen that calls `signIn()` must have its own `useEffect` watching `isReady + isAuthenticated + isOnboarded` to redirect after auth settles. Do NOT rely solely on `NavigationController` — it has a dev bypass (`ob_preview` sessionStorage) and can miss transitions.
+**Post-auth redirect rule:** Any screen that calls `signIn()` must have its own `useEffect` gated on a `didSignIn` ref (set to `true` just before calling `signIn()`). Do NOT redirect based solely on `isAuthenticated` — the screen may be revisited by navigating back while already authenticated, which would bounce the user forward again.
+
+**Back button rule:** Never use `router.back()` in onboarding screens — it silently fails when there is no browser history (e.g. after a `router.replace`). Always use `router.replace('<explicit-previous-route>')`.
 
 **CTA button rule:** Never wrap primary action buttons in `Animated.View` with an opacity/delay animation. Animate content cards and headings only. The CTA must be visible from the moment the screen mounts.
+
+**Onboarding visual style:**
+- Pages 1–2 (welcome, language): full-screen blue gradient (`#7A9AB0` → white → `#7A9AB0`) with a solid white oval (D = W×1.3) and outer halo gradient aligned to `ARC_TOP/ARC_BOT`
+- Pages 3+ (overview, signup, name, …): flat `Colors.sky[50]` (`#F0F4F8`) background
+- All CTA buttons: `Colors.blush[400]` (`#D9898B`) pink with white text
+- Stack `contentStyle` is `Colors.sky[50]` and `animation: 'slide_from_right'` so transitions are consistent
 
 ---
 

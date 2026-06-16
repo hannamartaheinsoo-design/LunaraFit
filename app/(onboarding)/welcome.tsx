@@ -7,11 +7,15 @@ import { useTranslation } from '../../lib/LangContext';
 
 const { width: W, height: H } = Dimensions.get('window');
 
-// Oval is a circle wider than screen so gradient peeks at top & bottom.
-// Diameter driven by screen width so it scales across device sizes.
-const D  = W * 1.58;
-const OX = -(D - W) / 2;          // negative: extends equally beyond both sides
-const OY = (H - D) / 2;           // centres vertically on screen
+// Solid white circle — slightly inset so colorful edges stay visible.
+// Halo gradient lives OUTSIDE the oval, fading from white at circle edge → transparent.
+const D  = W * 1.3;
+const OX = -(D - W) / 2;
+const OY = (H - D) / 2;
+// Where the top/bottom arc crosses the screen edges (fraction of H).
+// Used to align the outer halo gradient precisely to the circle boundary.
+const ARC_TOP = (OY + D / 2 - Math.sqrt((D / 2) ** 2 - (W / 2) ** 2)) / H;
+const ARC_BOT = 1 - ARC_TOP;
 
 function useFade(delay: number) {
   const op = useRef(new Animated.Value(0)).current;
@@ -38,14 +42,24 @@ export default function WelcomeScreen() {
     <View style={styles.root}>
       {/* ── Ombre gradient background ── */}
       <LinearGradient
-        colors={['#D4607C', '#EFA8BC', '#F8E4EB', '#FAFAFA', '#FAFAFA', '#E0C0F0', '#A870C0']}
+        colors={['#7A9AB0', '#7A9AB0', '#F0F4F8', '#FFFFFF', '#FFFFFF', '#F0F4F8', '#7A9AB0']}
         locations={[0, 0.14, 0.30, 0.44, 0.56, 0.82, 1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
 
-      {/* ── White oval — content lives inside ── */}
+      {/* ── Outer halo: fades from transparent (screen edges) → white (at circle boundary) ── */}
+      <LinearGradient
+        colors={['transparent', 'rgba(255,255,255,0.5)', '#ffffff', '#ffffff', 'rgba(255,255,255,0.5)', 'transparent']}
+        locations={[0, ARC_TOP - 0.06, ARC_TOP + 0.01, ARC_BOT - 0.01, ARC_BOT + 0.06, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+
+      {/* ── Solid white oval — clean circle edge ── */}
       <View style={[styles.oval, { width: D, height: D, borderRadius: D / 2, left: OX, top: OY }]}>
         {/* Inner content is constrained to visible screen width */}
         <View style={styles.inner}>
@@ -81,6 +95,7 @@ const styles = StyleSheet.create({
   oval: {
     position: 'absolute',
     backgroundColor: '#ffffff',
+    overflow: 'hidden',
     // Subtle lift so the gradient at edges reads as light not flat
     shadowColor: '#B060A0',
     shadowOpacity: 0.08,
@@ -103,7 +118,7 @@ const styles = StyleSheet.create({
     marginBottom: 44,
   },
   logoAccent: {
-    fontFamily: Fonts.sansLight,
+    fontFamily: Fonts.sansBold,
     fontSize: 18,
     color: Colors.blush[400],
     letterSpacing: 0.8,
@@ -129,15 +144,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 999,
-    backgroundColor: 'rgba(212,96,124,0.09)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(212,96,124,0.22)',
+    backgroundColor: Colors.blush[400],
+    borderWidth: 0,
   },
   pillTxt: {
     fontFamily: Fonts.sansMedium,
     fontSize: 12,
     letterSpacing: 1.8,
-    color: Colors.blush[600],
+    color: '#ffffff',
     textTransform: 'uppercase',
   },
 });
