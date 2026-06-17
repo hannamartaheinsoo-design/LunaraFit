@@ -260,6 +260,30 @@
 **Fix applied:** Added a `didSignIn` ref (default `false`) to signup. The redirect useEffect only fires when `didSignIn.current === true`. The ref is set to `true` just before calling `signIn()`, and reset to `false` on sign-in error.
 **Rule going forward:** Post-auth redirect useEffects in auth screens must be gated on a ref that tracks whether the user actively signed in during this screen mount. Never redirect based solely on `isAuthenticated` state — the screen may be revisited by navigating back while the user is already authenticated.
 
+### [2026-06-17] isOnboarded shortcut triggered mid-onboarding redirect to home
+**What happened:** `isOnboarded` in `authContext.tsx` was defined as `onboarding_complete === true || (name && fitness_level)`. After the user completed the fitness step, both `name` and `fitness_level` were set, making `isOnboarded` true. The NavigationController then redirected to `/(tabs)/home`, skipping the body composition, plan, and ready screens entirely.
+**Root cause:** The legacy shortcut `name && fitness_level` was kept for backwards compatibility but fires mid-onboarding for any user who progresses past the fitness screen.
+**Fix applied:** Removed the shortcut. `isOnboarded` is now only `profile?.onboarding_complete === true`. Ran `seed:markExistingUsersOnboarded` to patch all existing named profiles.
+**Rule going forward:** Never use partial profile fields as an onboarding completion signal. Only `onboarding_complete === true` (set on the final ready screen) should gate home access.
+
+### [2026-06-17] NavigationController only excluded "signup" from mid-onboarding redirect guard
+**What happened:** The redirect guard checked `!path.includes('signup')` before sending authenticated+not-onboarded users to `/name`. Any other onboarding screen (birthdate, cycle, fitness, body, plan, ready) was not excluded, so the controller could fire and override mid-onboarding navigation.
+**Root cause:** Guard was added only for the signup edge case, not for the full onboarding path.
+**Fix applied:** Changed check to `!path.includes('onboarding')` so the controller leaves users alone on any onboarding screen.
+**Rule going forward:** NavigationController redirect guards for the "not onboarded" state must check for the full `onboarding` path prefix, not just individual screen names.
+
+### [2026-06-17] position:absolute selectRing overlapped badge chip in plan card header
+**What happened:** The selection ring indicator on plan cards was `position: absolute, top: 18, right: 18`. The badge chip (PRO / Current / -17%) in the card header was also near the top-right, causing visual overlap and the "Most popular" tag overlapping with the badge.
+**Root cause:** Absolute positioning was used for a UI element that lives in the same visual zone as flex-layout children.
+**Fix applied:** Moved select ring into the `cardHeaderRight` flex row as an inline sibling of the badge. Moved popular tag to `top: 0, left: 0` (bottom-right radius only) so it no longer conflicts with right-side elements.
+**Rule going forward:** Never use `position: absolute` for selection indicators or decorative tags that share a visual region with flex-layout card header content. Use inline flex siblings instead.
+
+### [2026-06-17] Signing in via fetch in preview doesn't persist Convex auth tokens
+**What happened:** Used `fetch('/api/auth/signin/password', ...)` in `preview_eval` to sign in, got status 200, but subsequent page navigations still treated the user as unauthenticated.
+**Root cause:** Convex Auth uses its own token storage (localStorage keys) that aren't set by a bare fetch call — the response sets a cookie/token but the Convex client doesn't pick it up without a page reload that re-initialises the Convex provider.
+**Fix applied:** Used `window.location.reload()` after the fetch sign-in and waited for the page to settle before navigating.
+**Rule going forward:** After a fetch-based sign-in in preview_eval, always call `window.location.reload()` and wait before navigating. Prefer testing auth-gated screens by signing in through the actual UI flow rather than fetch shortcuts.
+
 ### [2026-06-16] Nested horizontal ScrollView inside vertical ScrollView blocks native scroll
 **What happened:** A horizontal `ScrollView` (chip row) nested inside the vertical home screen `ScrollView` intercepted touch events on native. When a user tried to scroll down in the chip row area, the horizontal scroller consumed the gesture and the vertical scroll did not trigger.
 **Root cause:** React Native's gesture system gives priority to the inner ScrollView when both horizontal and vertical gestures could apply. On web this is invisible since mouse scroll events propagate differently.

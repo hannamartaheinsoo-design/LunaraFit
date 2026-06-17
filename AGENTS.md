@@ -28,7 +28,7 @@ This project uses **Convex** as the backend and **`@convex-dev/auth`** for authe
 - Auth providers: email/password (works), Google + Apple (need `AUTH_GOOGLE_ID/SECRET`, `AUTH_APPLE_ID/SECRET` env vars)
 - Backend files: `convex/schema.ts`, `convex/auth.ts`, `convex/profiles.ts`, `convex/workouts.ts`, `convex/cycleDays.ts`, `convex/userData.ts`
 - `cycle_days` table has: `period` (bool), `spotting` (optional bool), `mood`, `symptoms[]`
-- `profiles` table has: `birth_year`, `birth_month`, `birth_day` (all optional numbers) — used together for precise age validation (≥ 16 required)
+- `profiles` table has: `birth_year`, `birth_month`, `birth_day` (all optional numbers) — used together for precise age validation (≥ 16 required); `weight_kg`, `height_cm`, `body_fat_pct`, `muscle_pct` (all optional numbers); `onboarding_complete` (optional boolean — set true on ready screen)
 
 **Data access — always use Convex, never `storage.*`:**
 - Read: `useQuery(api.profiles.get)`, `useQuery(api.workouts.list)`, `useQuery(api.cycleDays.list)` — reactive, no `useEffect` needed
@@ -173,8 +173,10 @@ Palette maps: `{ 50, 100, 200, 400, 600, 800 }` — indices 300, 500, 700 do NOT
 
 **NavigationController routing (in `_layout.tsx`):**
 - unauthenticated → `/(onboarding)/welcome`
-- authenticated + not onboarded (no `profile.name`) → `/(onboarding)/name`
+- authenticated + not onboarded → `/(onboarding)/name` (only if path does not already include `onboarding`)
 - authenticated + onboarded → `/(tabs)/home`
+
+**`isOnboarded` definition:** `profile?.onboarding_complete === true` only. Do NOT use `name && fitness_level` as a shortcut — that fires mid-onboarding and sends the user to home before they finish. The `onboarding_complete` flag is set on the final ready screen.
 
 **Post-auth redirect rule:** Any screen that calls `signIn()` must have its own `useEffect` gated on a `didSignIn` ref (set to `true` just before calling `signIn()`). Do NOT redirect based solely on `isAuthenticated` — the screen may be revisited by navigating back while already authenticated, which would bounce the user forward again.
 
@@ -184,9 +186,17 @@ Palette maps: `{ 50, 100, 200, 400, 600, 800 }` — indices 300, 500, 700 do NOT
 
 **Onboarding visual style:**
 - Pages 1–2 (welcome, language): full-screen blue gradient (`#7A9AB0` → white → `#7A9AB0`) with a solid white oval (D = W×1.3) and outer halo gradient aligned to `ARC_TOP/ARC_BOT`
-- Pages 3+ (overview, signup, name, …): flat `Colors.sky[50]` (`#F0F4F8`) background
-- All CTA buttons: `Colors.blush[400]` (`#D9898B`) pink with white text
+- Pages 3+ (overview, signup, name, birthdate, cycle, fitness, body, plan, ready): flat `Colors.sky[50]` (`#F0F4F8`) background
+- All top icon orbs: `LinearGradient` with `[Colors.blush[100], Colors.blush[400]]` (pink)
+- All CTA buttons: `Colors.blush[400]` (`#D9898B`) pink with white text — including disabled states use `Colors.beige[200]`
 - Stack `contentStyle` is `Colors.sky[50]` and `animation: 'slide_from_right'` so transitions are consistent
+
+**Incomplete onboarding email re-use:** If a user starts sign-up but drops out before finishing, their email is already registered. The signup screen handles this by silently retrying `signIn` when `signUp` fails with "already exists" and the same password works — resuming onboarding. If `signIn` also fails (wrong password), show `auth.err.emailTaken` error.
+
+**Absolute-positioned elements inside plan cards:** do not use `position: absolute` for selection indicators or tags that sit near the card header row — they overlap with inline badge chips. Either use flex layout (inline sibling) or position the absolute element on the opposite side (e.g. popular tag at `top: 0, left: 0` not `right`).
+
+**`seed:deleteUser`** — available in `convex/seed.ts` to delete a user account and all associated data: `npx convex run seed:deleteUser '{"userId":"<id>"}'`
+**`seed:markExistingUsersOnboarded`** — marks all profiles with a `name` as `onboarding_complete: true`. Run after changing the `isOnboarded` definition to avoid locking out existing users.
 
 ---
 
