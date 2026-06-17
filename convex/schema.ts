@@ -33,6 +33,8 @@ export default defineSchema({
     birth_day:        v.optional(v.number()),
     weight_kg:        v.optional(v.number()),
     height_cm:        v.optional(v.number()),
+    body_fat_pct:     v.optional(v.number()),
+    muscle_pct:       v.optional(v.number()),
     uses_birth_control: v.optional(v.boolean()),
     cycle_length:     v.number(),
     period_length:    v.number(),
