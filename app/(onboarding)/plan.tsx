@@ -113,7 +113,7 @@ export default function PlanScreen() {
                     </View>
                   )}
                   <View style={styles.cardHeader}>
-                    <Text style={[styles.planName, sel && { color: Colors.beige[800] }]}>{plan.name}</Text>
+                    <Text style={[styles.planName, sel && styles.planNameSel]}>{plan.name}</Text>
                     <View style={styles.cardHeaderRight}>
                       <View style={[styles.badge, sel && styles.badgeSel]}>
                         <Text style={[styles.badgeTxt, sel && styles.badgeTxtSel]}>{plan.badge}</Text>
@@ -172,19 +172,20 @@ const styles = StyleSheet.create({
   subtitle: { fontFamily: Fonts.sansLight, fontSize: 17, color: Colors.beige[400], lineHeight: 26, marginBottom: 28 },
   cardWrap: { marginBottom: 10 },
   card: { padding: 20, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.95)', borderWidth: 2, borderColor: 'transparent', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, position: 'relative', overflow: 'hidden' },
-  cardSelected: { borderColor: Colors.blush[400], backgroundColor: '#fff' },
+  cardSelected: { borderColor: Colors.sky[400], backgroundColor: '#fff' },
   popularTag: { position: 'absolute', top: 0, right: 20, backgroundColor: Colors.blush[400], paddingHorizontal: 12, paddingVertical: 5, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 },
   popularTagTxt: { fontFamily: Fonts.sansBold, color: '#fff', fontSize: 9, letterSpacing: 0.8, textTransform: 'uppercase' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   cardHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   planName: { fontFamily: Fonts.sansSemiBold, fontSize: 15, color: Colors.beige[600] },
+  planNameSel: { color: Colors.sky[600] },
   badge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: Colors.beige[100] },
   badgeSel: { backgroundColor: Colors.blush[200] },
   badgeTxt: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.7, textTransform: 'uppercase', color: Colors.beige[600] },
   badgeTxtSel: { color: Colors.blush[800] },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', marginBottom: 4 },
   price: { fontFamily: Fonts.sansBold, fontSize: 34, color: Colors.beige[400] },
-  priceSel: { color: Colors.blush[800] },
+  priceSel: { color: Colors.sky[600] },
   per: { fontFamily: Fonts.sansLight, fontSize: 14, color: Colors.beige[400] },
   planSub: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginBottom: 4 },
   trialTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.sky[600], marginTop: 8, marginBottom: 2 },
@@ -194,10 +195,10 @@ const styles = StyleSheet.create({
   dotOn: { color: Colors.blush[400] }, dotOff: { color: Colors.beige[200] },
   featureTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[600] },
   featureTxtOff: { color: Colors.beige[400] },
-  selectRing: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: Colors.beige[200] },
-  selectRingOn: { borderColor: Colors.blush[400], backgroundColor: Colors.blush[400] },
+  selectRing: { width: 16, height: 16, borderRadius: 8, borderWidth: 1, borderColor: '#000' },
+  selectRingOn: { borderColor: Colors.sky[400], backgroundColor: Colors.sky[400] },
   footer: { paddingHorizontal: 24, paddingBottom: 44, paddingTop: 12 },
-  ctaBtn: { height: 60, borderRadius: 999, backgroundColor: Colors.beige[800], alignItems: 'center', justifyContent: 'center', marginBottom: 12, shadowColor: Colors.beige[800], shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 8 },
+  ctaBtn: { height: 60, borderRadius: 999, backgroundColor: Colors.blush[400], alignItems: 'center', justifyContent: 'center', marginBottom: 12, shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 8 },
   ctaBtnText: { fontFamily: Fonts.sansBold, fontSize: 17, color: '#fff', letterSpacing: 0.2 },
   secureRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 },
   secureTxt: { fontFamily: Fonts.sansLight, fontSize: 11.5, color: Colors.beige[400] },
