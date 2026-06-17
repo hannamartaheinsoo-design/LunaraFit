@@ -89,7 +89,7 @@ export default function OnboardingCycleScreen() {
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Animated.View style={[styles.orbWrap, a1]}>
-          <LinearGradient colors={[Colors.berry[200], Colors.berry[600]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.orb}>
+          <LinearGradient colors={[Colors.blush[100], Colors.blush[400]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.orb}>
             <Icon name="moon" size={40} color="#fff" strokeWidth={1.2} />
           </LinearGradient>
         </Animated.View>
@@ -172,7 +172,7 @@ export default function OnboardingCycleScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.cream },
+  root: { flex: 1, backgroundColor: Colors.sky[50] },
   navRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16,
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 20 },
   orbWrap: { alignSelf: 'flex-start', marginBottom: 28 },
-  orb: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', shadowColor: Colors.berry[400], shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
+  orb: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
   heading: { fontFamily: Fonts.sansBold, fontSize: 40, color: Colors.beige[800], lineHeight: 48, letterSpacing: -1, marginBottom: 10 },
   subtitle: { fontFamily: Fonts.sansLight, fontSize: 17, color: Colors.beige[400], lineHeight: 26, marginBottom: 32 },
   sectionLabel: { fontFamily: Fonts.sansBold, fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', color: Colors.beige[400], marginBottom: 10 },
@@ -191,10 +191,10 @@ const styles = StyleSheet.create({
   dualRow: { flexDirection: 'row', gap: 12 },
   dualCard: { flex: 1 },
   cardLabel: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: Colors.beige[400], marginBottom: 14 },
-  stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  stepBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: Colors.beige[100], alignItems: 'center', justifyContent: 'center' },
-  stepBtnTxt: { fontFamily: Fonts.sansBold, fontSize: 20, color: Colors.beige[600], lineHeight: 24 },
-  stepVal: { fontFamily: Fonts.sansBold, fontSize: 32, color: Colors.beige[800], textAlign: 'center', minWidth: 36 },
+  stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 },
+  stepBtn: { width: 32, height: 32, borderRadius: 10, backgroundColor: Colors.beige[100], alignItems: 'center', justifyContent: 'center' },
+  stepBtnTxt: { fontFamily: Fonts.sansMedium, fontSize: 16, color: Colors.beige[400], lineHeight: 20 },
+  stepVal: { fontFamily: Fonts.sansMedium, fontSize: 22, color: Colors.beige[800], textAlign: 'center', minWidth: 36 },
   stepUnit: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginTop: 6 },
   pillHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginBottom: 18 },
   pillIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: Colors.berry[50], alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
@@ -206,6 +206,6 @@ const styles = StyleSheet.create({
   pillBtnTxt: { fontFamily: Fonts.sansMedium, fontSize: 14, color: Colors.beige[600] },
   pillBtnTxtActive: { color: Colors.berry[600] },
   footer: { paddingHorizontal: 24, paddingBottom: 48, paddingTop: 12 },
-  ctaBtn: { height: 60, borderRadius: 999, backgroundColor: Colors.beige[800], alignItems: 'center', justifyContent: 'center', shadowColor: Colors.beige[800], shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 8 },
+  ctaBtn: { height: 60, borderRadius: 999, backgroundColor: Colors.blush[400], alignItems: 'center', justifyContent: 'center', shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 8 },
   ctaBtnText: { fontFamily: Fonts.sansBold, fontSize: 17, color: '#fff', letterSpacing: 0.2 },
 });

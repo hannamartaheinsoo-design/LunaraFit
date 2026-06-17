@@ -96,8 +96,25 @@ export default function SignupScreen() {
       fd.append('flow', flow);
       await signIn('password', fd);
     } catch (e: any) {
+      // If sign-up failed because the account already exists (incomplete onboarding),
+      // silently retry as sign-in so the user can resume where they left off.
+      if (flow === 'signUp') {
+        try {
+          const fd2 = new FormData();
+          fd2.append('email', email.trim().toLowerCase());
+          fd2.append('password', password);
+          fd2.append('flow', 'signIn');
+          await signIn('password', fd2);
+          // signIn succeeded — user is resuming an incomplete onboarding session
+          return;
+        } catch (_) {
+          // signIn also failed — wrong password for an existing account
+          setError(t('auth.err.emailTaken'));
+        }
+      } else {
+        setError(e?.message ?? t('auth.err.generic'));
+      }
       didSignIn.current = false;
-      setError(e?.message ?? t('auth.err.generic'));
     } finally {
       setLoading(null);
     }

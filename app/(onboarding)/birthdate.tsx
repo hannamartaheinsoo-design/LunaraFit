@@ -100,7 +100,7 @@ export default function BirthDateScreen() {
       <View style={styles.body}>
         <Animated.View style={[styles.orbWrap, a1]}>
           <LinearGradient
-            colors={[Colors.sky[200], Colors.sky[600]]}
+            colors={[Colors.blush[100], Colors.blush[400]]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             style={styles.orb}
           >
@@ -138,7 +138,7 @@ export default function BirthDateScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.cream },
+  root: { flex: 1, backgroundColor: Colors.sky[50] },
   navRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16,
@@ -175,9 +175,9 @@ const styles = StyleSheet.create({
   errTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.error.text, marginTop: 12 },
   footer: { paddingHorizontal: 24, paddingBottom: 48, paddingTop: 12 },
   ctaBtn: {
-    height: 60, borderRadius: 999, backgroundColor: Colors.beige[800],
+    height: 60, borderRadius: 999, backgroundColor: Colors.blush[400],
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: Colors.beige[800], shadowOffset: { width: 0, height: 8 },
+    shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.28, shadowRadius: 16, elevation: 8,
   },
   ctaBtnText: { fontFamily: Fonts.sansBold, fontSize: 17, color: '#fff', letterSpacing: 0.2 },
