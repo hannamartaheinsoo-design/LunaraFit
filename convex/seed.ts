@@ -10,6 +10,24 @@ export const listAllUsers = internalQuery({
   },
 });
 
+export const deleteUser = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    const profile = await ctx.db.query("profiles").withIndex("by_user", q => q.eq("userId", userId)).first();
+    if (profile) await ctx.db.delete(profile._id);
+    const accounts = await ctx.db.query("authAccounts").filter(q => q.eq(q.field("userId"), userId)).collect();
+    for (const a of accounts) await ctx.db.delete(a._id);
+    const sessions = await ctx.db.query("authSessions").filter(q => q.eq(q.field("userId"), userId)).collect();
+    for (const s of sessions) await ctx.db.delete(s._id);
+    const workouts = await ctx.db.query("workouts").withIndex("by_user_date", q => q.eq("userId", userId)).collect();
+    for (const w of workouts) await ctx.db.delete(w._id);
+    const cycleDays = await ctx.db.query("cycle_days").withIndex("by_user_date", q => q.eq("userId", userId)).collect();
+    for (const c of cycleDays) await ctx.db.delete(c._id);
+    await ctx.db.delete(userId);
+    return "deleted";
+  },
+});
+
 export const listAll = internalQuery({
   args: {},
   handler: async (ctx) => {
