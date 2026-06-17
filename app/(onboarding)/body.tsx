@@ -42,10 +42,25 @@ function useFade(delay: number) {
   return { opacity: op, transform: [{ translateY: ty }] };
 }
 
+// Conversion helpers
+const lbToKg = (lb: number) => lb * 0.453592;
+const kgToLb = (kg: number) => kg / 0.453592;
+const ftInToCm = (ft: number, inches: number) => (ft * 12 + inches) * 2.54;
+const cmToFtIn = (cm: number) => {
+  const totalInches = cm / 2.54;
+  return { ft: Math.floor(totalInches / 12), inches: Math.round(totalInches % 12) };
+};
+
+type UnitSystem = 'metric' | 'imperial';
+
 export default function BodyScreen() {
   const { t } = useTranslation();
+  const [units, setUnits] = useState<UnitSystem>('metric');
+
+  // Always store as metric strings internally; convert on display switch
   const [weightStr, setWeightStr] = useState('');
-  const [heightStr, setHeightStr] = useState('');
+  const [heightStr, setHeightStr] = useState('');   // cm or ft
+  const [heightInStr, setHeightInStr] = useState(''); // inches (imperial only)
   const [fatStr, setFatStr] = useState('');
   const [muscleStr, setMuscleStr] = useState('');
   const [saving, setSaving] = useState(false);
@@ -54,9 +69,51 @@ export default function BodyScreen() {
   const a0 = useFade(0); const a1 = useFade(100);
   const a2 = useFade(220); const a3 = useFade(320);
 
-  const weight = parseFloat(weightStr);
-  const height = parseFloat(heightStr);
-  const canContinue = isFinite(weight) && weight > 0 && isFinite(height) && height > 0;
+  function switchUnits(next: UnitSystem) {
+    if (next === units) return;
+    // Convert currently entered values to the new system
+    if (next === 'imperial') {
+      const kg = parseFloat(weightStr);
+      if (isFinite(kg) && kg > 0) setWeightStr(String(Math.round(kgToLb(kg))));
+      const cm = parseFloat(heightStr);
+      if (isFinite(cm) && cm > 0) {
+        const { ft, inches } = cmToFtIn(cm);
+        setHeightStr(String(ft));
+        setHeightInStr(String(inches));
+      }
+    } else {
+      const lb = parseFloat(weightStr);
+      if (isFinite(lb) && lb > 0) setWeightStr(String(Math.round(lbToKg(lb))));
+      const ft = parseFloat(heightStr);
+      const inches = parseFloat(heightInStr) || 0;
+      if (isFinite(ft) && ft > 0) {
+        setHeightStr(String(Math.round(ftInToCm(ft, inches))));
+        setHeightInStr('');
+      }
+    }
+    setUnits(next);
+  }
+
+  // Derive metric values for saving
+  function getMetricValues() {
+    if (units === 'metric') {
+      return {
+        weight_kg: parseFloat(weightStr),
+        height_cm: parseFloat(heightStr),
+      };
+    } else {
+      const lb = parseFloat(weightStr);
+      const ft = parseFloat(heightStr);
+      const inches = parseFloat(heightInStr) || 0;
+      return {
+        weight_kg: isFinite(lb) ? lbToKg(lb) : NaN,
+        height_cm: isFinite(ft) ? ftInToCm(ft, inches) : NaN,
+      };
+    }
+  }
+
+  const { weight_kg, height_cm } = getMetricValues();
+  const canContinue = isFinite(weight_kg) && weight_kg > 0 && isFinite(height_cm) && height_cm > 0;
 
   const handleContinue = async () => {
     if (!canContinue) return;
@@ -65,8 +122,8 @@ export default function BodyScreen() {
       const fat = parseFloat(fatStr);
       const muscle = parseFloat(muscleStr);
       await upsertProfile({
-        weight_kg: weight,
-        height_cm: height,
+        weight_kg: Math.round(weight_kg * 10) / 10,
+        height_cm: Math.round(height_cm * 10) / 10,
         body_fat_pct: isFinite(fat) && fat > 0 ? fat : undefined,
         muscle_pct: isFinite(muscle) && muscle > 0 ? muscle : undefined,
       });
@@ -102,7 +159,31 @@ export default function BodyScreen() {
           <Text style={styles.subtitle}>{t('ob.body.sub')}</Text>
         </Animated.View>
 
-        {/* Mandatory: height + weight */}
+        {/* Unit toggle */}
+        <Animated.View style={[styles.unitToggleWrap, a2]}>
+          <View style={styles.unitToggle}>
+            <TouchableOpacity
+              style={[styles.unitBtn, units === 'metric' && styles.unitBtnActive]}
+              onPress={() => switchUnits('metric')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.unitBtnTxt, units === 'metric' && styles.unitBtnTxtActive]}>
+                {t('ob.units.metric')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.unitBtn, units === 'imperial' && styles.unitBtnActive]}
+              onPress={() => switchUnits('imperial')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.unitBtnTxt, units === 'imperial' && styles.unitBtnTxtActive]}>
+                {t('ob.units.imperial')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
+        {/* Mandatory: weight + height */}
         <Animated.View style={[styles.row, a2]}>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>{t('ob.weight.lbl')}</Text>
@@ -110,27 +191,60 @@ export default function BodyScreen() {
               style={styles.statInput}
               value={weightStr}
               onChangeText={setWeightStr}
-              placeholder={t('ob.weight.ph')}
+              placeholder={units === 'metric' ? t('ob.weight.ph') : t('ob.weight.ph.imperial')}
               placeholderTextColor={Colors.beige[200]}
               keyboardType="decimal-pad"
               maxLength={5}
             />
-            <Text style={styles.statUnit}>{t('ob.unit.kg')}</Text>
+            <Text style={styles.statUnit}>{units === 'metric' ? t('ob.unit.kg') : t('ob.unit.lb')}</Text>
           </View>
 
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>{t('ob.height.lbl')}</Text>
-            <TextInput
-              style={styles.statInput}
-              value={heightStr}
-              onChangeText={setHeightStr}
-              placeholder={t('ob.height.ph')}
-              placeholderTextColor={Colors.beige[200]}
-              keyboardType="decimal-pad"
-              maxLength={5}
-            />
-            <Text style={styles.statUnit}>{t('ob.unit.cm')}</Text>
-          </View>
+          {units === 'metric' ? (
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>{t('ob.height.lbl')}</Text>
+              <TextInput
+                style={styles.statInput}
+                value={heightStr}
+                onChangeText={setHeightStr}
+                placeholder={t('ob.height.ph')}
+                placeholderTextColor={Colors.beige[200]}
+                keyboardType="decimal-pad"
+                maxLength={5}
+              />
+              <Text style={styles.statUnit}>{t('ob.unit.cm')}</Text>
+            </View>
+          ) : (
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>{t('ob.height.lbl')}</Text>
+              <View style={styles.ftInRow}>
+                <View style={styles.ftInField}>
+                  <TextInput
+                    style={[styles.statInput, { fontSize: 36 }]}
+                    value={heightStr}
+                    onChangeText={setHeightStr}
+                    placeholder={t('ob.height.ph.ft')}
+                    placeholderTextColor={Colors.beige[200]}
+                    keyboardType="number-pad"
+                    maxLength={1}
+                  />
+                  <Text style={styles.statUnit}>{t('ob.unit.ft')}</Text>
+                </View>
+                <View style={styles.ftInDivider} />
+                <View style={styles.ftInField}>
+                  <TextInput
+                    style={[styles.statInput, { fontSize: 36 }]}
+                    value={heightInStr}
+                    onChangeText={setHeightInStr}
+                    placeholder={t('ob.height.ph.in')}
+                    placeholderTextColor={Colors.beige[200]}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                  />
+                  <Text style={styles.statUnit}>{t('ob.unit.in')}</Text>
+                </View>
+              </View>
+            </View>
+          )}
         </Animated.View>
 
         {/* Optional: body fat + muscle % */}
@@ -198,18 +312,24 @@ const styles = StyleSheet.create({
   orbWrap: { alignSelf: 'flex-start', marginBottom: 28 },
   orb: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
   heading: { fontFamily: Fonts.sansBold, fontSize: 40, color: Colors.beige[800], lineHeight: 48, letterSpacing: -1, marginBottom: 10 },
-  subtitle: { fontFamily: Fonts.sansLight, fontSize: 17, color: Colors.beige[400], lineHeight: 26, marginBottom: 32 },
+  subtitle: { fontFamily: Fonts.sansLight, fontSize: 17, color: Colors.beige[400], lineHeight: 26, marginBottom: 24 },
+  unitToggleWrap: { marginBottom: 20 },
+  unitToggle: { flexDirection: 'row', backgroundColor: Colors.beige[100], borderRadius: 12, padding: 3, alignSelf: 'flex-start' },
+  unitBtn: { paddingHorizontal: 18, paddingVertical: 7, borderRadius: 10 },
+  unitBtnActive: { backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 } },
+  unitBtnTxt: { fontFamily: Fonts.sansMedium, fontSize: 13, color: Colors.beige[400] },
+  unitBtnTxtActive: { color: Colors.beige[800] },
   row: { flexDirection: 'row', gap: 16, marginBottom: 16 },
-  statCard: {
-    flex: 1, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 24, padding: 24,
-    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 16, shadowOffset: { width: 0, height: 4 },
-  },
+  statCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 24, padding: 24, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 16, shadowOffset: { width: 0, height: 4 } },
   statCardOptional: { borderWidth: 1.5, borderColor: Colors.beige[100] },
   statLabelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  statLabel: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase', color: Colors.beige[400] },
-  optionalTag: { fontFamily: Fonts.sansLight, fontSize: 9, letterSpacing: 0.4, color: Colors.beige[200], textTransform: 'lowercase' },
+  statLabel: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase', color: Colors.beige[400], marginBottom: 16 },
+  optionalTag: { fontFamily: Fonts.sansLight, fontSize: 9, letterSpacing: 0.4, color: Colors.beige[200], textTransform: 'lowercase', marginBottom: 16 },
   statInput: { fontFamily: Fonts.sansBold, fontSize: 48, color: Colors.beige[800], padding: 0, minWidth: 60 },
   statUnit: { fontFamily: Fonts.sansLight, fontSize: 16, color: Colors.beige[400], marginTop: 6 },
+  ftInRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 0 },
+  ftInField: { flex: 1 },
+  ftInDivider: { width: 1, height: 40, backgroundColor: Colors.beige[100], marginBottom: 10, marginHorizontal: 8 },
   footer: { paddingHorizontal: 24, paddingBottom: 48, paddingTop: 12 },
   ctaBtn: { height: 60, borderRadius: 999, backgroundColor: Colors.blush[400], alignItems: 'center', justifyContent: 'center', shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 8 },
   ctaBtnDisabled: { backgroundColor: Colors.beige[200], shadowOpacity: 0 },
