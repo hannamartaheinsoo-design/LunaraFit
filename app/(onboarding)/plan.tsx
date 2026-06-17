@@ -112,17 +112,17 @@ export default function PlanScreen() {
                       <Text style={styles.popularTagTxt}>{t('plan.popular')}</Text>
                     </View>
                   )}
-                  <View style={styles.cardHeader}>
-                    <Text style={[styles.planName, sel && styles.planNameSel]}>{plan.name}</Text>
+                  <View style={[styles.cardHeader, plan.popular && styles.cardHeaderWithTag]}>
+                    <Text style={styles.planName}>{plan.name}</Text>
                     <View style={styles.cardHeaderRight}>
-                      <View style={[styles.badge, sel && styles.badgeSel]}>
-                        <Text style={[styles.badgeTxt, sel && styles.badgeTxtSel]}>{plan.badge}</Text>
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeTxt}>{plan.badge}</Text>
                       </View>
                       <View style={[styles.selectRing, sel && styles.selectRingOn]} />
                     </View>
                   </View>
                   <View style={styles.priceRow}>
-                    <Text style={[styles.price, sel && styles.priceSel]}>{plan.price}</Text>
+                    <Text style={styles.price}>{plan.price}</Text>
                     <Text style={styles.per}> {plan.per}</Text>
                   </View>
                   {plan.sub && <Text style={styles.planSub}>{plan.sub}</Text>}
@@ -173,19 +173,16 @@ const styles = StyleSheet.create({
   cardWrap: { marginBottom: 10 },
   card: { padding: 20, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.95)', borderWidth: 2, borderColor: 'transparent', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, position: 'relative', overflow: 'hidden' },
   cardSelected: { borderColor: Colors.sky[400], backgroundColor: '#fff' },
-  popularTag: { position: 'absolute', top: 0, right: 20, backgroundColor: Colors.blush[400], paddingHorizontal: 12, paddingVertical: 5, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 },
+  popularTag: { position: 'absolute', top: 0, left: 0, backgroundColor: Colors.blush[400], paddingHorizontal: 8, paddingVertical: 3, borderBottomRightRadius: 8 },
   popularTagTxt: { fontFamily: Fonts.sansBold, color: '#fff', fontSize: 9, letterSpacing: 0.8, textTransform: 'uppercase' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  cardHeaderWithTag: { marginTop: 16 },
   cardHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  planName: { fontFamily: Fonts.sansSemiBold, fontSize: 15, color: Colors.beige[600] },
-  planNameSel: { color: Colors.sky[600] },
-  badge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: Colors.beige[100] },
-  badgeSel: { backgroundColor: Colors.blush[200] },
-  badgeTxt: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.7, textTransform: 'uppercase', color: Colors.beige[600] },
-  badgeTxtSel: { color: Colors.blush[800] },
+  planName: { fontFamily: Fonts.sansSemiBold, fontSize: 15, color: Colors.beige[800] },
+  badge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: Colors.sky[100] },
+  badgeTxt: { fontFamily: Fonts.sansBold, fontSize: 9, letterSpacing: 0.7, textTransform: 'uppercase', color: Colors.sky[600] },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', marginBottom: 4 },
-  price: { fontFamily: Fonts.sansBold, fontSize: 34, color: Colors.beige[400] },
-  priceSel: { color: Colors.sky[600] },
+  price: { fontFamily: Fonts.sansBold, fontSize: 34, color: Colors.beige[800] },
   per: { fontFamily: Fonts.sansLight, fontSize: 14, color: Colors.beige[400] },
   planSub: { fontFamily: Fonts.sansLight, fontSize: 12, color: Colors.beige[400], marginBottom: 4 },
   trialTxt: { fontFamily: Fonts.sansSemiBold, fontSize: 12, color: Colors.sky[600], marginTop: 8, marginBottom: 2 },
@@ -196,7 +193,7 @@ const styles = StyleSheet.create({
   featureTxt: { fontFamily: Fonts.sansLight, fontSize: 13, color: Colors.beige[600] },
   featureTxtOff: { color: Colors.beige[400] },
   selectRing: { width: 16, height: 16, borderRadius: 8, borderWidth: 1, borderColor: '#000' },
-  selectRingOn: { borderColor: Colors.sky[400], backgroundColor: Colors.sky[400] },
+  selectRingOn: { backgroundColor: Colors.sky[400] },
   footer: { paddingHorizontal: 24, paddingBottom: 44, paddingTop: 12 },
   ctaBtn: { height: 60, borderRadius: 999, backgroundColor: Colors.blush[400], alignItems: 'center', justifyContent: 'center', marginBottom: 12, shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 8 },
   ctaBtnText: { fontFamily: Fonts.sansBold, fontSize: 17, color: '#fff', letterSpacing: 0.2 },
