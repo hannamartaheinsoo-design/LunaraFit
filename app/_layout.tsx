@@ -44,9 +44,9 @@ function NavigationController() {
 
     if (state === 'home') router.replace('/(tabs)/home' as any);
     else if (state === 'onboarding') {
-      // Only push to name on first entry — don't override if user navigated back to signup
+      // Only redirect to name on first entry — don't interrupt mid-onboarding navigation
       const path = typeof window !== 'undefined' ? window.location.pathname : '';
-      if (!path.includes('signup')) router.replace('/(onboarding)/name' as any);
+      if (!path.includes('onboarding')) router.replace('/(onboarding)/name' as any);
     } else router.replace('/(onboarding)/welcome' as any);
   }, [isReady, isAuthenticated, isOnboarded]);
 
