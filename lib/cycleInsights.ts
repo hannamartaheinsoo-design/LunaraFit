@@ -612,6 +612,95 @@ export function detectPatterns(
   return patterns;
 }
 
+// ── Cycle Analysis ─────────────────────────────────────────────────────────
+
+export interface CycleStats {
+  cycleLength: number | null;
+  periodLength: number | null;
+  cycleLengthStatus: 'short' | 'normal' | 'long';
+  periodLengthStatus: 'short' | 'normal' | 'long';
+  topSymptoms: { name: string; count: number }[];
+  topPeriodSymptoms: { name: string; count: number }[];
+  moodPositivePct: number;
+  moodNeutralPct: number;
+  moodNegativePct: number;
+  totalLoggedDays: number;
+  totalPeriodDays: number;
+  hasEnoughData: boolean;
+}
+
+// Population norms from Apple Women's Health Study (165,668 cycles), FIGO/ACOG, NHS
+const CYCLE_AVG = 28.7;
+const CYCLE_NORMAL_MIN = 24;
+const CYCLE_NORMAL_MAX = 38;
+const PERIOD_NORMAL_MIN = 2;
+const PERIOD_NORMAL_MAX = 7;
+
+export function getCycleStats(
+  profile: { cycle_length?: number | null; period_length?: number | null } | null | undefined,
+  cycleDays: { date: string; period: boolean; mood: string | null; symptoms: string[] }[],
+): CycleStats {
+  const cycleLength  = profile?.cycle_length  ?? null;
+  const periodLength = profile?.period_length ?? null;
+
+  const cycleLengthStatus: CycleStats['cycleLengthStatus'] =
+    cycleLength == null ? 'normal'
+    : cycleLength < CYCLE_NORMAL_MIN  ? 'short'
+    : cycleLength > CYCLE_NORMAL_MAX  ? 'long'
+    : 'normal';
+
+  const periodLengthStatus: CycleStats['periodLengthStatus'] =
+    periodLength == null ? 'normal'
+    : periodLength < PERIOD_NORMAL_MIN ? 'short'
+    : periodLength > PERIOD_NORMAL_MAX ? 'long'
+    : 'normal';
+
+  // Symptom frequency across all days
+  const symCount: Record<string, number> = {};
+  cycleDays.forEach(d => {
+    (d.symptoms ?? []).forEach(s => { if (s) symCount[s] = (symCount[s] ?? 0) + 1; });
+  });
+  const topSymptoms = Object.entries(symCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([name, count]) => ({ name, count }));
+
+  // Symptom frequency on period days only
+  const periodDays = cycleDays.filter(d => d.period);
+  const pSymCount: Record<string, number> = {};
+  periodDays.forEach(d => {
+    (d.symptoms ?? []).forEach(s => { if (s) pSymCount[s] = (pSymCount[s] ?? 0) + 1; });
+  });
+  const topPeriodSymptoms = Object.entries(pSymCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, count]) => ({ name, count }));
+
+  // Mood breakdown
+  const moodDays = cycleDays.filter(d => d.mood);
+  const pos = moodDays.filter(d => ['good', 'great', 'energized'].includes(d.mood!)).length;
+  const neg = moodDays.filter(d => d.mood === 'bad').length;
+  const neu = moodDays.length - pos - neg;
+  const total = moodDays.length || 1;
+
+  return {
+    cycleLength,
+    periodLength,
+    cycleLengthStatus,
+    periodLengthStatus,
+    topSymptoms,
+    topPeriodSymptoms,
+    moodPositivePct: Math.round((pos / total) * 100),
+    moodNeutralPct:  Math.round((neu / total) * 100),
+    moodNegativePct: Math.round((neg / total) * 100),
+    totalLoggedDays: cycleDays.length,
+    totalPeriodDays: periodDays.length,
+    hasEnoughData: cycleDays.length >= 3,
+  };
+}
+
+export { CYCLE_AVG, CYCLE_NORMAL_MIN, CYCLE_NORMAL_MAX, PERIOD_NORMAL_MIN, PERIOD_NORMAL_MAX };
+
 export const CONFIDENCE_LABELS_ET = { preliminary: 'Esialgne tähelepanek', emerging: 'Kasvav muster', consistent: 'Järjepidev muster' };
 export const CONFIDENCE_LABELS_EN = { preliminary: 'Early observation', emerging: 'Emerging pattern', consistent: 'Consistent pattern' };
 export const CONFIDENCE_LABELS = CONFIDENCE_LABELS_ET;

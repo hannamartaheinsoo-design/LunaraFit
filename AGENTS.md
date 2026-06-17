@@ -200,7 +200,7 @@ Palette maps: `{ 50, 100, 200, 400, 600, 800 }` — indices 300, 500, 700 do NOT
 
 # Insights Screen — insights.tsx
 
-**Tab structure:** Insights uses 4 equal-width pill tabs (Body | Training | Wellbeing | Patterns) rendered as a non-scrollable `flexDirection: 'row'` with `flex: 1` on each pill. Do NOT use a horizontal ScrollView for these tabs — all 4 must be visible at once on a 375px viewport.
+**Tab structure:** Insights uses 5 pill tabs (Body | Training | Wellbeing | Cycle | Patterns) in a **horizontally scrollable** `ScrollView` (`showsHorizontalScrollIndicator={false}`). Each pill has `paddingHorizontal: 14` (not `flex: 1`) so tabs don't stretch. The tab bar uses `tabBarScroll` / `tabBarContent` styles.
 
 **Body tab — data model:**
 - `PhaseInsight` now has `hormoneChips: string[]` (compact chip labels), `energySummary: string` (one-liner), and `energyArc: [number, number]` (energy level 0–1 at phase start and end).

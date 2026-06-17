@@ -10,6 +10,7 @@ import { getCycleInfo } from '../../lib/cycle';
 import { Profile, Workout, CycleDay } from '../../types';
 import {
   getPhaseInsights, detectPatterns, getConfidenceLabels, getDisclaimer,
+  getCycleStats, CYCLE_AVG, CYCLE_NORMAL_MIN, CYCLE_NORMAL_MAX, PERIOD_NORMAL_MIN, PERIOD_NORMAL_MAX,
   DetectedPattern, TrainingTip,
 } from '../../lib/cycleInsights';
 import { useTranslation } from '../../lib/LangContext';
@@ -76,7 +77,7 @@ function ConfidenceBadge({ level }: { level: DetectedPattern['confidence'] }) {
   );
 }
 
-type InsightTab = 'body' | 'training' | 'wellbeing' | 'patterns';
+type InsightTab = 'body' | 'training' | 'wellbeing' | 'patterns' | 'cycle';
 
 export default function InsightsScreen() {
   const T = useTheme();
@@ -115,15 +116,17 @@ export default function InsightsScreen() {
     sub:    insight.colors.sub,
     accent: insight.colors.accent,
   };
-  const patterns = detectPatterns(workouts, cycleDays, lang);
-  const DISCLAIMER = getDisclaimer(lang);
+  const patterns    = detectPatterns(workouts, cycleDays, lang);
+  const cycleStats  = getCycleStats(profile, cycleDays);
+  const DISCLAIMER  = getDisclaimer(lang);
   const hasData  = workouts.length > 0 || cycleDays.length > 0;
 
-  const tabs: { key: InsightTab; label: string; icon: string }[] = [
-    { key: 'body',      label: t('ins.tab.body'),      icon: 'spark'   },
-    { key: 'training',  label: t('ins.tab.training'),  icon: 'barbell' },
-    { key: 'wellbeing', label: t('ins.tab.wellbeing'), icon: 'leaf'    },
-    { key: 'patterns',  label: t('ins.tab.patterns'),  icon: 'eye'     },
+  const tabs: { key: InsightTab; label: string }[] = [
+    { key: 'body',      label: t('ins.tab.body')      },
+    { key: 'training',  label: t('ins.tab.training')  },
+    { key: 'wellbeing', label: t('ins.tab.wellbeing') },
+    { key: 'cycle',     label: t('ins.tab.cycle')     },
+    { key: 'patterns',  label: t('ins.tab.patterns')  },
   ];
 
   return (
@@ -156,8 +159,13 @@ export default function InsightsScreen() {
           </View>
         </View>
 
-        {/* ── Tab bar ── */}
-        <View style={styles.tabBarRow}>
+        {/* ── Tab bar — 5 pills, scrollable horizontally ── */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tabBarScroll}
+          contentContainerStyle={styles.tabBarContent}
+        >
           {tabs.map(tab => {
             const active = activeTab === tab.key;
             return (
@@ -174,7 +182,7 @@ export default function InsightsScreen() {
               </TouchableOpacity>
             );
           })}
-        </View>
+        </ScrollView>
 
         {/* ══ BODY TAB ══ */}
         {activeTab === 'body' && (
@@ -353,6 +361,176 @@ export default function InsightsScreen() {
           </View>
         )}
 
+        {/* ══ CYCLE TAB ══ */}
+        {activeTab === 'cycle' && (
+          <View style={styles.tabContent}>
+            {!cycleStats.hasEnoughData ? (
+              <View style={[styles.emptyCard, { backgroundColor: T.surface2, borderColor: T.border }]}>
+                <Text style={[styles.emptyTxt, { color: T.textMuted }]}>{t('ins.cycle.nodata')}</Text>
+              </View>
+            ) : (
+              <>
+                {/* ── Cycle & period length vs norms ── */}
+                <View style={[styles.infoCard, { backgroundColor: T.surface, borderColor: T.border }]}>
+                  <Text style={[styles.infoCardTitle, { color: T.text, marginBottom: 16 }]}>{t('ins.cycle.heading')}</Text>
+
+                  {/* Cycle length */}
+                  {cycleStats.cycleLength != null && (() => {
+                    const cl = cycleStats.cycleLength;
+                    const pct = Math.min(1, Math.max(0, (cl - 18) / (45 - 18)));
+                    const statusColor =
+                      cycleStats.cycleLengthStatus === 'normal' ? Colors.green[400]
+                      : Colors.blush[400];
+                    return (
+                      <View style={{ marginBottom: 18 }}>
+                        <View style={styles.statRow}>
+                          <Text style={[styles.statLabel, { color: T.textSec }]}>{t('ins.cycle.length.lbl')}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={[styles.statValue, { color: T.text }]}>{cl} {t('ins.cycle.days.unit')}</Text>
+                            <View style={[styles.statusPill, { backgroundColor: cycleStats.cycleLengthStatus === 'normal' ? Colors.green[50] : Colors.blush[50], borderColor: statusColor }]}>
+                              <Text style={[styles.statusPillTxt, { color: statusColor }]}>
+                                {cycleStats.cycleLengthStatus === 'normal' ? t('ins.cycle.normal') : cycleStats.cycleLengthStatus === 'short' ? t('ins.cycle.short') : t('ins.cycle.long')}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                        <View style={styles.normBar}>
+                          <View style={[styles.normBarFill, { width: `${pct * 100}%` as any, backgroundColor: statusColor }]} />
+                        </View>
+                        <View style={styles.normLabels}>
+                          <Text style={[styles.normLbl, { color: T.textMuted }]}>{CYCLE_NORMAL_MIN}d</Text>
+                          <Text style={[styles.normLbl, { color: T.textMuted }]}>{t('ins.cycle.avg.label')}: {CYCLE_AVG}d</Text>
+                          <Text style={[styles.normLbl, { color: T.textMuted }]}>{CYCLE_NORMAL_MAX}d</Text>
+                        </View>
+                      </View>
+                    );
+                  })()}
+
+                  {/* Period length */}
+                  {cycleStats.periodLength != null && (() => {
+                    const pl = cycleStats.periodLength;
+                    const pct = Math.min(1, Math.max(0, (pl - 1) / (9 - 1)));
+                    const statusColor =
+                      cycleStats.periodLengthStatus === 'normal' ? Colors.green[400]
+                      : Colors.blush[400];
+                    return (
+                      <View>
+                        <View style={styles.statRow}>
+                          <Text style={[styles.statLabel, { color: T.textSec }]}>{t('ins.cycle.period.lbl')}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={[styles.statValue, { color: T.text }]}>{pl} {t('ins.cycle.days.unit')}</Text>
+                            <View style={[styles.statusPill, { backgroundColor: cycleStats.periodLengthStatus === 'normal' ? Colors.green[50] : Colors.blush[50], borderColor: statusColor }]}>
+                              <Text style={[styles.statusPillTxt, { color: statusColor }]}>
+                                {cycleStats.periodLengthStatus === 'normal' ? t('ins.cycle.normal') : cycleStats.periodLengthStatus === 'short' ? t('ins.cycle.short') : t('ins.cycle.long')}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                        <View style={styles.normBar}>
+                          <View style={[styles.normBarFill, { width: `${pct * 100}%` as any, backgroundColor: statusColor }]} />
+                        </View>
+                        <View style={styles.normLabels}>
+                          <Text style={[styles.normLbl, { color: T.textMuted }]}>{PERIOD_NORMAL_MIN}d</Text>
+                          <Text style={[styles.normLbl, { color: T.textMuted }]}>{t('ins.cycle.range.label')}: {PERIOD_NORMAL_MIN}–{PERIOD_NORMAL_MAX}d</Text>
+                          <Text style={[styles.normLbl, { color: T.textMuted }]}>{PERIOD_NORMAL_MAX}d</Text>
+                        </View>
+                      </View>
+                    );
+                  })()}
+                </View>
+
+                {/* ── Mood overview ── */}
+                {cycleStats.totalLoggedDays >= 5 && (
+                  <View style={[styles.infoCard, { backgroundColor: T.blushBg, borderColor: T.blushBorder }]}>
+                    <View style={styles.infoCardHeader}>
+                      <Icon name="smile-good" size={13} color={Colors.blush[400]} />
+                      <Text style={[styles.infoCardTitle, { color: T.text }]}>{t('ins.cycle.mood.lbl')}</Text>
+                    </View>
+                    <View style={styles.moodRow}>
+                      {[
+                        { label: t('ins.cycle.mood.pos'), pct: cycleStats.moodPositivePct, color: Colors.green[400] },
+                        { label: t('ins.cycle.mood.neu'), pct: cycleStats.moodNeutralPct,  color: T.textMuted },
+                        { label: t('ins.cycle.mood.neg'), pct: cycleStats.moodNegativePct, color: Colors.blush[400] },
+                      ].map(m => (
+                        <View key={m.label} style={styles.moodCol}>
+                          <Text style={[styles.moodPct, { color: m.color }]}>{m.pct}%</Text>
+                          <View style={[styles.moodBar, { backgroundColor: T.border }]}>
+                            <View style={[styles.moodBarFill, { height: `${m.pct}%` as any, backgroundColor: m.color }]} />
+                          </View>
+                          <Text style={[styles.moodLbl, { color: T.textMuted }]}>{m.label}</Text>
+                        </View>
+                      ))}
+                    </View>
+                    <Text style={[styles.moodSub, { color: T.textMuted }]}>
+                      {cycleStats.totalLoggedDays} {t('ins.cycle.mood.days')}
+                    </Text>
+                  </View>
+                )}
+
+                {/* ── Top symptoms all days ── */}
+                {cycleStats.topSymptoms.length > 0 && (
+                  <View style={[styles.infoCard, { backgroundColor: T.surface, borderColor: T.border }]}>
+                    <View style={styles.infoCardHeader}>
+                      <Icon name="leaf" size={13} color={T.textMuted} />
+                      <View>
+                        <Text style={[styles.infoCardTitle, { color: T.text }]}>{t('ins.cycle.symptoms.lbl')}</Text>
+                        <Text style={[styles.normLbl, { color: T.textMuted, marginTop: 1 }]}>{t('ins.cycle.symptoms.sub')}</Text>
+                      </View>
+                    </View>
+                    {cycleStats.topSymptoms.map(s => {
+                      const pct = cycleStats.topSymptoms[0].count > 0 ? s.count / cycleStats.topSymptoms[0].count : 0;
+                      return (
+                        <View key={s.name} style={styles.symRow}>
+                          <Text style={[styles.symName, { color: T.textSec }]} numberOfLines={1}>{s.name}</Text>
+                          <View style={[styles.symTrack, { backgroundColor: T.border }]}>
+                            <View style={[styles.symFill, { width: `${pct * 100}%` as any, backgroundColor: Colors.blush[400] }]} />
+                          </View>
+                          <Text style={[styles.symCount, { color: T.textMuted }]}>{s.count}×</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+
+                {/* ── Period-day symptoms ── */}
+                {cycleStats.topPeriodSymptoms.length > 0 && (
+                  <View style={[styles.infoCard, { backgroundColor: T.blushBg, borderColor: T.blushBorder }]}>
+                    <View style={styles.infoCardHeader}>
+                      <Icon name="moon" size={13} color={Colors.blush[400]} />
+                      <View>
+                        <Text style={[styles.infoCardTitle, { color: T.text }]}>{t('ins.cycle.period.sym')}</Text>
+                        <Text style={[styles.normLbl, { color: T.textMuted, marginTop: 1 }]}>{t('ins.cycle.period.sym.sub')}</Text>
+                      </View>
+                    </View>
+                    {cycleStats.topPeriodSymptoms.map(s => {
+                      const pct = cycleStats.topPeriodSymptoms[0].count > 0 ? s.count / cycleStats.topPeriodSymptoms[0].count : 0;
+                      return (
+                        <View key={s.name} style={styles.symRow}>
+                          <Text style={[styles.symName, { color: T.textSec }]} numberOfLines={1}>{s.name}</Text>
+                          <View style={[styles.symTrack, { backgroundColor: T.blushBorder }]}>
+                            <View style={[styles.symFill, { width: `${pct * 100}%` as any, backgroundColor: Colors.blush[600] }]} />
+                          </View>
+                          <Text style={[styles.symCount, { color: T.textMuted }]}>{s.count}×</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+
+                {/* Research source */}
+                <View style={[styles.disclaimer, { backgroundColor: T.surface2, borderColor: T.border, marginTop: 4 }]}>
+                  <View style={styles.disclaimerHeader}>
+                    <Icon name="lock" size={12} color={T.textMuted} />
+                    <Text style={[styles.disclaimerTitle, { color: T.textSec }]}>{t('ins.note')}</Text>
+                  </View>
+                  <Text style={[styles.disclaimerTxt, { color: T.textMuted }]}>{t('ins.cycle.research')}</Text>
+                  <Text style={[styles.disclaimerTxt, { color: T.textMuted, marginTop: 4 }]}>{DISCLAIMER}</Text>
+                </View>
+              </>
+            )}
+          </View>
+        )}
+
         {/* ══ PATTERNS TAB ══ */}
         {activeTab === 'patterns' && (
           <View style={styles.tabContent}>
@@ -441,16 +619,14 @@ function makeStyles(T: ThemeTokens) {
   taglineRow:    { borderTopWidth: 1, paddingTop: 12, borderTopColor: 'rgba(255,255,255,0.2)' },
   phaseTagline:  { fontFamily: Fonts.sansBold, fontSize: 14, letterSpacing: 0.2 },
 
-  // Tab bar — fixed row, all 4 pills always visible
-  tabBarRow: {
-    flexDirection: 'row', marginTop: 16,
-    paddingHorizontal: Spacing.xl, gap: 6,
-  },
+  // Tab bar — horizontally scrollable for 5 tabs
+  tabBarRow: { flexDirection: 'row', marginTop: 16, paddingHorizontal: Spacing.xl, gap: 6 },
   tabBarScroll:   { flexGrow: 0, marginTop: 16 },
-  tabBarContent:  { paddingHorizontal: Spacing.xl, gap: 8, flexDirection: 'row' },
+  tabBarContent:  { paddingHorizontal: Spacing.xl, gap: 6, flexDirection: 'row' },
   tabPill: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 8, borderRadius: 20, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 8, paddingHorizontal: 14,
+    borderRadius: 20, borderWidth: 1,
   },
   tabLabel: { fontFamily: Fonts.sansMedium, fontSize: 12 },
 
@@ -530,6 +706,31 @@ function makeStyles(T: ThemeTokens) {
   patternSubtext:   { fontFamily: Fonts.sans, fontSize: 12, color: T.textMuted, lineHeight: 17 },
   confidenceBadge:  { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'flex-start' },
   confidenceTxt:    { fontFamily: Fonts.sansBold, fontSize: 8, letterSpacing: 0.8 },
+
+  // Cycle tab styles
+  statRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  statLabel:     { fontFamily: Fonts.sansMedium, fontSize: 13, color: T.textSec },
+  statValue:     { fontFamily: Fonts.sansBold, fontSize: 15, color: T.text },
+  statusPill:    { borderRadius: 8, borderWidth: 1, paddingHorizontal: 7, paddingVertical: 2 },
+  statusPillTxt: { fontFamily: Fonts.sansBold, fontSize: 10, letterSpacing: 0.3 },
+  normBar:       { height: 6, borderRadius: 3, backgroundColor: T.border, marginBottom: 4, overflow: 'hidden' },
+  normBarFill:   { height: 6, borderRadius: 3 },
+  normLabels:    { flexDirection: 'row', justifyContent: 'space-between' },
+  normLbl:       { fontFamily: Fonts.sans, fontSize: 10, color: T.textMuted },
+
+  moodRow:     { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
+  moodCol:     { alignItems: 'center', gap: 4 },
+  moodPct:     { fontFamily: Fonts.sansBold, fontSize: 20, letterSpacing: -0.5 },
+  moodBar:     { width: 32, height: 60, borderRadius: 6, overflow: 'hidden', justifyContent: 'flex-end' },
+  moodBarFill: { width: '100%', borderRadius: 6 },
+  moodLbl:     { fontFamily: Fonts.sans, fontSize: 11, color: T.textMuted, textAlign: 'center' },
+  moodSub:     { fontFamily: Fonts.sans, fontSize: 11, color: T.textMuted, textAlign: 'center', marginTop: 4 },
+
+  symRow:   { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  symName:  { fontFamily: Fonts.sans, fontSize: 12, color: T.textSec, width: 90 },
+  symTrack: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden' },
+  symFill:  { height: 6, borderRadius: 3 },
+  symCount: { fontFamily: Fonts.sansMedium, fontSize: 11, color: T.textMuted, width: 24, textAlign: 'right' },
 
   // Empty state
   emptyCard: { marginHorizontal: Spacing.xl, padding: 28, alignItems: 'center', borderRadius: Radius.md, borderWidth: 1 },

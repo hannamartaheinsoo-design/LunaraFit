@@ -17,13 +17,13 @@ import { api } from '../../convex/_generated/api';
 type PhaseKey = 'menstruation' | 'follicular' | 'ovulation' | 'luteal';
 
 const PHASE_COLORS: Record<PhaseKey, { ring: string; glow: string; label: string }> = {
-  menstruation: { ring: '#D9898B', glow: '#EDBABB', label: Colors.blush[600] },
+  menstruation: { ring: '#7A9AB0', glow: '#B0C4D4', label: Colors.sky[600] },
   follicular:   { ring: '#7A9AB0', glow: '#B0C4D4', label: Colors.sky[600] },
-  ovulation:    { ring: '#EE9F80', glow: '#F9C4A0', label: Colors.coral[600] },
-  luteal:       { ring: '#A06870', glow: '#E4B8BC', label: Colors.berry[600] },
+  ovulation:    { ring: '#7A9AB0', glow: '#B0C4D4', label: Colors.sky[600] },
+  luteal:       { ring: '#7A9AB0', glow: '#B0C4D4', label: Colors.sky[600] },
 };
 
-const DEFAULT_PHASE = { ring: '#D9898B', glow: '#EDBABB', label: Colors.blush[600] };
+const DEFAULT_PHASE = { ring: '#7A9AB0', glow: '#B0C4D4', label: Colors.sky[600] };
 
 const PHASE_ENERGY: Record<PhaseKey, number> = {
   menstruation: 0.25,
