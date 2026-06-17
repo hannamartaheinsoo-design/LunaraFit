@@ -10,9 +10,9 @@ import type { FitnessLevel } from '../../types';
 import { useTranslation } from '../../lib/LangContext';
 
 const LEVELS: { key: FitnessLevel; titleKey: any; subKey: any; icon: any; grad: readonly [string, string] }[] = [
-  { key: 'beginner',     titleKey: 'fitness.lv1.title', subKey: 'fitness.lv1.sub', icon: 'leaf',    grad: [Colors.sky[200],   Colors.sky[600]]   },
-  { key: 'intermediate', titleKey: 'fitness.lv2.title', subKey: 'fitness.lv2.sub', icon: 'wave',    grad: [Colors.blush[200], Colors.blush[600]] },
-  { key: 'advanced',     titleKey: 'fitness.lv3.title', subKey: 'fitness.lv3.sub', icon: 'barbell', grad: [Colors.berry[200], Colors.berry[600]] },
+  { key: 'beginner',     titleKey: 'fitness.lv1.title', subKey: 'fitness.lv1.sub', icon: 'leaf',    grad: [Colors.blush[100], Colors.blush[400]] },
+  { key: 'intermediate', titleKey: 'fitness.lv2.title', subKey: 'fitness.lv2.sub', icon: 'wave',    grad: [Colors.blush[100], Colors.blush[400]] },
+  { key: 'advanced',     titleKey: 'fitness.lv3.title', subKey: 'fitness.lv3.sub', icon: 'barbell', grad: [Colors.blush[100], Colors.blush[400]] },
 ];
 
 function StepBar({ step, total }: { step: number; total: number }) {
@@ -74,7 +74,7 @@ export default function FitnessScreen() {
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Animated.View style={[styles.orbWrap, a1]}>
-          <LinearGradient colors={[Colors.sky[200], Colors.sky[600]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.orb}>
+          <LinearGradient colors={[Colors.blush[100], Colors.blush[400]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.orb}>
             <Icon name="barbell" size={40} color="#fff" strokeWidth={1.2} />
           </LinearGradient>
         </Animated.View>
@@ -105,7 +105,7 @@ export default function FitnessScreen() {
                     <Text style={[styles.cardTitle, sel && { color: Colors.beige[800] }]}>{t(level.titleKey)}</Text>
                     <Text style={styles.cardSub}>{t(level.subKey)}</Text>
                   </View>
-                  <View style={[styles.radio, sel && { borderColor: level.grad[1], backgroundColor: level.grad[1] }]}>
+                  <View style={[styles.radio, sel && { borderColor: Colors.sky[400], backgroundColor: Colors.sky[400] }]}>
                     {sel && <View style={styles.radioDot} />}
                   </View>
                 </TouchableOpacity>
@@ -131,19 +131,19 @@ export default function FitnessScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.cream },
+  root: { flex: 1, backgroundColor: Colors.sky[50] },
   navRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } },
   backIcon: { fontSize: 24, color: Colors.beige[600], lineHeight: 28, marginTop: -2 },
   scroll: { flex: 1 },
   content: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 20 },
   orbWrap: { alignSelf: 'flex-start', marginBottom: 28 },
-  orb: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', shadowColor: Colors.sky[400], shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
+  orb: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
   heading: { fontFamily: Fonts.sansBold, fontSize: 40, color: Colors.beige[800], lineHeight: 48, letterSpacing: -1, marginBottom: 10 },
   subtitle: { fontFamily: Fonts.sansLight, fontSize: 17, color: Colors.beige[400], lineHeight: 26, marginBottom: 32 },
   stack: { gap: 12 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 20, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.95)', borderWidth: 2, borderColor: 'transparent', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 12, shadowOffset: { width: 0, height: 3 } },
-  cardSelected: { borderColor: Colors.blush[200], backgroundColor: '#fff' },
+  cardSelected: { borderColor: Colors.sky[400], backgroundColor: '#fff' },
   cardIcon: { width: 58, height: 58, borderRadius: 18, alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' },
   cardText: { flex: 1 },
   cardTitle: { fontFamily: Fonts.sansBold, fontSize: 16, color: Colors.beige[600], marginBottom: 4 },
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   radio: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: Colors.beige[200], alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: '#fff' },
   footer: { paddingHorizontal: 24, paddingBottom: 48, paddingTop: 12 },
-  ctaBtn: { height: 60, borderRadius: 999, backgroundColor: Colors.beige[800], alignItems: 'center', justifyContent: 'center', shadowColor: Colors.beige[800], shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 8 },
+  ctaBtn: { height: 60, borderRadius: 999, backgroundColor: Colors.blush[400], alignItems: 'center', justifyContent: 'center', shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 8 },
   ctaBtnDisabled: { backgroundColor: Colors.beige[200], shadowOpacity: 0 },
   ctaBtnText: { fontFamily: Fonts.sansBold, fontSize: 17, color: '#fff', letterSpacing: 0.2 },
 });
