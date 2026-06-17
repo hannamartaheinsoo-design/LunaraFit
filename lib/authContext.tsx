@@ -26,12 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isReady = !isLoading && (profile !== undefined || !isAuthenticated);
   // True only after the user explicitly completes the full onboarding flow (ready screen).
-  // Legacy profiles with a name but no onboarding_complete are treated as complete so
-  // existing users are not forced back through onboarding.
-  const isOnboarded = isAuthenticated && !!(
-    profile?.onboarding_complete === true ||
-    (profile?.name && profile?.fitness_level)
-  );
+  const isOnboarded = isAuthenticated && profile?.onboarding_complete === true;
 
   const signOut = async () => {
     await convexSignOut();

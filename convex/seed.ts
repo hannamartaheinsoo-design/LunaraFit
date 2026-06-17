@@ -10,6 +10,21 @@ export const listAllUsers = internalQuery({
   },
 });
 
+export const markExistingUsersOnboarded = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const profiles = await ctx.db.query("profiles").collect();
+    let count = 0;
+    for (const p of profiles) {
+      if (p.name && !p.onboarding_complete) {
+        await ctx.db.patch(p._id, { onboarding_complete: true });
+        count++;
+      }
+    }
+    return `Marked ${count} profiles as onboarding_complete`;
+  },
+});
+
 export const deleteUser = internalMutation({
   args: { userId: v.id("users") },
   handler: async (ctx, { userId }) => {
