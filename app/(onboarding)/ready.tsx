@@ -24,9 +24,9 @@ function useFadeIn(delay: number) {
 }
 
 const FEATURE_ICONS = [
-  { icon: 'moon'    as const, grad: [Colors.blush[200],  Colors.blush[400]]  as const },
-  { icon: 'barbell' as const, grad: [Colors.sky[200],    Colors.sky[600]]    as const },
-  { icon: 'spark'   as const, grad: [Colors.berry[200],  Colors.berry[600]]  as const },
+  { icon: 'moon'    as const, grad: [Colors.blush[100], Colors.blush[400]] as const },
+  { icon: 'barbell' as const, grad: [Colors.blush[100], Colors.blush[400]] as const },
+  { icon: 'spark'   as const, grad: [Colors.blush[100], Colors.blush[400]] as const },
 ];
 
 export default function ReadyScreen() {
@@ -87,7 +87,7 @@ export default function ReadyScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.cream },
+  root: { flex: 1, backgroundColor: Colors.sky[50] },
   body: { flex: 1, alignItems: 'flex-start', justifyContent: 'center', paddingHorizontal: 28 },
   orbWrap: { marginBottom: 36 },
   orb: {
@@ -112,9 +112,9 @@ const styles = StyleSheet.create({
   },
   footer: { paddingHorizontal: 24, paddingBottom: 48, paddingTop: 12 },
   ctaBtn: {
-    height: 60, borderRadius: Radius.full, backgroundColor: Colors.beige[800],
+    height: 60, borderRadius: Radius.full, backgroundColor: Colors.blush[400],
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: Colors.beige[800], shadowOffset: { width: 0, height: 8 },
+    shadowColor: Colors.blush[400], shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.28, shadowRadius: 16, elevation: 8,
   },
   ctaBtnText: { fontFamily: Fonts.sansBold, fontSize: 17, color: '#fff', letterSpacing: 0.2 },
