@@ -33,6 +33,7 @@ function NavigationController() {
   const prev = useRef<string | null>(null);
 
   useEffect(() => {
+    console.log('[Nav]', { isReady, isAuthenticated, isOnboarded, path: typeof window !== 'undefined' ? window.location.pathname : '' });
     if (!isReady) return;
 
     // Dev preview bypass — set sessionStorage.ob_preview='1' to skip auth redirects
@@ -44,9 +45,10 @@ function NavigationController() {
 
     if (state === 'home') router.replace('/(tabs)/home' as any);
     else if (state === 'onboarding') {
-      // Only redirect to name on first entry — don't interrupt mid-onboarding navigation
+      // Redirect to name on first entry or if landing on welcome while authenticated
       const path = typeof window !== 'undefined' ? window.location.pathname : '';
-      if (!path.includes('onboarding')) router.replace('/(onboarding)/name' as any);
+      const onWelcome = path.includes('welcome') || !path.includes('onboarding');
+      if (onWelcome) router.replace('/(onboarding)/name' as any);
     } else router.replace('/(onboarding)/welcome' as any);
   }, [isReady, isAuthenticated, isOnboarded]);
 

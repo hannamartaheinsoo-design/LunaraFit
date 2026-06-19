@@ -65,8 +65,16 @@ export default function SignupScreen() {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState<string | null>(null);
-  // Only redirect if user actively signed in during this screen mount
-  const didSignIn = React.useRef(false);
+  // Only redirect if user actively signed in during this screen mount.
+  // For OAuth (Google) the page reloads after redirect, so we persist the flag
+  // in sessionStorage so it survives the reload.
+  const didSignIn = React.useRef(
+    typeof sessionStorage !== 'undefined' && sessionStorage.getItem('oauthSignIn') === '1'
+  );
+
+  useEffect(() => {
+    if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('oauthSignIn');
+  }, []);
 
   // Redirect only after a fresh sign-in on this screen, not when navigating back
   useEffect(() => {
@@ -124,12 +132,15 @@ export default function SignupScreen() {
     setLoading(provider);
     setError('');
     didSignIn.current = true;
+    if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('oauthSignIn', '1');
     try {
       await signIn(provider);
       // useEffect above handles redirect once isAuthenticated settles
     } catch (e: any) {
       setError(e?.message ?? `${provider} ${t('auth.err.oauth')}`);
       setLoading(null);
+      didSignIn.current = false;
+      if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('oauthSignIn');
     }
   }
 
