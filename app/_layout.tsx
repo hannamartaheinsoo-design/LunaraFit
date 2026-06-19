@@ -45,10 +45,15 @@ function NavigationController() {
 
     if (state === 'home') router.replace('/(tabs)/home' as any);
     else if (state === 'onboarding') {
-      // Redirect to name on first entry or if landing on welcome while authenticated
+      // Send authenticated-but-not-onboarded users to the first onboarding step,
+      // unless they are already on one of the step screens (so they can progress
+      // through birthdate → cycle → … without being yanked back).
+      // NOTE: expo-router strips the (onboarding) group from web URLs, so the path
+      // is /name, /birthdate, etc. — never contains "onboarding". Match explicitly.
       const path = typeof window !== 'undefined' ? window.location.pathname : '';
-      const onWelcome = path.includes('welcome') || !path.includes('onboarding');
-      if (onWelcome) router.replace('/(onboarding)/name' as any);
+      const ONBOARDING_STEPS = ['/name', '/birthdate', '/cycle', '/fitness', '/body', '/plan', '/ready'];
+      const onStep = ONBOARDING_STEPS.some((p) => path === p || path.startsWith(p));
+      if (!onStep) router.replace('/(onboarding)/name' as any);
     } else router.replace('/(onboarding)/welcome' as any);
   }, [isReady, isAuthenticated, isOnboarded]);
 
