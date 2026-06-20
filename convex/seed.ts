@@ -43,6 +43,24 @@ export const deleteUser = internalMutation({
   },
 });
 
+export const updateAccountEmail = internalMutation({
+  args: { userId: v.id("users"), newEmail: v.string() },
+  handler: async (ctx, { userId, newEmail }) => {
+    const account = await ctx.db.query("authAccounts").filter(q => q.eq(q.field("userId"), userId)).first();
+    if (!account) return "account not found";
+    await ctx.db.patch(account._id, { providerAccountId: newEmail });
+    return "updated";
+  },
+});
+
+export const listAccountsByEmail = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const accounts = await ctx.db.query("authAccounts").collect();
+    return accounts.map(a => ({ userId: a.userId, provider: a.provider, providerAccountId: a.providerAccountId }));
+  },
+});
+
 export const listAll = internalQuery({
   args: {},
   handler: async (ctx) => {
