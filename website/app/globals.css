@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #1f1f1f;
+
+  /* ── Lunara Fit design tokens — mirrored from constants/theme.ts in the app repo ── */
+  --color-cream: #fafafa;
+
+  --color-beige-50: #f5f5f5;
+  --color-beige-100: #e8e8e8;
+  --color-beige-200: #d0d0d0;
+  --color-beige-400: #9a9a9a;
+  --color-beige-600: #555555;
+  --color-beige-800: #1f1f1f;
+
+  --color-blush-50: #fdf1f2;
+  --color-blush-100: #f5d4d6;
+  --color-blush-200: #edbabb;
+  --color-blush-400: #d9898b;
+  --color-blush-600: #a85a5c;
+  --color-blush-800: #6a2a2c;
+
+  --color-berry-50: #faf0f2;
+  --color-berry-100: #f0d8da;
+  --color-berry-200: #e4b8bc;
+  --color-berry-400: #d5a0a8;
+  --color-berry-600: #a06870;
+  --color-berry-800: #6a3840;
+
+  --color-sky-50: #f0f4f8;
+  --color-sky-100: #d2dde7;
+  --color-sky-200: #b0c4d4;
+  --color-sky-400: #7a9ab0;
+  --color-sky-600: #4a6a80;
+  --color-sky-800: #1e3848;
+
+  --color-coral-50: #fef3ec;
+  --color-coral-100: #fcddc4;
+  --color-coral-200: #f9c4a0;
+  --color-coral-400: #ee9f80;
+  --color-coral-600: #c87050;
+  --color-coral-800: #884030;
+
+  --color-error-bg: #fff0f0;
+  --color-error-text: #cc3333;
+
+  --radius-sm: 9px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+
+  --color-cream: var(--color-cream);
+
+  --color-beige-50: var(--color-beige-50);
+  --color-beige-100: var(--color-beige-100);
+  --color-beige-200: var(--color-beige-200);
+  --color-beige-400: var(--color-beige-400);
+  --color-beige-600: var(--color-beige-600);
+  --color-beige-800: var(--color-beige-800);
+
+  --color-blush-50: var(--color-blush-50);
+  --color-blush-100: var(--color-blush-100);
+  --color-blush-200: var(--color-blush-200);
+  --color-blush-400: var(--color-blush-400);
+  --color-blush-600: var(--color-blush-600);
+  --color-blush-800: var(--color-blush-800);
+
+  --color-berry-50: var(--color-berry-50);
+  --color-berry-100: var(--color-berry-100);
+  --color-berry-200: var(--color-berry-200);
+  --color-berry-400: var(--color-berry-400);
+  --color-berry-600: var(--color-berry-600);
+  --color-berry-800: var(--color-berry-800);
+
+  --color-sky-50: var(--color-sky-50);
+  --color-sky-100: var(--color-sky-100);
+  --color-sky-200: var(--color-sky-200);
+  --color-sky-400: var(--color-sky-400);
+  --color-sky-600: var(--color-sky-600);
+  --color-sky-800: var(--color-sky-800);
+
+  --color-coral-50: var(--color-coral-50);
+  --color-coral-100: var(--color-coral-100);
+  --color-coral-200: var(--color-coral-200);
+  --color-coral-400: var(--color-coral-400);
+  --color-coral-600: var(--color-coral-600);
+  --color-coral-800: var(--color-coral-800);
+
+  --color-error-bg: var(--color-error-bg);
+  --color-error-text: var(--color-error-text);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-full: var(--radius-full);
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-beige-800);
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
