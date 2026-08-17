@@ -20,8 +20,8 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before 
 
 This project uses **Convex** as the backend and **`@convex-dev/auth`** for authentication. There is NO Supabase, NO AsyncStorage for user data.
 
-- Start backend: `PATH="/opt/homebrew/bin:$PATH" npx convex dev` (node is at `/opt/homebrew/bin/node`)
-- Start frontend: `PATH="/opt/homebrew/bin:$PATH" npx expo start --web --port 19006`
+- Start backend: `npx convex dev`
+- Start frontend: `npx expo start --web --port 19006`
 - The `preview_start` tool uses `.claude/launch.json` — port must match (currently 19006)
 - **Always call `preview_resize(preset="mobile")` before any `preview_screenshot`** — the app is phone-only (375×812). The viewport does not persist across reloads; resize every time.
 - Convex URL is in `.env.local` as `EXPO_PUBLIC_CONVEX_URL`
